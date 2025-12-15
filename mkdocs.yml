@@ -32,6 +32,14 @@ theme:
 # Plugins para funcionalidades extras
 plugins:
   - search                     # Barra de busca
+  - mkdocstrings              # Documentação automática de código
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 # Estrutura do Menu (Navegação)
 nav:
