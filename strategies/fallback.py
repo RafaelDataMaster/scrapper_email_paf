@@ -1,11 +1,11 @@
-from core.interfaces import text_extraction_strategy
+from core.interfaces import TextExtractionStrategy
 
-class smart_extraction_strategy(text_extraction_strategy):
+class SmartExtractionStrategy(TextExtractionStrategy):
     def __init__(self):
         # Define a ordem de prioridade
         self.strategies = [
-            native_pdf_strategy(),      # 1. Tenta ser rápido
-            tesseract_ocr_trategy()    # 2. Se falhar, usa força bruta
+            NativePdfStrategy(),      # 1. Tenta ser rápido
+            TesseractOcrStrategy()    # 2. Se falhar, usa força bruta
         ]
 
     def extract(self, file_path: str) -> str:

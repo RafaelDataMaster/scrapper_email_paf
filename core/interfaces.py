@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class text_extraction_strategy(ABC):
+class TextExtractionStrategy(ABC):
     """Contrato para qualquer motor de leitura de arquivos."""
     
     @abstractmethod

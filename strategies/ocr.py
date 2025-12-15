@@ -1,10 +1,10 @@
 import pytesseract
 from pdf2image import convert_from_path
-from core.interfaces import text_extraction_strategy
+from core.interfaces import TextExtractionStrategy
 from config import settings
 # Importe suas configs de caminhos aqui
 
-class tesseract_ocr_trategy(text_extraction_strategy):
+class TesseractOcrStrategy(TextExtractionStrategy):
     def extract(self, file_path: str) -> str:
         # Configurações isoladas aqui dentro
         custom_config = r'--psm 6' 

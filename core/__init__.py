@@ -1,3 +1,3 @@
-from .interfaces import text_extraction_strategy
+from .interfaces import TextExtractionStrategy
 # Se tiver exceções personalizadas depois:
 # from .exceptions import ExtractionError

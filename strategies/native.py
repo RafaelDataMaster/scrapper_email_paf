@@ -1,7 +1,7 @@
 import pdfplumber
-from core.interfaces import text_extraction_strategy
+from core.interfaces import TextExtractionStrategy
 
-class native_pdf_strategy(text_extraction_strategy):
+class NativePdfStrategy(TextExtractionStrategy):
     def extract(self, file_path: str) -> str:
         try:
             with pdfplumber.open(file_path) as pdf:
