@@ -3,7 +3,7 @@
 # To Do
 - [ ] Conseguir o acesso ao maior número de pdfs e a tabela já catalogada dos dados pra conferir se a extração do PDF está de fato funcionando.
 - [ ] Começar a estudar como realmente fazer o scrapping de diferentes tipos de email. (Talvez pedir um email alternativo pra isso).
-- [ ] Terminar de organizar a documentação por completo! Arrumando o Index e outras partes.
+- [ ] Terminar de organizar a documentação por completo! As funções de código, ver oque eu faço com a parte de arquitetura ou se troco pra pesquisa. 
 
 
 # Done
