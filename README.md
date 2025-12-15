@@ -26,6 +26,39 @@ Durante o planejamento do projeto avaliar a necessidade de separar uma fila de p
 - 'valor_total'
 - 'texto_bruto'
 
+## Estrutura do projeto (feita na data 15/12/2025)
+
+```
+extrator_nfse/
+│
+├── core/                       # O "Kernel" do sistema (Interfaces e Classes Base)
+│   ├── __init__.py
+│   ├── interfaces.py           # Onde fica a classe abstrata TextExtractionStrategy
+│   ├── exceptions.py           # Erros personalizados (ex: ExtractionError)
+│   └── models.py               # (Futuro) Classes de dados (Pydantic)
+│
+├── strategies/                 # Implementações concretas de LEITURA (Fase 1)
+│   ├── __init__.py
+│   ├── native.py               # Leitura rápida (pdfplumber)
+│   ├── ocr.py                  # Leitura lenta (Tesseract)
+│   └── fallback.py             # A estratégia composta (Tenta Nativo -> Se falhar -> OCR)
+│
+├── extractors/                 # (Fase 2/3) Lógica de extração por cidade
+│   └── __init__.py             # Aqui ficarão os Processors e Handlers
+│
+├── config/                     # Configurações globais
+│   ├── __init__.py
+│   └── settings.py             # Caminhos do Tesseract, Poppler, etc.
+│
+├── tests/                      # Testes automatizados
+│   ├── __init__.py
+│   └── test_strategies.py      # Testar se o fallback está funcionando
+│
+├── main.py                     # Ponto de entrada (CLI ou Script)
+├── requirements.txt            # Dependências
+└── README.md
+```
+
 ## 1. Automação de Entradas de NFe
 
 ### ORQUESTRAÇÃO
