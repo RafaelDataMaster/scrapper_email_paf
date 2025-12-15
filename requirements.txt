@@ -1,0 +1,11 @@
+# Dependências do Projeto
+pdfplumber
+pandas
+pytesseract
+pdf2image
+pillow
+
+# Dependências da Documentação (Para o Netlify)
+mkdocs
+mkdocs-material
+mkdocstrings[python]
