@@ -7,7 +7,7 @@ def main():
     processor = BaseInvoiceProcessor() # Futuramente usaremos uma Factory aqui
     lista_resultados = []
     
-    pasta_origem = settings.DIR_ENTRADA # Usando suas settings
+    pasta_origem = settings.DIR_ENTRADA 
     
     print(f"Iniciando processamento em: {pasta_origem}")
 
