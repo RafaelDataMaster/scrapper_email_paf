@@ -47,4 +47,4 @@ nav:
   - Arquitetura:
       - Design e Padrões: arquitetura.md
       - Decisões Técnicas: insights.md
-  - API Reference: api.md
+  - Funções: api.md

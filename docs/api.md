@@ -1,3 +1,2 @@
-# Referência da API
-
+# Funções da interface
 ::: core.interfaces.TextExtractionStrategy
