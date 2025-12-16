@@ -33,12 +33,8 @@ theme:
 plugins:
   - search                     # Barra de busca
   - mkdocstrings              # Documentação automática de código
-  - encryptcontent:          
-      title_text: "Acesso Restrito - Master"
-      placeholder_text: "Digite a senha do projeto"
-      password: "M4sterKey@0912"
-      global: true
-
+  - encryptcontent:           # Proteção de conteúdo sensível
+      password: "M4sterKey@0912"  # Senha para descriptografar o conteúdo
 markdown_extensions:
   - attr_list                  # Permite classes em elementos HTML/Markdown
   - md_in_html                 # Permite Markdown dentro de tags HTML <div>
