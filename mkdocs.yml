@@ -34,7 +34,9 @@ plugins:
   - search                     # Barra de busca
   - mkdocstrings              # Documentação automática de código
   - encryptcontent:           # Proteção de conteúdo sensível
-      password: "M4sterKey@0912"  # Senha para descriptografar o conteúdo
+      global_password: "M4sterKey@0912"  # Senha para descriptografar o conteúdo
+      title_prefix: "(Bloqueado) "
+      search_index: "dynamically"
 markdown_extensions:
   - attr_list                  # Permite classes em elementos HTML/Markdown
   - md_in_html                 # Permite Markdown dentro de tags HTML <div>

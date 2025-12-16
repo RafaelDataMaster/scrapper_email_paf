@@ -2,11 +2,15 @@
 
 # To Do
 - [ ] Conseguir o acesso ao maior número de pdfs e a tabela já catalogada dos dados pra conferir se a extração do PDF está de fato funcionando.
-- [ ] Começar a estudar como realmente fazer o scrapping de diferentes tipos de email. (Talvez pedir um email alternativo pra isso).
-- [X] Terminar de organizar a documentação por completo! As funções de código, ver oque eu faço com a parte de arquitetura ou se troco pra pesquisa. 
+- [ ] Configurar o email pra fazer os testes em ambiente real de scrapping. Provavelmente usando meu pessoal. Verificar a possibilidade de um redirecionador de email pra um separado (Verificar com a Melyssa).
+
 
 
 # Done
+
+## 16/12/2025
+- [X] Começar a estudar como realmente fazer o scrapping de diferentes tipos de email. (Talvez pedir um email alternativo pra isso).
+- [X] Terminar de organizar a documentação por completo! As funções de código, ver oque eu faço com a parte de arquitetura ou se troco pra pesquisa. 
 
 ## 15/12/2025
 - [X] Montar o site da documentação
@@ -18,7 +22,9 @@
 
 
 # Oque eu to focando em pesquisar por agora
-Continuar avaliando o padrão e estrutura do projeto. Validar o funcionamento da extração dos dados do pdf. Começar a montar realmente a parte do Scrapping.
+- Validar a extração de dados do pdf. 
+- Identificar adição de abordagem de extração de xml. 
+- Configuração dos imaps e testar o scrapping em um email real.
 
 # Dificuldades até o momento
 Boa parte dos erros foram relacionados ao Regex, estudar mais a fundo e procurar fazer testes com casos mais complexos para ir adicionando mais palavras ao dicionário de Regex.
