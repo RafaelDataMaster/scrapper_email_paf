@@ -1,3 +1,12 @@
+from .models import InvoiceData
 from .interfaces import TextExtractionStrategy
-# Se tiver exceções personalizadas depois:
-# from .exceptions import ExtractionError
+from .extractors import BaseExtractor, register_extractor
+from .processor import BaseInvoiceProcessor
+
+__all__ = [
+    "InvoiceData",
+    "TextExtractionStrategy",
+    "BaseExtractor",
+    "register_extractor",
+    "BaseInvoiceProcessor",
+]

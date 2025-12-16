@@ -34,38 +34,49 @@ Durante o planejamento do projeto avaliar a necessidade de separar uma fila de p
 - 'valor_total'
 - 'texto_bruto'
 
-## Estrutura do projeto (feita na data 15/12/2025)
+## Estrutura do projeto
 
 ```
 extrator_nfse/
 │
-├── core/                       # O "Kernel" do sistema (Interfaces e Classes Base)
-│   ├── __init__.py
-│   ├── interfaces.py           # Onde fica a classe abstrata TextExtractionStrategy
-│   ├── exceptions.py           # Erros personalizados (ex: ExtractionError)
-│   └── models.py               # (Futuro) Classes de dados (Pydantic)
-│
-├── strategies/                 # Implementações concretas de LEITURA (Fase 1)
-│   ├── __init__.py
-│   ├── native.py               # Leitura rápida (pdfplumber)
-│   ├── ocr.py                  # Leitura lenta (Tesseract)
-│   └── fallback.py             # A estratégia composta (Tenta Nativo -> Se falhar -> OCR)
-│
-├── extractors/                 # (Fase 2/3) Lógica de extração por cidade
-│   └── __init__.py             # Aqui ficarão os Processors e Handlers
-│
-├── config/                     # Configurações globais
-│   ├── __init__.py
-│   └── settings.py             # Caminhos do Tesseract, Poppler, etc.
-│
-├── tests/                      # Testes automatizados
-│   ├── __init__.py
-│   └── test_strategies.py      # Testar se o fallback está funcionando
-│
-├── main.py                     # Ponto de entrada (CLI ou Script)
-├── requirements.txt            # Dependências
-└── README.md
+├── config/                     # Configurações (settings.py + .env)
+├── core/                       # Interfaces e Classes Base
+├── extractors/                 # Lógica de extração específica
+├── ingestors/                  # Conectores de E-mail (IMAP)
+├── strategies/                 # Estratégias de Leitura (PDF/OCR)
+├── docs/                       # Documentação (MkDocs)
+├── nfs/                        # Pasta de entrada local
+├── data/                       # Saída de dados
+├── main.py                     # Script de processamento local
+├── run_ingestion.py            # Script de ingestão de e-mail
+└── requirements.txt            # Dependências
 ```
+
+# Guia Rápido
+
+## Instalação
+
+1.  Clone o repositório e crie o ambiente virtual:
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate  # Linux/Mac
+    .venv\Scripts\activate     # Windows
+    ```
+
+2.  Instale as dependências:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  Configure a segurança:
+    *   Copie `.env.example` para `.env`.
+    *   Preencha suas credenciais de e-mail no `.env`.
+
+## Como Usar
+
+*   **Ingestão de E-mail:** `python run_ingestion.py` (Baixa e processa notas do e-mail).
+*   **Processamento Local:** `python main.py` (Processa arquivos da pasta `nfs/`).
+*   **Documentação:** `mkdocs serve` (Abre o site da documentação localmente).
 
 ## 1. Automação de Entradas de NFe
 

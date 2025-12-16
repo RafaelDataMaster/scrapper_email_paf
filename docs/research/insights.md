@@ -42,3 +42,23 @@ A extração de valores monetários brasileiros é traiçoeira.
 *   Formatos encontrados: `1.234,56`, `1234,56`, `1 234,56`.
 *   O ponto (`.`) pode ser separador de milhar ou decimal (em notas internacionais).
 *   **Decisão:** Padronizamos uma função de limpeza que remove tudo que não é dígito ou vírgula final, e então converte para float padrão Python (ponto como decimal). Isso centraliza a lógica de conversão em um único lugar, evitando bugs dispersos.
+
+---
+
+## 5. Ingestão de E-mails e Segurança
+
+A implementação do módulo de ingestão trouxe desafios de arquitetura e segurança que não existiam no processamento local.
+
+### O "Gap" Memória vs. Disco
+Bibliotecas de e-mail (`imaplib`) retornam anexos como objetos de bytes na memória RAM. No entanto, bibliotecas de PDF (`pdfplumber`) e OCR (`pytesseract`) são otimizadas para ler caminhos de arquivos no disco.
+*   **Solução:** Implementamos um *buffer* em disco (`temp_email/`). O script baixa os bytes, materializa um arquivo temporário, processa e (opcionalmente) deleta. Isso desacopla a lógica de rede da lógica de processamento.
+
+### Colisão de Nomes de Arquivo
+Em testes reais, descobrimos que muitos fornecedores enviam arquivos com nomes genéricos como `invoice.pdf` ou `nota.pdf`.
+*   **Risco:** Se processarmos 10 e-mails em sequência, o arquivo `invoice.pdf` do e-mail 10 sobrescreveria o do e-mail 1 antes que pudéssemos auditá-lo.
+*   **Solução:** Adoção de UUIDs. Todo arquivo salvo recebe um prefixo único (ex: `a1b2c3d4_invoice.pdf`), garantindo rastreabilidade e evitando perda de dados.
+
+### Segurança de Credenciais (12-Factor App)
+Inicialmente, para testes rápidos, as senhas estavam no código.
+*   **Ação:** Migração imediata para variáveis de ambiente (`.env`) usando `python-dotenv`.
+*   **Insight:** Além de segurança, isso facilita a troca de ambientes (Dev vs. Prod) sem alterar uma linha de código. O uso de "Senhas de Aplicativo" (App Passwords) provou-se essencial para contornar o 2FA de provedores modernos como Gmail.

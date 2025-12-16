@@ -51,6 +51,7 @@ nav:
   - Home: index.md
   - Guia de Uso:
       - Instalação e Execução: guide/usage.md
+      - Ingestão de E-mails: guide/ingestion.md
       - Como Estender (Plugins): guide/extending.md
       - Padrões de Documentação: guide/documentation_standards.md
   - Referência Técnica:

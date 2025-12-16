@@ -6,3 +6,8 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+.env
+.DS_Store
+temp_email/
+*.log
+

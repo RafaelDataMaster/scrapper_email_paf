@@ -4,6 +4,7 @@ pandas
 pytesseract
 pdf2image
 pillow
+python-dotenv
 
 # Dependências da Documentação (Para o Netlify)
 mkdocs
