@@ -46,24 +46,24 @@ O fluxo de dados foi desenhado para ser resiliente e escalável:
 
 ```mermaid
 graph TD
-    subgraph INGEST [1. Ingestão (ImapIngestor)]
-        A[📧 E-mail Server] -->|IMAP/SSL| B(run_ingestion.py)
-        B -->|Bytes| C{Buffer em Disco}
-        C -->|UUID| D[Arquivos Temporários]
+    subgraph INGEST ["1. Ingestão (ImapIngestor)"]
+        A["📧 E-mail Server"] -->|IMAP/SSL| B("run_ingestion.py")
+        B -->|Bytes| C{"Buffer em Disco"}
+        C -->|UUID| D["Arquivos Temporários"]
     end
 
-    subgraph CORE [2. Processamento (InvoiceProcessor)]
-        D --> E{É Texto?}
-        E -->|Sim| F[NativePdfStrategy]
-        E -->|Não| G[TesseractOcrStrategy]
-        F --> H[Extração Regex]
+    subgraph CORE ["2. Processamento (InvoiceProcessor)"]
+        D --> E{"É Texto?"}
+        E -->|Sim| F["NativePdfStrategy"]
+        E -->|Não| G["TesseractOcrStrategy"]
+        F --> H["Extração Regex"]
         G --> H
-        H --> I[InvoiceData Model]
+        H --> I["InvoiceData Model"]
     end
 
-    subgraph OUTPUT [3. Saída]
-        I --> J[CSV Consolidado]
-        I --> K[Integração ERP (Futuro)]
+    subgraph OUTPUT ["3. Saída"]
+        I --> J["CSV Consolidado"]
+        I --> K["Integração ERP (Futuro)"]
     end
 
     style INGEST fill:#e1f5fe,stroke:#01579b,stroke-width:2px
