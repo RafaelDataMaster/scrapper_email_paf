@@ -40,11 +40,18 @@ plugins:
       global: true
 
 markdown_extensions:
-  - pymdownx.superfences:
+  - attr_list                  # Permite classes em elementos HTML/Markdown
+  - md_in_html                 # Permite Markdown dentro de tags HTML <div>
+  - admonition                 # Caixas de alerta (!!! warning)
+  - pymdownx.details           # Colapsar alertas
+  - pymdownx.superfences:      # Blocos de código avançados (Mermaid)
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:            # Ícones :material-icon:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
 
 # Estrutura do Menu (Navegação)
 nav:

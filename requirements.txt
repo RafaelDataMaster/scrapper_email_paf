@@ -11,3 +11,4 @@ mkdocs
 mkdocs-material
 mkdocstrings[python]
 mkdocs-encryptcontent-plugin
+pymdown-extensions
