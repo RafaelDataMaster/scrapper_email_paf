@@ -56,7 +56,4 @@ nav:
   - Pesquisa & Evolução:
       - Blueprint da Arquitetura: research/architecture.md
       - Insights de Desenvolvimento: research/insights.md
-  - Arquitetura:
-      - Design e Padrões: arquitetura.md
-      - Decisões Técnicas: insights.md
   - Funções: api.md
