@@ -61,5 +61,6 @@ nav:
   - Referência Técnica:
       - API Reference: api.md
   - Pesquisa & Evolução:
-      - Blueprint da Arquitetura: research/architecture_pdf_extraction.md
+      - Blueprint da Arquitetura da parte de extração de PDF: research/architecture_pdf_extraction.md
+      - Blueprint da Arquitetura da parte de Ingestão de E-mails: research/architecture_email_ingestion.md
       - Insights de Desenvolvimento: research/insights.md
