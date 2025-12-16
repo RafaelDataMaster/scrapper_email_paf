@@ -51,6 +51,7 @@ nav:
   - Guia de Uso:
       - Instalação e Execução: guide/usage.md
       - Como Estender (Plugins): guide/extending.md
+      - Padrões de Documentação: guide/documentation_standards.md
   - Referência Técnica:
       - API Reference: api.md
   - Pesquisa & Evolução:
