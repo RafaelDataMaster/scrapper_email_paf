@@ -1,12 +1,17 @@
 # Projeto de Scraping  de notas fiscais eletrônicas
 
 # To Do
-- [ ] Conseguir o acesso ao maior número de pdfs e a tabela já catalogada dos dados pra conferir se a extração do PDF está de fato funcionando.
-- [ ] Configurar o email pra fazer os testes em ambiente real de scrapping. Provavelmente usando meu pessoal. Verificar a possibilidade de um redirecionador de email pra um separado (Verificar com a Melyssa).
+- [ ] Conseguir o acesso ao maior número de pdfs e a tabela de verdades já catalogada dos dados pra conferir se a extração do PDF está de fato funcionando.
+- [ ] Verificar cada caso a fundo dos pdfs e avaliar possíveis estratégias para os casos onde o pdf em si não esta anexado no email (link de prefeitura ou redirecionador de terceiros).
+- [ ] Conversar direito com a Melyssa, ou mesmo direto com o Paulo ou o Gustavo a respeito do redirecionamento de emails. Avaliar possíveis soluções e planejar como realmente as NFSE vai estar e em qual email.
+
 
 
 
 # Done
+
+## 17/12/2025
+- [x] Configurar o email pra fazer os testes em ambiente real de scrapping. Provavelmente usando meu pessoal. **Nota**: Foi usando um email pessoal meu do google o scrapper.nfse@gmail.com ele ta com athenticação no meu email da master rafael.ferreira@soumaster.com.br e no app do google authenticate e no meu número pessoal de telefone final 6737.
 
 ## 16/12/2025
 - [X] Começar a estudar como realmente fazer o scrapping de diferentes tipos de email. (Talvez pedir um email alternativo pra isso).
