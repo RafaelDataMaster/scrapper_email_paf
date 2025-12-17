@@ -55,7 +55,7 @@ def main():
 
     # 4. Busca (Fetch)
     # Dica: Comece filtrando por um assunto específico para testar
-    assunto_teste = "Nota Fiscal" 
+    assunto_teste = "ENC" 
     print(f"🔍 Buscando e-mails com assunto: '{assunto_teste}'...")
     
     try:
@@ -98,7 +98,7 @@ def main():
             data_dict['email_subject'] = item['subject']
             
             resultados.append(data_dict)
-            print(f"  ✅ Sucesso: {result.invoice_number} - {result.issuer_name}")
+            print(f"  ✅ Sucesso: {result.numero_nota} - {result.cnpj_prestador}")
             
         except Exception as e:
             print(f"  ⚠️ Falha ao processar {filename}: {e}")
@@ -110,7 +110,7 @@ def main():
         output_file = settings.DIR_SAIDA / "relatorio_ingestao.csv"
         
         df = pd.DataFrame(resultados)
-        df.to_csv(output_file, index=False, sep=';', encoding='utf-8-sig')
+        df.to_csv(output_file, index=False, sep=',', encoding='utf-8-sig')
         print(f"\n🚀 Processamento concluído! Relatório salvo em: {output_file}")
     else:
         print("\n⚠️ Nenhum resultado processado com sucesso.")

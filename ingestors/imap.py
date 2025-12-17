@@ -37,6 +37,33 @@ class ImapIngestor(EmailIngestorStrategy):
         self.connection.login(self.user, self.password)
         self.connection.select(self.folder) # Seleciona caixa de entrada
 
+    def _decode_text(self, text: str) -> str:
+        """
+        Decodifica cabeçalhos de e-mail (Assunto, Nome de arquivo) de forma segura.
+        Trata diferentes encodings e evita falhas de 'utf-8 codec error'.
+        """
+        if not text:
+            return ""
+            
+        decoded_list = decode_header(text)
+        final_text = ""
+        
+        for content, encoding in decoded_list:
+            if isinstance(content, bytes):
+                if not encoding:
+                    # Se não vier encoding, tenta utf-8, se falhar vai de latin-1
+                    encoding = "utf-8"
+                
+                try:
+                    final_text += content.decode(encoding, errors="replace")
+                except (LookupError, UnicodeDecodeError):
+                    # Fallback agressivo para latin-1 se o encoding informado estiver errado
+                    final_text += content.decode("latin-1", errors="replace")
+            else:
+                final_text += str(content)
+                
+        return final_text
+
     def fetch_attachments(self, subject_filter: str = "Nota Fiscal") -> List[Dict[str, Any]]:
         """
         Busca e-mails pelo assunto e extrai anexos PDF.
@@ -55,7 +82,7 @@ class ImapIngestor(EmailIngestorStrategy):
             self.connect()
             
         # Busca no servidor (Filtering Server-side é limitado no IMAP)
-        # [cite: 21] IMAP search é verboso
+        # IMAP search é verboso
         status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
         
         results = []
@@ -63,29 +90,36 @@ class ImapIngestor(EmailIngestorStrategy):
             return results
 
         for num in messages[0].split():
-            _, msg_data = self.connection.fetch(num, "(RFC822)")
-            msg = email.message_from_bytes(msg_data[0][1])
-            subject = decode_header(msg["Subject"])[0][0]
-            if isinstance(subject, bytes):
-                subject = subject.decode()
-            
-            # Navegar pela árvore MIME para achar anexos [cite: 27]
-            for part in msg.walk():
-                if part.get_content_maintype() == 'multipart':
+            try:
+                _, msg_data = self.connection.fetch(num, "(RFC822)")
+                if not msg_data or not msg_data[0]:
                     continue
-                if part.get('Content-Disposition') is None:
-                    continue
-                    
-                filename = part.get_filename()
-                if filename and filename.lower().endswith('.pdf'):
-                    # Decodificar nome do arquivo (ex: =?utf-8?Q?...) [cite: 26]
-                    decoded_list = decode_header(filename)
-                    filename = "".join([t[0].decode(t[1] or 'utf-8') if isinstance(t[0], bytes) else t[0] for t in decoded_list])
-                    
-                    results.append({
-                        'filename': filename,
-                        'content': part.get_payload(decode=True),
-                        'source': self.user,
-                        'subject': subject
-                    })
+
+                msg = email.message_from_bytes(msg_data[0][1])
+                
+                # Uso do método seguro
+                subject = self._decode_text(msg["Subject"])
+                
+                # Navegar pela árvore MIME para achar anexos 
+                for part in msg.walk():
+                    if part.get_content_maintype() == 'multipart':
+                        continue
+                    if part.get('Content-Disposition') is None:
+                        continue
+                        
+                    filename = part.get_filename()
+                    if filename and filename.lower().endswith('.pdf'):
+                        # Uso do método seguro
+                        filename = self._decode_text(filename)
+                        
+                        results.append({
+                            'filename': filename,
+                            'content': part.get_payload(decode=True),
+                            'source': self.user,
+                            'subject': subject
+                        })
+            except Exception as e:
+                print(f"⚠️ Erro ao ler e-mail ID {num}: {e}")
+                continue
+
         return results
