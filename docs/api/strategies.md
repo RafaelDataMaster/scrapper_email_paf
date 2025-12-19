@@ -6,11 +6,12 @@ As estratégias são responsáveis por transformar arquivos PDF binários em tex
 
 O sistema implementa o **padrão Strategy** para extração de texto, permitindo diferentes abordagens:
 
-- **NativePdfStrategy**: Extração nativa via PDFPlumber (rápida, documentos digitais)
+- **NativePdfStrategy**: Extração nativa via PDFPlumber com layout preservado (rápida, documentos digitais)
+- **TablePdfStrategy**: Extração de tabelas estruturadas (documentos tabulares complexos)
 - **TesseractOcrStrategy**: OCR via Tesseract (documentos escaneados/imagens)
-- **SmartExtractionStrategy**: Fallback automático (tenta native, se falhar usa OCR)
+- **SmartExtractionStrategy**: Fallback automático em cascata (tenta native → tabelas → OCR)
 
-**Benefício:** Resiliência - se um método falhar, outro assume automaticamente.
+**Benefício:** Resiliência em 3 níveis - se um método falhar, outro assume automaticamente.
 
 ---
 
@@ -50,6 +51,67 @@ def extract_text(pdf_path: str) -> str:
 ```
 
 ::: strategies.native.NativePdfStrategy
+    options:
+      show_root_heading: true
+      show_source: false
+
+---
+
+## TablePdfStrategy
+
+Extração de estruturas tabulares usando PDFPlumber.
+
+### Características
+
+- **Velocidade**: Rápida (processamento nativo)
+- **Qualidade**: Excelente para documentos com tabelas
+- **Especialização**: Converte tabelas para formato "chave: valor"
+
+### Quando Usar
+
+✅ **Ideal para:**
+- Boletos com layout tabular (cabeçalhos separados dos valores)
+- Documentos onde rótulos e valores estão em colunas diferentes
+- PDFs com estrutura de dados tabulares
+- Fallback quando extração nativa com layout não é suficiente
+
+### Funcionamento Interno
+
+```python
+import pdfplumber
+
+def extract_tables(pdf_path: str) -> str:
+    with pdfplumber.open(pdf_path) as pdf:
+        full_text = ""
+        for page in pdf.pages:
+            # Extrai texto normal
+            full_text += page.extract_text(layout=True)
+            
+            # Extrai tabelas
+            tables = page.extract_tables()
+            for table in tables:
+                headers = table[0]  # Primeira linha = cabeçalho
+                for row in table[1:]:
+                    for header, value in zip(headers, row):
+                        full_text += f"{header}: {value}\n"
+        return full_text
+```
+
+**Exemplo de Conversão:**
+
+```
+Tabela Original:
+| Beneficiário | Vencimento | Valor |
+|--------------|------------|-------|
+| Empresa XYZ  | 10/12/2025 | 1.250,00 |
+
+Texto Gerado:
+Beneficiário: Empresa XYZ
+Vencimento: 10/12/2025
+Valor: 1.250,00
+```
+
+::: strategies.table.TablePdfStrategy
     options:
       show_root_heading: true
       show_source: false

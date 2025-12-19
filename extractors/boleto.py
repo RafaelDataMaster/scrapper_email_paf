@@ -97,20 +97,72 @@ class BoletoExtractor(BaseExtractor):
     def _extract_valor(self, text: str) -> float:
         """
         Extrai o valor do documento do boleto.
+        
+        Implementa 3 níveis de fallback para extração robusta:
+        1. Padrões específicos (com/sem R$)
+        2. Heurística do maior valor monetário encontrado
+        3. Extração do valor da linha digitável (10 últimos dígitos em centavos)
+        
+        Returns:
+            float: Valor do documento em reais ou 0.0 se não encontrado.
         """
         # Padrão: Procura "Valor do Documento" ou valores monetários
+        # Aceita formatos com ou sem R$
         patterns = [
+            # Com R$ explícito
             r'(?i)Valor\s+do\s+Documento\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
             r'(?i)Valor\s+Nominal\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
             r'(?i)Valor\s+Cobrado\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
-            r'(?i)Valor\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})'  # Fallback genérico
+            
+            # Sem R$ explícito (valor logo após o rótulo)
+            # Útil para boletos com layout tabular
+            r'(?i)Valor\s+do\s+Documento[\s\n]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
+            r'(?i)Valor\s+Nominal[\s\n]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
+            
+            # Genérico com R$
+            r'(?i)Valor\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})'
         ]
         
         for pattern in patterns:
             match = re.search(pattern, text)
             if match:
                 valor_str = match.group(1)
-                return float(valor_str.replace('.', '').replace(',', '.'))
+                valor = float(valor_str.replace('.', '').replace(',', '.'))
+                if valor > 0:
+                    return valor
+        
+        # Fallback Nível 2: Heurística do maior valor monetário encontrado
+        # Útil quando o texto está "amassado" e os rótulos estão longe dos valores
+        todos_valores = re.findall(r'R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})', text)
+        
+        if todos_valores:
+            valores_float = [
+                float(v.replace('.', '').replace(',', '.'))
+                for v in todos_valores
+            ]
+            if valores_float:
+                maior_valor = max(valores_float)
+                if maior_valor > 0:
+                    return maior_valor
+        
+        # Fallback Nível 3: Extrai valor da linha digitável
+        # Formato padrão: últimos 14 dígitos contêm fator de vencimento (4) + valor (10)
+        # Exemplo: 75691.31407 01130.051202 02685.970010 3 11690000625000
+        #          11690000625000 → 1169 (fator) + 0000625000 (valor em centavos = R$ 6.250,00)
+        linha_digitavel_match = re.search(
+            r'\d{5}[\.\s]\d{5}\s+\d{5}[\.\s]\d{6}\s+\d{5}[\.\s]\d{6}\s+\d\s+(\d{4})(\d{10})',
+            text
+        )
+        if linha_digitavel_match:
+            # Segundo grupo: 10 dígitos do valor em centavos
+            valor_centavos_str = linha_digitavel_match.group(2)
+            try:
+                valor_centavos = int(valor_centavos_str)
+                valor = valor_centavos / 100.0
+                if valor > 0:
+                    return valor
+            except ValueError:
+                pass
         
         return 0.0
 

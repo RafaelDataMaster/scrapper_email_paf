@@ -2,18 +2,18 @@
 📊 RELATÓRIO DE QUALIDADE DA EXTRAÇÃO
 ================================================================================
 
-📅 Data: 19/12/2025 13:13:47
+📅 Data: 19/12/2025 13:53:06
 📦 Total de arquivos: 20
 
 --- NFSe ---
-✅ Completas: 0
-⚠️ Com falhas: 10
-📈 Taxa de sucesso: 0.0%
+✅ Completas: 2
+⚠️ Com falhas: 8
+📈 Taxa de sucesso: 20.0%
 
 --- Boletos ---
-✅ Completos: 1
-⚠️ Com falhas: 9
-📈 Taxa de sucesso: 10.0%
+✅ Completos: 10
+⚠️ Com falhas: 0
+📈 Taxa de sucesso: 100.0%
 
 ❌ Erros: 0
 
@@ -31,11 +31,6 @@
    Número: None
    Valor: R$ 876.16
 
-📄 5d3d0753_31251122261093000140550010000877341464376981.pdf
-   Motivo: VALOR_ZERO
-   Número: 87734
-   Valor: R$ 0.00
-
 📄 742d9a68_31250822261093000140550010000846531000000010-procNfe.pdf
    Motivo: VALOR_ZERO
    Número: 000
@@ -51,11 +46,6 @@
    Número: 000074970
    Valor: R$ 0.00
 
-📄 9661c2da_31251122261093000140550010000877301066874869.pdf
-   Motivo: VALOR_ZERO
-   Número: 87730
-   Valor: R$ 0.00
-
 📄 c3c02f82_Fatura Locaweb.pdf
    Motivo: SEM_NUMERO|SEM_CNPJ
    Número: None
@@ -69,44 +59,4 @@
 📄 f1617498_RECS08194.PDF
    Motivo: SEM_NUMERO|VALOR_ZERO
    Número: None
-   Valor: R$ 0.00
-
-================================================================================
-🔍 FALHAS - BOLETOS
-================================================================================
-
-📄 0ea3c4be_BOLETO NF 2025.122.pdf
-   Motivo: VALOR_ZERO|SEM_VENCIMENTO
-   Valor: R$ 0.00
-
-📄 37e40903_NF 2025-02.900.pdf
-   Motivo: VALOR_ZERO
-   Valor: R$ 0.00
-
-📄 6a984b15_BOLETO NF 2025.135.pdf
-   Motivo: VALOR_ZERO|SEM_VENCIMENTO
-   Valor: R$ 0.00
-
-📄 6d0ad55a_boleto.pdf
-   Motivo: VALOR_ZERO|SEM_VENCIMENTO
-   Valor: R$ 0.00
-
-📄 a9f8350c_BOLS081941_1_1.PDF
-   Motivo: VALOR_ZERO
-   Valor: R$ 0.00
-
-📄 b43f2b3f_BOLETO NF 2025.139.pdf
-   Motivo: VALOR_ZERO|SEM_VENCIMENTO
-   Valor: R$ 0.00
-
-📄 e19a108c_NF 2025-44.pdf
-   Motivo: VALOR_ZERO
-   Valor: R$ 0.00
-
-📄 fbd8bcbe_BOLETO NF 2025.119.pdf
-   Motivo: VALOR_ZERO|SEM_VENCIMENTO
-   Valor: R$ 0.00
-
-📄 fcde2420_BOLS066331_1_1.PDF
-   Motivo: VALOR_ZERO
    Valor: R$ 0.00

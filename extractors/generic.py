@@ -18,13 +18,13 @@ class GenericExtractor(BaseExtractor):
         Verifica se este extrator pode processar o texto fornecido.
         
         Este é o extrator genérico para NFSe. Ele aceita qualquer documento
-        QUE NÃO SEJA um boleto bancário.
+        QUE NÃO SEJA um boleto bancário OU DANFE (Nota Fiscal Eletrônica de Produto).
 
         Args:
             text (str): Texto extraído do PDF.
 
         Returns:
-            bool: True se NÃO for um boleto (fallback padrão para NFSe).
+            bool: True se NÃO for um boleto ou DANFE (fallback padrão para NFSe).
         """
         text_upper = text.upper()
         
@@ -74,11 +74,45 @@ class GenericExtractor(BaseExtractor):
         return match.group(0) if match else None
 
     def _extract_valor(self, text: str):
-        # Migrando sua função limpar_valor_monetario
-        match = re.search(r'R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})', text)
-        if match:
-            valor_str = match.group(1)
-            return float(valor_str.replace('.', '').replace(',', '.'))
+        """
+        Extrai valor com regex flexível (R$ opcional).
+        
+        Tenta múltiplos padrões em ordem de especificidade:
+        - Padrões com R$ explícito (mais específicos)
+        - Padrões sem R$ obrigatório (mais flexíveis)
+        - Fallback genérico
+        
+        Returns:
+            float: Valor encontrado ou 0.0 se não houver valor válido.
+        """
+        patterns = [
+            # Padrões com R$ explícito (mais específicos)
+            r'(?i)Valor\s+Total\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Valor\s+da\s+Nota\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Valor\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            
+            # Padrões sem R$ obrigatório (mais flexíveis)
+            # Aceita "Valor Total: 1.234,56" sem símbolo monetário
+            r'(?i)Valor\s+Total\s*[:\s]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
+            r'(?i)Valor\s+da\s+Nota\s*[:\s]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
+            r'(?i)Total\s+Nota\s*[:\s]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
+            r'(?i)Valor\s+L[ií]quido\s*[:\s]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
+            
+            # Fallback genérico (último recurso)
+            r'\bR\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})\b'
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                valor_str = match.group(1)
+                try:
+                    valor = float(valor_str.replace('.', '').replace(',', '.'))
+                    if valor > 0:
+                        return valor
+                except ValueError:
+                    continue
+        
         return 0.0
 
     def _extract_data_emissao(self, text: str):

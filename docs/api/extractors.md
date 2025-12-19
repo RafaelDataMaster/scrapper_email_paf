@@ -27,21 +27,33 @@ Extrator genérico para Notas Fiscais de Serviço Eletrônica usando expressões
 
 ### Lógica de Identificação
 
-O `GenericExtractor` aceita qualquer documento que **não seja** um boleto bancário.
+O `GenericExtractor` aceita qualquer documento que **não seja** um boleto bancário **nem DANFE** (Nota Fiscal Eletrônica de Produto).
 
-**Indicadores de rejeição:**
+**Indicadores de rejeição - Boletos:**
 - Presença de "Linha Digitável"
-- Palavras-chave de boleto: "Beneficiário", "Cedente", "Código de Barras"
+- Palavras-chave: "Beneficiário", "Cedente", "Código de Barras"
 - Padrão de linha digitável (5 blocos numéricos)
+
+**Indicadores de rejeição - DANFE (Novo):**
+- Palavra "DANFE" no documento
+- Campos específicos de NFe produto: "CFOP", "ICMS", "Destinatário/Remetente"
+- Verificação dupla: se contém "SERVIÇO" ou "NFS-e", ainda pode ser processado
 
 ### Regex Patterns
 
 O extrator usa uma hierarquia de padrões regex ordenados por especificidade:
 
+**Para Número da Nota:**
 1. **Número da Nota com contexto explícito**: `"Número da Nota: XXXXX"`
 2. **NFS-e específico**: `"NFS-e Nº XXXXX"`
 3. **Nota Fiscal genérico**: `"Nota Fiscal Nº XXXXX"`
 4. **Número isolado** (com filtros para evitar RPS/Lote/Série)
+
+**Para Valor (Novo - Flexível):**
+1. **Com R$ explícito**: `"Valor Total: R$ 1.234,56"`
+2. **Sem R$ obrigatório**: `"Valor Total: 1.234,56"` (mais flexível)
+3. **Variações**: "Valor da Nota", "Total Nota", "Valor Líquido"
+4. **8 padrões ordenados** do mais específico ao mais genérico
 
 ### Limpeza de Texto
 
@@ -70,10 +82,10 @@ Extrator especializado em boletos bancários brasileiros.
 ### Características
 
 - **Tipo de documento**: Boletos bancários
-- **Método de extração**: Regex + Heurísticas
+- **Método de extração**: Regex + Heurísticas avançadas (3 níveis de fallback)
 - **Campos extraídos**:
   - CNPJ do Beneficiário
-  - Valor do Documento
+  - Valor do Documento (com múltiplos fallbacks)
   - Data de Vencimento
   - Número do Documento
   - Linha Digitável (código de barras)
@@ -97,6 +109,37 @@ O `BoletoExtractor` identifica boletos através de:
 **Critério de aceitação:**
 - Score ≥ 3 palavras-chave **OU** padrão de linha digitável detectado
 - **E** ausência de palavras-chave de NFSe
+
+### Extração de Valor - 3 Níveis de Fallback (Novo)
+
+#### Nível 1: Padrões Específicos
+Busca por "Valor do Documento" com/sem R$:
+```
+Valor do Documento: R$ 1.234,56
+Valor do Documento
+1.234,56
+```
+
+#### Nível 2: Heurística de Maior Valor
+Se padrões específicos falharem, busca todos os valores monetários no documento e retorna o maior (geralmente o valor do documento é o maior valor em um boleto).
+
+#### Nível 3: Extração da Linha Digitável
+**Novo fallback crítico** para casos onde o texto está muito fragmentado:
+
+- Extrai valor dos últimos 14 dígitos da linha digitável
+- Formato: `XXXXX.XXXXX XXXXX.XXXXXX XXXXX.XXXXXX X [FFFF][VVVVVVVVVV]`
+  - `FFFF` = Fator de vencimento (4 dígitos)
+  - `VVVVVVVVVV` = Valor em centavos (10 dígitos)
+
+**Exemplo:**
+```
+Linha: 75691.31407 01130.051202 02685.970010 3 11690000625000
+       └─────────────────────────────────┘ │ └────┘└────────┘
+                    Campos                 │ Fator   Valor
+                                           └─ DV
+
+Valor extraído: 0000625000 centavos = R$ 6.250,00
+```
 
 ### Campos Específicos
 
