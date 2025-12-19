@@ -74,4 +74,6 @@ nav:
       - Insights de Desenvolvimento: research/insights.md
   - Desenvolvimento:
       - Histórico de Refatorações: development/refactoring_history.md
+      - Refatoração SOLID (2025): development/solid_refactoring_report.md
+      - Guia de Uso SOLID: development/solid_usage_guide.md
       - Guia de Debug de PDFs: development/debugging_guide.md

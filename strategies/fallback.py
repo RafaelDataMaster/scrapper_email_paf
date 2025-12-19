@@ -33,11 +33,18 @@ class SmartExtractionStrategy(TextExtractionStrategy):
             str: Texto extraído pela primeira estratégia bem-sucedida.
 
         Raises:
-            Exception: Se todas as estratégias falharem.
+            ExtractionError: Se todas as estratégias falharem.
         """
-        for strategy in self.strategies:
-            texto = strategy.extract(file_path)
-            if texto: # Se retornou algo válido
-                return texto
+        from core.exceptions import ExtractionError
         
-        raise Exception("Falha: Nenhum método conseguiu ler o arquivo.")
+        for strategy in self.strategies:
+            try:
+                texto = strategy.extract(file_path)
+                if texto and len(texto.strip()) >= 50:  # Validação mínima
+                    return texto
+            except Exception:
+                # Estratégia falhou, tentar próxima
+                continue
+        
+        # Todas falharam: agora sim é erro crítico
+        raise ExtractionError(f"Nenhuma estratégia conseguiu extrair texto de {file_path}")

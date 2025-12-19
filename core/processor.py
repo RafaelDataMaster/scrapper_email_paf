@@ -2,8 +2,9 @@ import re
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 from core.models import InvoiceData, BoletoData
+from core.interfaces import TextExtractionStrategy
 from strategies.fallback import SmartExtractionStrategy
 from core.extractors import EXTRACTOR_REGISTRY
 import extractors.generic
@@ -19,9 +20,13 @@ class BaseInvoiceProcessor(ABC):
     3.  **Seleção**: Escolhe o extrator adequado para o texto.
     4.  **Extração**: Executa a mineração de dados.
     5.  **Normalização**: Retorna objeto `InvoiceData` ou `BoletoData`.
+    
+    Args:
+        reader: Estratégia de extração de texto. Se None, usa SmartExtractionStrategy.
+                Permite injeção de dependência para testes (DIP).
     """
-    def __init__(self):
-        self.reader = SmartExtractionStrategy()
+    def __init__(self, reader: Optional[TextExtractionStrategy] = None):
+        self.reader = reader if reader is not None else SmartExtractionStrategy()
 
     def _get_extractor(self, text: str):
         """Factory Method: Escolhe o extrator certo para o texto."""

@@ -51,8 +51,13 @@ class TesseractOcrStrategy(TextExtractionStrategy):
                     config=custom_config
                 )
             
+            # Validação: Se OCR retornou texto muito curto, considere falha
+            if len(texto_final.strip()) < 50:
+                return ""  # Falha recuperável, força próxima estratégia
+            
             return texto_final
             
         except Exception as e:
-            # Dica: É bom imprimir o erro original para debug
-            raise Exception(f"Erro fatal no OCR: {e}")
+            # Retorna string vazia para permitir fallback
+            # Em vez de lançar exceção (violação LSP)
+            return ""

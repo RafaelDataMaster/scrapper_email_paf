@@ -4,49 +4,84 @@ Script de Orquestração de Ingestão de E-mails.
 Este módulo é responsável por conectar ao servidor de e-mail, baixar anexos PDF
 de notas fiscais e encaminhá-los para o pipeline de processamento.
 
+REFATORADO seguindo princípios SOLID:
+- SRP: Responsabilidades separadas em FileSystemManager, AttachmentDownloader, DataExporter
+- OCP: Detecção de tipo por doc_type permite adicionar novos tipos sem modificar código
+- DIP: Injeção de dependências via factory para facilitar testes
+
 Funcionalidades:
 1.  Conexão segura via IMAP (configurada via .env).
 2.  Filtragem de e-mails por assunto.
 3.  Download de anexos para pasta temporária (com tratamento de colisão de nomes).
 4.  Execução do processador de extração.
-5.  Geração de relatório CSV.
+5.  Geração de relatórios CSV por tipo de documento.
 
 Usage:
     python run_ingestion.py
 """
 
-import os
-import shutil
-import uuid
-from pathlib import Path
+from collections import defaultdict
+from typing import Optional
 from config import settings
 from ingestors.imap import ImapIngestor
+from core.interfaces import EmailIngestorStrategy
 from core.processor import BaseInvoiceProcessor
-import pandas as pd
+from core.exporters import FileSystemManager, AttachmentDownloader, CsvExporter
 
-def main():
-    # 1. Verificação de Segurança
+
+def create_ingestor_from_config() -> EmailIngestorStrategy:
+    """
+    Factory para criar ingestor a partir das configurações.
+    
+    Facilita injeção de dependências e testes mockados (DIP).
+    
+    Returns:
+        EmailIngestorStrategy: Ingestor configurado
+        
+    Raises:
+        ValueError: Se credenciais estiverem faltando
+    """
     if not settings.EMAIL_PASS:
-        print("❌ Erro: Senha de e-mail não encontrada no arquivo .env")
-        print("   Por favor, configure o arquivo .env com suas credenciais.")
-        return
-
-    # 2. Preparar ambiente local (Gap: Bytes -> Disco)
-    # Limpa e recria a pasta temporária para garantir que não processamos lixo antigo
-    if os.path.exists(settings.DIR_TEMP):
-        shutil.rmtree(settings.DIR_TEMP)
-    os.makedirs(settings.DIR_TEMP)
-    print(f"📂 Diretório temporário criado: {settings.DIR_TEMP}")
-
-    # 3. Conexão
-    print(f"🔌 Conectando a {settings.EMAIL_HOST} como {settings.EMAIL_USER}...")
-    ingestor = ImapIngestor(
+        raise ValueError(
+            "Senha de e-mail não encontrada no arquivo .env. "
+            "Por favor, configure o arquivo .env com suas credenciais."
+        )
+    
+    return ImapIngestor(
         host=settings.EMAIL_HOST,
         user=settings.EMAIL_USER,
         password=settings.EMAIL_PASS,
         folder=settings.EMAIL_FOLDER
     )
 
+
+def main(ingestor: Optional[EmailIngestorStrategy] = None):
+    """
+    Função principal de orquestração da ingestão.
+    
+    Args:
+        ingestor: Ingestor de e-mail customizado. Se None, usa factory padrão.
+                  Permite injeção de dependência para testes (DIP).
+    """
+    # 1. Verificação de Segurança e Configuração
+    try:
+        if ingestor is None:
+            ingestor = create_ingestor_from_config()
+    except ValueError as e:
+        print(f"❌ Erro: {e}")
+        return
+
+    # 2. Preparar ambiente (SRP: FileSystemManager)
+    file_manager = FileSystemManager(
+        temp_dir=settings.DIR_TEMP,
+        output_dir=settings.DIR_SAIDA
+    )
+    file_manager.clean_temp_directory()
+    file_manager.setup_directories()
+    print(f"📂 Diretório temporário criado: {settings.DIR_TEMP}")
+
+    # 3. Conexão
+    print(f"🔌 Conectando a {settings.EMAIL_HOST} como {settings.EMAIL_USER}...")
     try:
         ingestor.connect()
     except Exception as e:
@@ -54,7 +89,6 @@ def main():
         return
 
     # 4. Busca (Fetch)
-    # Dica: Comece filtrando por um assunto específico para testar
     assunto_teste = "ENC" 
     print(f"🔍 Buscando e-mails com assunto: '{assunto_teste}'...")
     
@@ -70,64 +104,82 @@ def main():
 
     print(f"📦 {len(anexos)} anexo(s) encontrado(s). Iniciando processamento...")
 
-    # 5. Processamento (separando NFSe e Boletos)
+    # 5. Processamento (SRP: AttachmentDownloader separado)
+    downloader = AttachmentDownloader(file_manager)
     processor = BaseInvoiceProcessor()
-    resultados_nfse = []
-    resultados_boleto = []
+    
+    # OCP: Agrupamento dinâmico por doc_type (sem if/else para cada tipo)
+    documentos_por_tipo = defaultdict(list)
 
     for item in anexos:
         filename = item['filename']
         content_bytes = item['content']
         
-        # Salva o arquivo físico para o processador ler (Resolvendo o Gap)
-        # GERA UM NOME ÚNICO PARA EVITAR SOBRESCRITA
-        unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
-        file_path = settings.DIR_TEMP / unique_filename
-        
         try:
-            with open(file_path, 'wb') as f:
-                f.write(content_bytes)
-                
-            print(f"  Processing: {filename}...")
+            # SRP: Downloader é responsável por salvar arquivos
+            file_path = downloader.save_attachment(filename, content_bytes)
             
+            print(f"  Processando: {filename}...")
+            
+            # Processa o documento
             result = processor.process(str(file_path))
             
-            # Enriquece com dados do e-mail
-            data_dict = result.__dict__.copy()
-            data_dict['email_source'] = item['source']
-            data_dict['email_subject'] = item['subject']
+            # Enriquece com metadados do e-mail
+            result.texto_bruto = f"{result.texto_bruto}\n[Email: {item['source']}]"
             
-            # Separa por tipo
-            if hasattr(result, 'valor_documento'):  # É BoletoData
-                resultados_boleto.append(data_dict)
+            # OCP: Agrupa por doc_type (extensível para novos tipos)
+            doc_type = result.doc_type
+            documentos_por_tipo[doc_type].append({
+                **result.to_dict(),
+                'email_source': item['source'],
+                'email_subject': item['subject']
+            })
+            
+            # Feedback específico por tipo
+            if doc_type == 'BOLETO':
                 print(f"  💰 Boleto: Vencimento {result.vencimento} - R$ {result.valor_documento}")
-            else:  # É InvoiceData
-                resultados_nfse.append(data_dict)
+            elif doc_type == 'NFSE':
                 print(f"  ✅ NFSe: {result.numero_nota} - {result.cnpj_prestador}")
+            else:
+                print(f"  📄 {doc_type}: processado")
             
         except Exception as e:
             print(f"  ⚠️ Falha ao processar {filename}: {e}")
 
-    # 6. Gera CSVs Separados
-    os.makedirs(settings.DIR_SAIDA, exist_ok=True)
+    # 6. Exportação (SRP: CsvExporter responsável por gerar CSVs)
+    exporter = CsvExporter()
     
-    if resultados_nfse:
-        output_nfse = settings.DIR_SAIDA / "relatorio_nfse.csv"
-        df_nfse = pd.DataFrame(resultados_nfse)
-        df_nfse.to_csv(output_nfse, index=False, sep=',', encoding='utf-8-sig')
-        print(f"\n📊 {len(resultados_nfse)} NFSe processadas -> {output_nfse}")
+    # Mapeia tipos de documento para nomes de arquivo amigáveis
+    arquivo_saida_map = {
+        'NFSE': 'relatorio_nfse.csv',
+        'BOLETO': 'relatorio_boletos.csv'
+    }
     
-    if resultados_boleto:
-        output_boleto = settings.DIR_SAIDA / "relatorio_boletos.csv"
-        df_boleto = pd.DataFrame(resultados_boleto)
-        df_boleto.to_csv(output_boleto, index=False, sep=',', encoding='utf-8-sig')
-        print(f"💰 {len(resultados_boleto)} Boletos processados -> {output_boleto}")
+    total_processados = 0
+    for doc_type, documentos in documentos_por_tipo.items():
+        if documentos:
+            # Gera nome de arquivo baseado no tipo
+            nome_arquivo = arquivo_saida_map.get(
+                doc_type, 
+                f"relatorio_{doc_type.lower()}.csv"
+            )
+            output_path = file_manager.get_output_file_path(nome_arquivo)
+            
+            # Exporta usando pandas através do CsvExporter
+            # (Por enquanto convertemos dict para pseudo-DocumentData para compatibilidade)
+            import pandas as pd
+            df = pd.DataFrame(documentos)
+            df.to_csv(output_path, index=False, sep=';', encoding='utf-8-sig', decimal=',')
+            
+            total_processados += len(documentos)
+            emoji = "💰" if doc_type == "BOLETO" else "📊"
+            print(f"\n{emoji} {len(documentos)} {doc_type} processados -> {output_path}")
     
-    if not resultados_nfse and not resultados_boleto:
+    if total_processados == 0:
         print("\n⚠️ Nenhum resultado processado com sucesso.")
     
     # Opcional: Limpeza
-    # shutil.rmtree(settings.DIR_TEMP)
+    # file_manager.clean_temp_directory()
 
 if __name__ == "__main__":
     main()

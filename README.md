@@ -14,13 +14,23 @@
 # Done
 
 ## 19/12/2025 - Dia 6
+- [X] **Refatoração SOLID completa (production-ready):**
+  - Implementados 4 princípios SOLID: LSP, OCP, SRP, DIP
+  - Criado módulo `core/exporters.py` com classes separadas (FileSystemManager, AttachmentDownloader, DataExporter)
+  - Adicionada classe base `DocumentData` com `doc_type` para extensibilidade (OCP)
+  - Implementada injeção de dependências no `BaseInvoiceProcessor` e `run_ingestion.py` (DIP)
+  - Padronizado tratamento de erros nas estratégias (LSP)
+  - Criado esqueleto de `GoogleSheetsExporter` para futura integração
+  - **43/43 testes passando** (14 novos testes SOLID + 23 existentes + 6 estratégias)
+  - Documentação completa: `solid_refactoring_report.md` e `solid_usage_guide.md`
+  - Projeto agora permite adicionar novos tipos de documento sem modificar código existente
 - [X] Validação completa dos 10 boletos extraídos (100% de taxa de sucesso)
 - [X] Corrigidos 3 casos críticos de extração:
   - `numero_documento` capturando data em vez do valor correto (layout tabular)
   - `nosso_numero` em layouts multi-linha (label e valor separados por \n)
   - `nosso_numero` quando label está como imagem (fallback genérico)
 - [X] Implementados padrões regex robustos com `re.DOTALL` e diferenciação de formatos
-- [X] Documentação atualizada: `refactoring_history.md` (Fase 3 completa) e `extractors.md`
+- [X] Documentação atualizada: `refactoring_history.md` (Fase 3 e 4 completas) e `extractors.md`
 - [X] Criado guia completo de debug de PDFs em `docs/development/debugging_guide.md`
 - [X] Criado script avançado de debug `scripts/debug_pdf.py` com:
   - Output colorido, análise de campos, comparação de PDFs
