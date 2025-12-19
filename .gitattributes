@@ -1,0 +1,54 @@
+# Git Line Endings Configuration
+# Ensures cross-platform compatibility (Windows dev → Linux Docker)
+
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Scripts shell sempre com LF (Linux/Mac/Docker)
+*.sh text eol=lf
+
+# Scripts batch sempre com CRLF (Windows)
+*.bat text eol=crlf
+
+# Python sempre com LF
+*.py text eol=lf
+
+# Arquivos de configuração com LF
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+.env text eol=lf
+.env.* text eol=lf
+
+# Markdown sempre com LF
+*.md text eol=lf
+
+# Docker sempre com LF (importante!)
+Dockerfile text eol=lf
+docker-entrypoint.sh text eol=lf
+docker-compose.yml text eol=lf
+docker-compose.*.yml text eol=lf
+.dockerignore text eol=lf
+
+# Makefiles sempre com LF
+Makefile text eol=lf
+makefile text eol=lf
+
+# Arquivos de texto genéricos
+*.txt text eol=lf
+*.csv text eol=lf
+
+# Binários não devem ser alterados
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary

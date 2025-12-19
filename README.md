@@ -1,29 +1,12 @@
 # Projeto de Scraping de notas fiscais eletrônicas
 
-## 🐳 Executando com Docker (Recomendado)
-
-```bash
-# Clone e configure
-git clone <repo>
-cd scrapper
-cp .env.example .env  # Edite com suas credenciais
-
-# Build e execute
-docker-compose up -d scrapper-cron
-
-# Ver logs
-docker-compose logs -f scrapper-cron
-```
-
-📖 **Guia completo:** [README-DOCKER.md](README-DOCKER.md)
-
----
 
 # To Do
 - [ ] Conseguir o acesso ao maior número de pdfs e a tabela de verdades já catalogada dos dados pra conferir se a extração do PDF está de fato funcionando.
 - [ ] Verificar cada caso a fundo dos pdfs e avaliar possíveis estratégias para os casos onde o pdf em si não esta anexado no email (link de prefeitura ou redirecionador de terceiros).
-- [ ] Conversar direito com a Melyssa, ou mesmo direto com o Paulo ou o Gustavo a respeito do redirecionamento de emails. Avaliar possíveis soluções e planejar como realmente as NFSE vai estar e em qual email.
-- [x] Modelar o projeto pra rodar em servidor, organizar a docker file e descobrir como subir isso em produção do jeito certo! ✅ **CONCLUÍDO 18/12/2025**
+- [ ] Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows.
+- [ ] Quando o projeto estiver no estágio real pra primeira release ler git-futuro.md e pesquisar ferramentas/plugins/qualquer coisa que ajude a melhorar a maluquice que é os commits e tudo mais.
+- [ ] Estudar o vídeo do rapaz explicando que o git push é praticamente um ssh pro servidor do github e entender como fazer isso pra um notebook local de forma eficiente.
 
 
 
@@ -31,6 +14,8 @@ docker-compose logs -f scrapper-cron
 # Done
 
 ## 18/12/2025 
+- [X] Conversar direito com a Melyssa, ou mesmo direto com o Paulo ou o Gustavo a respeito do redirecionamento de emails. Avaliar possíveis soluções e planejar como realmente as NFSE vai estar e em qual email.
+- [X] Criado configuração do projeto pra rodar em container.
 - [x] Criado módulo centralizado `core/diagnostics.py` para análise de qualidade
 - [x] Criado `scripts/_init_env.py` para path resolution centralizado
 - [x] Renomeado `test_rules_extractors.py` → `validate_extraction_rules.py` (clareza semântica)
