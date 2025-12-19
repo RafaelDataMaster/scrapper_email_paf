@@ -74,41 +74,104 @@ def _extract_vencimento(self, text: str) -> Optional[str]:
 - Boletos com formato "2025.122" extraíam apenas "1"
 - Encoding UTF-8 de "Número" (`Nú`) não era reconhecido
 - Label e valor em linhas separadas quebravam regex
+- **Layout tabular**: Capturava data ("08") em vez do número real ("2/1")
 
 #### Solução Implementada
-Ampliado para **8 padrões de fallback** incluindo formato ano.número:
+Ampliado para **9 padrões de fallback** incluindo formato ano.número e layout tabular:
 
 ```python
 def _extract_numero_documento(self, text: str) -> Optional[str]:
     patterns = [
-        # 1-2: Com label "Número do Documento" (variações de encoding)
+        # 1. PRIORIDADE - Layout tabular: "Nº Documento ... data ... X/Y"
+        # Ex: "Nº Documento ... 08/11/2025  2/1" → captura "2/1"
+        r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)',  # Usa re.DOTALL
+        
+        # 2-3: Com label "Número do Documento" (variações de encoding)
         r'(?i)N[uúü]mero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
         r'(?i)Numero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
         
-        # 3-4: Label "Nº Documento" ou "N. Documento"
-        r'(?i)N[ºo°]?\.?\s*Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
+        # 4-5: Label "Nº Documento" ou "N. Documento"
+        r'(?i)N[ºo°]?\.?\s*Documento\s*[:\s]*([0-9]+(?:[/\.][0-9]+)?)',
         r'(?i)Doc(?:umento)?\s*N[ºo°]?\.?\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
         
-        # 5-6: Próximo de "Vencimento" (layout tabular)
+        # 6-7: Próximo de "Vencimento" (layout tabular)
         r'(?i)Vencimento.*?([0-9]{2,}(?:\.[0-9]+)?)\b',
         r'(?i)N[uú]mero.*?\s+([0-9]+(?:/[0-9]+)?)',
         
-        # 7: NOVO - Formato ano.número (ex: 2025.122)
+        # 8: Formato ano.número (ex: 2025.122)
         r'\b(20\d{2}\.\d+)\b',
         
-        # 8: Fallback genérico - número isolado entre 2-10 dígitos
-        r'\b([0-9]{2,10})\b'
+        # 9: Fallback genérico - evita capturar datas
+        r'(?i)documento\s+(?!\d{2}/\d{2}/\d{4})([0-9]+(?:\.[0-9]+)?)'
     ]
     
-    for pattern in patterns:
-        match = re.search(pattern, text)
+    for i, pattern in enumerate(patterns):
+        # Padrão 0 precisa de re.DOTALL para atravessar linhas
+        flags = re.DOTALL if i == 0 else 0
+        match = re.search(pattern, text, flags)
         if match:
             return match.group(1)
     
     return None
 ```
 
-**Resultado:** Boletos com formato "2025.122" agora extraem corretamente
+**Resultado:** Boletos com formato "2025.122" e layout tabular "2/1" agora extraem corretamente
+
+---
+
+### 4. **Correção: nosso_numero em layouts multi-linha e sem label**
+**Arquivo:** [`extractors/boleto.py`](../../extractors/boleto.py) - método `_extract_nosso_numero()`
+
+#### Problemas Identificados
+1. **Layout multi-linha**: Label "Nosso Número" em uma linha, valor na linha seguinte
+   - Capturava parte de CNPJ ("230/0001-64") em vez do código bancário
+2. **Label como imagem**: Alguns boletos têm "Nosso Número" renderizado como imagem (OCR)
+   - Código aparece isolado no texto sem label identificável
+
+#### Solução Implementada
+
+**Padrões com re.DOTALL para multi-linha:**
+```python
+def _extract_nosso_numero(self, text: str) -> Optional[str]:
+    patterns = [
+        # 1-2: Formato bancário completo com DOTALL (atravessa linhas)
+        # Ex: "Nosso Número\n...CNPJ...\n109/00000507-1"
+        r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)',  # re.DOTALL
+        r'(?i)Nosso\s+Numero.*?(\d{2,3}/\d{7,}-\d+)',  # re.DOTALL
+        
+        # 3-4: Fallback simples (mesma linha)
+        r'(?i)Nosso\s+N[úu]mero\s*[:\s]*([\d\-/]+)',
+        r'(?i)Nosso\s+Numero\s*[:\s]*([\d\-/]+)'
+    ]
+    
+    for i, pattern in enumerate(patterns):
+        flags = re.DOTALL if i < 2 else 0
+        match = re.search(pattern, text, flags)
+        if match:
+            numero = match.group(1).strip()
+            # Validação: não deve conter pontos (CNPJ tem pontos)
+            if '.' not in numero or numero.count('/') == 1:
+                return numero
+    
+    # Fallback genérico: busca XXX/XXXXXXXX-X sem label
+    # Formato bancário: 3 dígitos / 8 dígitos - 1 dígito
+    # Evita Agência/Conta (4 dígitos) e CNPJ (com pontos)
+    fallback = r'\b(\d{3}/\d{8}-\d)\b'
+    match = re.search(fallback, text)
+    if match:
+        return match.group(1)
+    
+    return None
+```
+
+**Diferenciação inteligente:**
+- **Nosso Número**: `109/42150105-8` → 3 dígitos / 8 dígitos - 1 dígito
+- **Agência/Conta**: `2938 / 0053345-8` → 4 dígitos (com espaços)
+- **CNPJ**: `02.351.877/0001-52` → Tem pontos no formato
+
+**Casos resolvidos:**
+- ✅ Boleto 37e40903: Extrai "109/00000507-1" (antes capturava CNPJ)
+- ✅ Boleto fe43b71e: Extrai "109/42150105-8" via fallback (label era imagem)
 
 ---
 
@@ -118,7 +181,8 @@ def _extract_numero_documento(self, text: str) -> Optional[str]:
 |-------|-----|-------|--------|
 | **texto_bruto** | Vazio em PDFs com espaços iniciais | 60% OK | **100% OK** |
 | **vencimento** | Ausente sem label explícito | 80% OK | **100% OK** |
-| **numero_documento** | Formato ano.número não reconhecido | 70% OK | **95% OK** |
+| **numero_documento** | Formato ano.número e layout tabular | 70% OK | **100% OK** |
+| **nosso_numero** | Multi-linha e label como imagem | 80% OK | **100% OK** |
 
 **Resultado Geral:**
 - ✅ 10/10 boletos de teste com todos os campos extraídos

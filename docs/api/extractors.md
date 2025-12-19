@@ -175,13 +175,26 @@ text = "Beneficiário: Empresa XYZ\n10/08/2025  R$ 1.250,00"
 
 Campo desafiador devido à variedade de formatos e layouts.
 
-**8 padrões implementados (ordem de prioridade):**
+**9 padrões implementados (ordem de prioridade):**
 
-1-2. **Com label completo:** `Número do Documento: 12345` (variações de encoding `Nú`, `Nu`, `Nü`)
-3-4. **Label abreviado:** `Nº Documento:`, `N. Documento:`, `Doc. Nº`
-5-6. **Layout tabular:** Busca próximo a "Vencimento" ou após "Número"
-7. **⭐ Formato ano.número:** `2025.122`, `2024.900` (comum em alguns bancos)
-8. **Fallback genérico:** Qualquer número entre 2-10 dígitos
+1. **⭐ Layout tabular com data:** `Nº Documento ... DD/MM/YYYY ... X/Y`
+   - Pula data completa e captura número após (ex: "2/1" não "08")
+   - Usa re.DOTALL para atravessar linhas
+2-3. **Com label completo:** `Número do Documento: 12345` (variações de encoding `Nú`, `Nu`, `Nü`)
+4-5. **Label abreviado:** `Nº Documento:`, `N. Documento:`, `Doc. Nº` (aceita `/` e `.`)
+6-7. **Próximo a keywords:** Busca após "Vencimento" ou "Número"
+8. **Formato ano.número:** `2025.122`, `2024.900` (comum em alguns bancos)
+9. **Fallback inteligente:** Não captura datas (validação negativa)
+
+**Exemplo - Layout tabular:**
+```python
+# PDF com layout:
+# "Nº Documento  Espécie  Moeda  Valor"
+# "08/11/2025    2/1      DM     R$ 4.789,00"
+
+# Padrão r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)'
+# com re.DOTALL captura "2/1" (pula a data "08/11/2025")
+```
 
 **Exemplo - Formato ano.número:**
 ```python
@@ -193,9 +206,44 @@ Campo desafiador devido à variedade de formatos e layouts.
 ```
 
 **Desafios resolvidos:**
+- ✅ Layout tabular (data antes do número)
 - ✅ Encoding UTF-8 de "Número" (ú, ü)
 - ✅ Label e valor em linhas separadas
 - ✅ Formato ano.número (20XX.NNN)
+
+#### Nosso Número
+
+Identificação interna do banco, formato variável por instituição.
+
+**Estratégia de extração em 3 níveis:**
+
+1. **Com label + re.DOTALL**: Atravessa múltiplas linhas
+   - `Nosso Número ... 109/00000507-1` (valor pode estar em linha diferente)
+   - Padrão bancário específico: 2-3 dígitos / 7+ dígitos - dígito
+
+2. **Com label (mesma linha)**: Formato simples
+   - `Nosso Número: 26859-7`
+   - Aceita qualquer formato com dígitos, hífens e barras
+
+3. **⭐ Fallback sem label**: Para casos onde label é imagem OCR
+   - Busca padrão `XXX/XXXXXXXX-X` isolado no texto
+   - Ex: `109/42150105-8` (3 dígitos / 8 dígitos - 1 dígito)
+   - **Evita falsos positivos**: Não captura Agência/Conta (4 dígitos) ou CNPJ (com pontos)
+
+**Exemplo - Fallback genérico:**
+```python
+# PDF onde "Nosso Número" está como imagem:
+# Texto: "...Yapay ... 2938 / 0053345-8 ... 109/42150105-8 ..."
+
+# Padrão r'\b(\d{3}/\d{8}-\d)\b' captura "109/42150105-8"
+# Ignora "2938 / 0053345-8" (4 dígitos antes da barra)
+```
+
+**Desafios resolvidos:**
+- ✅ Label e valor em linhas separadas (re.DOTALL)
+- ✅ Diferenciação de CNPJ (que tem pontos)
+- ✅ Label renderizado como imagem (fallback genérico)
+- ✅ Agência/Conta com 4 dígitos (formato diferente)
 
 #### Referência à NFSe
 

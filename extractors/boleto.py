@@ -208,28 +208,35 @@ class BoletoExtractor(BaseExtractor):
         
         Comum em boletos de serviços (pode conter o número da NF).
         Evita capturar números muito curtos (1 dígito) que são genéricos.
-        Aceita formatos: "123", "2025.122", "NF-12345", etc.
+        Aceita formatos: "123", "2025.122", "2/1", "NF-12345", etc.
         """
         patterns = [
-            # Padrões específicos com diferentes variações de "número"
+            # 1. PRIORIDADE ALTA - Layout tabular com data: "Nº Documento ... data ... X/Y"
+            # Comum em boletos VSP/Itaú onde data vem antes do número
+            r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)',
+            
+            # 2-6. Padrões específicos com diferentes variações de "número"
             r'(?i)N[uú]mero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',  # Com ú ou u
             r'(?i)Numero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',  # Sem acento
             r'(?i)Num\.?\s*Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
-            r'(?i)N[ºº°]\s*Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
+            r'(?i)N[ºº°]\s*Documento\s*[:\s]*([0-9]+(?:[/\.][0-9]+)?)',  # Aceita / ou .
             r'(?i)N\.\s*documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
             
-            # Busca "Número do Documento" seguido do valor na próxima linha
+            # 7. Busca "Número do Documento" seguido do valor na próxima linha
             r'(?i)N.mero\s+do\s+Documento\s+.+?\n\s+.+?\s+([0-9]+\.[0-9]+)',  # Qualquer char em "Número"
             
-            # Padrão contextual: palavra "documento" seguida de número
-            r'(?i)documento\s+([0-9]+(?:\.[0-9]+)?)',
+            # 8. Padrão contextual: palavra "documento" seguida de número (NÃO data)
+            # Regex negativa para evitar capturar datas DD/MM/YYYY
+            r'(?i)documento\s+(?!\d{2}/\d{2}/\d{4})([0-9]+(?:\.[0-9]+)?)',
             
-            # Genérico: busca por padrão ano.número (ex: 2025.122)
+            # 9. Genérico: busca por padrão ano.número (ex: 2025.122)
             r'\b(20\d{2}\.\d+)\b'  # 2024.xxx, 2025.xxx, etc.
         ]
         
-        for pattern in patterns:
-            match = re.search(pattern, text)
+        for i, pattern in enumerate(patterns):
+            # Padrão 0 (índice 0) precisa de re.DOTALL para atravessar linhas
+            flags = re.DOTALL if i == 0 else 0
+            match = re.search(pattern, text, flags)
             if match:
                 numero = match.group(1).strip()
                 # Valida: deve ter pelo menos 2 caracteres e não ser apenas "1"
@@ -261,16 +268,40 @@ class BoletoExtractor(BaseExtractor):
     def _extract_nosso_numero(self, text: str) -> Optional[str]:
         """
         Extrai o "Nosso Número" (identificação interna do banco).
+        Formatos comuns: "12345", "12345-6", "109/00000507-1"
         """
         patterns = [
-            r'(?i)Nosso\s+N[úu]mero\s*[:\s]*(\d+[-/]?\d*)',
-            r'(?i)Nosso\s+Numero\s*[:\s]*(\d+[-/]?\d*)'
+            # Formato bancário completo: XXX/XXXXXXX-X (ex: 109/00000507-1)
+            # Padrão robusto: 2-3 dígitos / 7+ dígitos - 1 dígito
+            # Evita capturar CNPJ que tem formato diferente
+            r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)',
+            
+            # Formato simples sem encoding específico
+            r'(?i)Nosso\s+Numero.*?(\d{2,3}/\d{7,}-\d+)',
+            
+            # Fallback: qualquer sequência de dígitos com separadores
+            r'(?i)Nosso\s+N[úu]mero\s*[:\s]*([\d\-/]+)',
+            r'(?i)Nosso\s+Numero\s*[:\s]*([\d\-/]+)'
         ]
         
-        for pattern in patterns:
-            match = re.search(pattern, text)
+        for i, pattern in enumerate(patterns):
+            # Primeiros 2 padrões precisam de DOTALL para atravessar linhas
+            flags = re.DOTALL if i < 2 else 0
+            match = re.search(pattern, text, flags)
             if match:
-                return match.group(1)
+                numero = match.group(1).strip()
+                # Validação: não deve ser parte de CNPJ (que tem pontos)
+                if '.' not in numero or numero.count('/') == 1:
+                    return numero
+        
+        # Fallback genérico: busca padrão XXX/XXXXXXXX-X sem label
+        # Usado quando "Nosso Número" está como imagem ou ausente
+        # Formato: 3 dígitos / 8 dígitos - 1 dígito (ex: 109/42150105-8)
+        # Evita Agência/Conta que tem 4 dígitos ou espaços (ex: "2938 / 0053345-8")
+        fallback_pattern = r'\b(\d{3}/\d{8}-\d)\b'
+        match = re.search(fallback_pattern, text)
+        if match:
+            return match.group(1)
         
         return None
 
