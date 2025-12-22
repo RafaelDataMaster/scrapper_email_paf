@@ -3,8 +3,14 @@ Script de validação de regras de extração para NFSe e Boletos.
 
 Este script processa PDFs da pasta failed_cases_pdf e gera relatórios
 detalhados separando sucessos e falhas, auxiliando no ajuste fino das regex.
+
+⚠️ MODO DE VALIDAÇÃO DE PRAZO:
+- Por padrão, IGNORA a validação de prazo de 4 dias úteis (útil para documentos antigos)
+- Para validar prazo, execute: python scripts/validate_extraction_rules.py --validar-prazo
 """
 import os
+import sys
+import argparse
 import pandas as pd
 from _init_env import setup_project_path
 
@@ -24,11 +30,6 @@ from config.settings import (
     DEBUG_RELATORIO_QUALIDADE
 )
 
-# As funções de classificação e relatório foram movidas para core.diagnostics
-# Mantemos compatibilidade aqui para facilitar a transição
-classificar_nfse = ExtractionDiagnostics.classificar_nfse
-classificar_boleto = ExtractionDiagnostics.classificar_boleto
-
 def main() -> None:
     """
     Testa as regras de extração nos PDFs da pasta failed_cases_pdf.
@@ -38,6 +39,14 @@ def main() -> None:
     - boletos_sucesso.csv / boletos_falha.csv (com coluna motivo_falha)
     - relatorio_qualidade.txt (estatísticas gerais)
     """
+    # Parse argumentos
+    parser = argparse.ArgumentParser(description='Valida regras de extração de PDFs')
+    parser.add_argument('--validar-prazo', action='store_true',
+                       help='Valida prazo de 4 dias úteis (ignora por padrão para docs antigos)')
+    args = parser.parse_args()
+    
+    validar_prazo = args.validar_prazo
+    
     # Cria pasta de saída se não existir
     DIR_DEBUG_OUTPUT.mkdir(parents=True, exist_ok=True)
     
@@ -46,6 +55,10 @@ def main() -> None:
     print("=" * 80)
     print(f"📂 Lendo: {DIR_DEBUG_INPUT}")
     print(f"💾 Salvando em: {DIR_DEBUG_OUTPUT}")
+    if validar_prazo:
+        print("⏰ Validação de prazo: ATIVA (requer 4 dias úteis)")
+    else:
+        print("⏰ Validação de prazo: DESATIVADA (documentos antigos)")
     print("=" * 80)
 
     processor = BaseInvoiceProcessor()
@@ -85,11 +98,12 @@ def main() -> None:
             
             # === BOLETOS ===
             if isinstance(result, BoletoData):
-                eh_sucesso, motivos = classificar_boleto(result)
+                eh_sucesso, motivos = ExtractionDiagnostics.classificar_boleto(result, validar_prazo=validar_prazo)
                 
                 if eh_sucesso:
                     count_boleto_ok += 1
-                    boletos_sucesso.append(result.__dict__)
+                    # Armazena objeto e dados para uso posterior
+                    boletos_sucesso.append({'object': result, **result.__dict__})
                     print(f"✅ BOLETO COMPLETO")
                     print(f"   • Valor: R$ {result.valor_documento:,.2f}")
                     print(f"   • Vencimento: {result.vencimento or 'N/A'}")
@@ -103,11 +117,12 @@ def main() -> None:
             
             # === NFSe ===
             elif isinstance(result, InvoiceData):
-                eh_sucesso, motivos = classificar_nfse(result)
+                eh_sucesso, motivos = ExtractionDiagnostics.classificar_nfse(result, validar_prazo=validar_prazo)
                 
                 if eh_sucesso:
                     count_nfse_ok += 1
-                    nfse_sucesso.append(result.__dict__)
+                    # Armazena objeto e dados para uso posterior
+                    nfse_sucesso.append({'object': result, **result.__dict__})
                     print(f"✅ NFSe COMPLETA")
                     print(f"   • Número: {result.numero_nota}")
                     print(f"   • Valor: R$ {result.valor_total:,.2f}")
@@ -127,26 +142,44 @@ def main() -> None:
             count_erro += 1
             print(f"❌ ERRO: {e}")
 
-    # === GERAR CSVs ===
+    # === GERAR CSVs NO FORMATO PAF (18 colunas) ===
     print("\n" + "=" * 80)
-    print("💾 GERANDO RELATÓRIOS")
+    print("💾 GERANDO RELATÓRIOS (Formato PAF - 18 colunas)")
     print("=" * 80)
     
+    # Colunas PAF padrão (18 colunas conforme POP 4.10)
+    COLUNAS_PAF = [
+        "DATA", "SETOR", "EMPRESA", "FORNECEDOR", "NF", "EMISSÃO",
+        "VALOR", "Nº PEDIDO", "VENCIMENTO", "FORMA PAGTO", "INDEX",
+        "DT CLASS", "Nº FAT", "TP DOC", "TRAT PAF", "LANC SISTEMA",
+        "OBSERVAÇÕES", "OBS INTERNA"
+    ]
+    
     if nfse_sucesso:
-        pd.DataFrame(nfse_sucesso).to_csv(DEBUG_CSV_NFSE_SUCESSO, index=False, encoding='utf-8-sig')
-        print(f"✅ {DEBUG_CSV_NFSE_SUCESSO.name} ({len(nfse_sucesso)} registros)")
+        # Converte usando o método to_sheets_row() para formato PAF
+        rows_paf = [item['object'].to_sheets_row() for item in nfse_sucesso]
+        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
+        df_paf.to_csv(DEBUG_CSV_NFSE_SUCESSO, index=False, encoding='utf-8-sig')
+        print(f"✅ {DEBUG_CSV_NFSE_SUCESSO.name} ({len(nfse_sucesso)} registros) - Formato PAF")
     
     if nfse_falha:
-        pd.DataFrame(nfse_falha).to_csv(DEBUG_CSV_NFSE_FALHA, index=False, encoding='utf-8-sig')
-        print(f"⚠️ {DEBUG_CSV_NFSE_FALHA.name} ({len(nfse_falha)} registros)")
+        # Para falhas, mantém dados completos + motivo_falha para debug
+        df_falha = pd.DataFrame(nfse_falha)
+        df_falha.to_csv(DEBUG_CSV_NFSE_FALHA, index=False, encoding='utf-8-sig')
+        print(f"⚠️ {DEBUG_CSV_NFSE_FALHA.name} ({len(nfse_falha)} registros) - Debug completo")
     
     if boletos_sucesso:
-        pd.DataFrame(boletos_sucesso).to_csv(DEBUG_CSV_BOLETO_SUCESSO, index=False, encoding='utf-8-sig')
-        print(f"✅ {DEBUG_CSV_BOLETO_SUCESSO.name} ({len(boletos_sucesso)} registros)")
+        # Converte usando o método to_sheets_row() para formato PAF
+        rows_paf = [item['object'].to_sheets_row() for item in boletos_sucesso]
+        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
+        df_paf.to_csv(DEBUG_CSV_BOLETO_SUCESSO, index=False, encoding='utf-8-sig')
+        print(f"✅ {DEBUG_CSV_BOLETO_SUCESSO.name} ({len(boletos_sucesso)} registros) - Formato PAF")
     
     if boletos_falha:
-        pd.DataFrame(boletos_falha).to_csv(DEBUG_CSV_BOLETO_FALHA, index=False, encoding='utf-8-sig')
-        print(f"⚠️ {DEBUG_CSV_BOLETO_FALHA.name} ({len(boletos_falha)} registros)")
+        # Para falhas, mantém dados completos + motivo_falha para debug
+        df_falha = pd.DataFrame(boletos_falha)
+        df_falha.to_csv(DEBUG_CSV_BOLETO_FALHA, index=False, encoding='utf-8-sig')
+        print(f"⚠️ {DEBUG_CSV_BOLETO_FALHA.name} ({len(boletos_falha)} registros) - Debug completo")
 
     # === RELATÓRIO ===
     dados_relatorio = {

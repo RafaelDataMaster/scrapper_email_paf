@@ -2,7 +2,7 @@
 📊 RELATÓRIO DE QUALIDADE DA EXTRAÇÃO
 ================================================================================
 
-📅 Data: 19/12/2025 16:40:10
+📅 Data: 22/12/2025 11:48:39
 📦 Total de arquivos: 20
 
 --- NFSe ---
@@ -11,9 +11,9 @@
 📈 Taxa de sucesso: 20.0%
 
 --- Boletos ---
-✅ Completos: 10
-⚠️ Com falhas: 0
-📈 Taxa de sucesso: 100.0%
+✅ Completos: 9
+⚠️ Com falhas: 1
+📈 Taxa de sucesso: 90.0%
 
 ❌ Erros: 0
 
@@ -22,7 +22,7 @@
 ================================================================================
 
 📄 1f15c4e1_A00003222.PDF
-   Motivo: SEM_NUMERO|VALOR_ZERO|SEM_CNPJ
+   Motivo: SEM_NUMERO|VALOR_ZERO|SEM_CNPJ|SEM_RAZAO_SOCIAL
    Número: None
    Valor: R$ 0.00
 
@@ -47,12 +47,12 @@
    Valor: R$ 0.00
 
 📄 c3c02f82_Fatura Locaweb.pdf
-   Motivo: SEM_NUMERO|SEM_CNPJ
+   Motivo: SEM_NUMERO|SEM_CNPJ|SEM_RAZAO_SOCIAL
    Número: None
    Valor: R$ 352.08
 
 📄 ec510a61_A00003222.PDF
-   Motivo: SEM_NUMERO|VALOR_ZERO|SEM_CNPJ
+   Motivo: SEM_NUMERO|VALOR_ZERO|SEM_CNPJ|SEM_RAZAO_SOCIAL
    Número: None
    Valor: R$ 0.00
 
@@ -60,3 +60,11 @@
    Motivo: SEM_NUMERO|VALOR_ZERO
    Número: None
    Valor: R$ 0.00
+
+================================================================================
+🔍 FALHAS - BOLETOS
+================================================================================
+
+📄 fe43b71e_Boleto Locaweb.pdf
+   Motivo: SEM_RAZAO_SOCIAL
+   Valor: R$ 352.08

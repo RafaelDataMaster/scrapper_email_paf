@@ -105,7 +105,7 @@ class ExtractionDiagnostics:
             return (False, 0)
     
     @staticmethod
-    def classificar_nfse(result: InvoiceData) -> Tuple[bool, List[str]]:
+    def classificar_nfse(result: InvoiceData, validar_prazo: bool = True) -> Tuple[bool, List[str]]:
         """
         Classifica uma NFSe como sucesso ou falha.
         
@@ -113,13 +113,18 @@ class ExtractionDiagnostics:
         - Número da Nota preenchido
         - Valor > 0
         - Razão Social (fornecedor_nome) preenchida
-        - Prazo de 04 dias úteis ao vencimento (se houver vencimento)
+        - Prazo de 04 dias úteis ao vencimento (se houver vencimento e validar_prazo=True)
         
         Args:
             result: Dados extraídos da NFSe
+            validar_prazo: Se False, ignora validação de prazo (útil para documentos antigos)
             
         Returns:
             Tupla (é_sucesso, lista_de_motivos_falha)
+            
+        Note:
+            Use validar_prazo=False ao processar documentos históricos/antigos onde
+            o vencimento já passou e não faz sentido validar os 4 dias úteis.
         """
         motivos = []
         
@@ -137,8 +142,8 @@ class ExtractionDiagnostics:
         if not tem_fornecedor:
             motivos.append('SEM_RAZAO_SOCIAL')
         
-        # Validação de prazo (Política 5.9 e POP 4.10)
-        if result.vencimento:
+        # Validação de prazo (Política 5.9 e POP 4.10) - OPCIONAL
+        if validar_prazo and result.vencimento:
             prazo_ok, dias_uteis = ExtractionDiagnostics.validar_prazo_vencimento(
                 result.dt_classificacao, result.vencimento
             )
@@ -147,7 +152,7 @@ class ExtractionDiagnostics:
         
         # Sucesso: tem campos obrigatórios + prazo OK (se aplicável)
         sucesso = tem_numero and tem_valor and tem_fornecedor
-        if result.vencimento:
+        if validar_prazo and result.vencimento:
             prazo_ok, _ = ExtractionDiagnostics.validar_prazo_vencimento(
                 result.dt_classificacao, result.vencimento
             )
@@ -156,7 +161,7 @@ class ExtractionDiagnostics:
         return (sucesso, motivos)
     
     @staticmethod
-    def classificar_boleto(result: BoletoData) -> Tuple[bool, List[str]]:
+    def classificar_boleto(result: BoletoData, validar_prazo: bool = True) -> Tuple[bool, List[str]]:
         """
         Classifica um Boleto como sucesso ou falha.
         
@@ -164,13 +169,18 @@ class ExtractionDiagnostics:
         - Valor > 0
         - Vencimento OU Linha Digitável
         - Razão Social (fornecedor_nome) preenchida
-        - Prazo de 04 dias úteis ao vencimento
+        - Prazo de 04 dias úteis ao vencimento (se validar_prazo=True)
         
         Args:
             result: Dados extraídos do boleto
+            validar_prazo: Se False, ignora validação de prazo (útil para documentos antigos)
             
         Returns:
             Tupla (é_sucesso, lista_de_motivos_falha)
+            
+        Note:
+            Use validar_prazo=False ao processar documentos históricos/antigos onde
+            o vencimento já passou e não faz sentido validar os 4 dias úteis.
         """
         motivos = []
         
@@ -188,17 +198,19 @@ class ExtractionDiagnostics:
         if not tem_fornecedor:
             motivos.append('SEM_RAZAO_SOCIAL')
         
-        # Validação de prazo (Política 5.9 e POP 4.10)
+        # Validação de prazo (Política 5.9 e POP 4.10) - OPCIONAL
         prazo_ok = True
-        if result.vencimento:
+        if validar_prazo and result.vencimento:
             prazo_ok, dias_uteis = ExtractionDiagnostics.validar_prazo_vencimento(
                 result.dt_classificacao, result.vencimento
             )
             if not prazo_ok:
                 motivos.append(f'PRAZO_INSUFICIENTE_{dias_uteis}d')
         
-        # Sucesso: tem campos obrigatórios + prazo OK
-        sucesso = tem_valor and tem_identificacao and tem_fornecedor and prazo_ok
+        # Sucesso: tem campos obrigatórios + prazo OK (se validação ativa)
+        sucesso = tem_valor and tem_identificacao and tem_fornecedor
+        if validar_prazo:
+            sucesso = sucesso and prazo_ok
         
         return (sucesso, motivos)
     
