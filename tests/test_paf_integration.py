@@ -6,7 +6,7 @@ import pytest
 from datetime import datetime, timedelta
 from config.feriados_sp import SPBusinessCalendar
 from core.models import InvoiceData, BoletoData
-from core.diagnostics import Diagnostico
+from core.diagnostics import ExtractionDiagnostics
 from extractors.boleto import BoletoExtractor
 from extractors.generic import GenericExtractor
 from config.bancos import NOMES_BANCOS
@@ -298,7 +298,7 @@ class TestDiagnostics:
     
     def test_validar_prazo_vencimento_suficiente(self):
         """Testa validação com prazo >= 4 dias úteis"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         # Segunda 22/12 para sexta 27/12 (4 dias úteis: 23, 24, 26, 27 - 25 é Natal)
         dt_classificacao = datetime(2025, 12, 22)
@@ -314,7 +314,7 @@ class TestDiagnostics:
     
     def test_validar_prazo_vencimento_insuficiente(self):
         """Testa validação com prazo < 4 dias úteis"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         # Segunda 22/12 para quarta 24/12 (2 dias úteis)
         dt_classificacao = datetime(2025, 12, 22)
@@ -330,7 +330,7 @@ class TestDiagnostics:
     
     def test_classificar_nfse_sucesso(self):
         """Testa classificação de NFSe com todos os campos corretos"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         invoice = InvoiceData(
             arquivo_origem="teste.pdf",
@@ -342,14 +342,14 @@ class TestDiagnostics:
             dt_classificacao="2025-12-22"
         )
         
-        resultado = diagnostico.classificar_nfse(invoice)
+        sucesso, motivos = diagnostico.classificar_nfse(invoice)
         
-        assert resultado['status'] == 'SUCESSO'
-        assert len(resultado['motivos']) == 0
+        assert sucesso is True
+        assert len(motivos) == 0
     
     def test_classificar_nfse_sem_razao_social(self):
         """Testa classificação de NFSe sem razão social"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         invoice = InvoiceData(
             arquivo_origem="teste.pdf",
@@ -360,14 +360,14 @@ class TestDiagnostics:
             dt_classificacao="2025-12-22"
         )
         
-        resultado = diagnostico.classificar_nfse(invoice)
+        sucesso, motivos = diagnostico.classificar_nfse(invoice)
         
-        assert resultado['status'] == 'FALHA'
-        assert 'SEM_RAZAO_SOCIAL' in resultado['motivos']
+        assert sucesso is False
+        assert 'SEM_RAZAO_SOCIAL' in motivos
     
     def test_classificar_nfse_prazo_insuficiente(self):
         """Testa classificação de NFSe com prazo < 4 dias úteis"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         invoice = InvoiceData(
             arquivo_origem="teste.pdf",
@@ -379,14 +379,14 @@ class TestDiagnostics:
             dt_classificacao="2025-12-22"
         )
         
-        resultado = diagnostico.classificar_nfse(invoice)
+        sucesso, motivos = diagnostico.classificar_nfse(invoice)
         
-        assert resultado['status'] == 'FALHA'
-        assert any('PRAZO_INSUFICIENTE' in motivo for motivo in resultado['motivos'])
+        assert sucesso is False
+        assert any('PRAZO_INSUFICIENTE' in motivo for motivo in motivos)
     
     def test_classificar_boleto_sucesso(self):
         """Testa classificação de Boleto com todos os campos corretos"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         boleto = BoletoData(
             arquivo_origem="boleto.pdf",
@@ -397,14 +397,14 @@ class TestDiagnostics:
             dt_classificacao="2025-12-22"
         )
         
-        resultado = diagnostico.classificar_boleto(boleto)
+        sucesso, motivos = diagnostico.classificar_boleto(boleto)
         
-        assert resultado['status'] == 'SUCESSO'
-        assert len(resultado['motivos']) == 0
+        assert sucesso is True
+        assert len(motivos) == 0
     
     def test_classificar_boleto_prazo_insuficiente(self):
         """Testa classificação de Boleto com prazo < 4 dias úteis"""
-        diagnostico = Diagnostico()
+        diagnostico = ExtractionDiagnostics()
         
         boleto = BoletoData(
             arquivo_origem="boleto.pdf",
@@ -415,10 +415,10 @@ class TestDiagnostics:
             dt_classificacao="2025-12-22"
         )
         
-        resultado = diagnostico.classificar_boleto(boleto)
+        sucesso, motivos = diagnostico.classificar_boleto(boleto)
         
-        assert resultado['status'] == 'FALHA'
-        assert any('PRAZO_INSUFICIENTE' in motivo for motivo in resultado['motivos'])
+        assert sucesso is False
+        assert any('PRAZO_INSUFICIENTE' in motivo for motivo in motivos)
 
 
 class TestBancos:
