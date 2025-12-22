@@ -4,7 +4,7 @@
 
 O projeto está organizado em camadas modulares seguindo princípios de Clean Architecture:
 
-```
+```text
 scrapper/
 ├── core/           # Lógica central do negócio
 │   ├── processor.py       # Orquestrador principal
@@ -49,7 +49,6 @@ scrapper/
       show_root_heading: true
       show_source: false
       members:
-        - __init__
         - process
 
 ::: core.models.InvoiceData

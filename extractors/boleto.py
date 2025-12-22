@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from typing import Dict, Any, Optional
 from core.extractors import BaseExtractor, register_extractor
+from config.bancos import NOMES_BANCOS
 
 @register_extractor
 class BoletoExtractor(BaseExtractor):
@@ -63,9 +64,15 @@ class BoletoExtractor(BaseExtractor):
     def extract(self, text: str) -> Dict[str, Any]:
         """
         Extrai dados estruturados do boleto.
+        
+        Campos Core PAF (Prioridade Alta):
+        - Razão Social do beneficiário (fornecedor_nome)
+        - Dados bancários normalizados (banco_nome, agencia, conta_corrente)
         """
         data = {}
         data['tipo_documento'] = 'BOLETO'
+        
+        # Campos básicos (já existentes)
         data['cnpj_beneficiario'] = self._extract_cnpj_beneficiario(text)
         data['valor_documento'] = self._extract_valor(text)
         data['vencimento'] = self._extract_vencimento(text)
@@ -73,6 +80,12 @@ class BoletoExtractor(BaseExtractor):
         data['linha_digitavel'] = self._extract_linha_digitavel(text)
         data['nosso_numero'] = self._extract_nosso_numero(text)
         data['referencia_nfse'] = self._extract_referencia_nfse(text)
+        
+        # Campos Core PAF (Prioridade Alta)
+        data['fornecedor_nome'] = self._extract_fornecedor_nome(text)
+        data['banco_nome'] = self._extract_banco_nome(text, data.get('linha_digitavel'))
+        data['agencia'] = self._extract_agencia(text)
+        data['conta_corrente'] = self._extract_conta_corrente(text)
         
         return data
 
@@ -324,5 +337,151 @@ class BoletoExtractor(BaseExtractor):
             match = re.search(pattern, text)
             if match:
                 return match.group(1)
+        
+        return None
+    
+    def _extract_fornecedor_nome(self, text: str) -> Optional[str]:
+        """
+        Extrai a Razão Social do beneficiário (fornecedor).
+        
+        Busca por texto após labels como "Beneficiário" ou "Cedente",
+        ou logo após o CNPJ do beneficiário.
+        
+        Conformidade: Campo obrigatório para coluna FORNECEDOR da planilha PAF.
+        
+        Returns:
+            str: Razão Social ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)Benefici[aá]rio[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            r'(?i)Cedente[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            r'(?i)Nome[^\n]*?Benefici[aá]rio[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                nome = match.group(1).strip()
+                # Remove números e limpa
+                nome = re.sub(r'\d+', '', nome).strip()
+                # Remove CNPJ se aparecer
+                nome = re.sub(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}', '', nome).strip()
+                if len(nome) >= 5:
+                    return nome
+        
+        # Fallback: busca texto após CNPJ do beneficiário
+        cnpj_match = re.search(r'(?i)Benefici[aá]rio.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})', text)
+        if cnpj_match:
+            start_pos = cnpj_match.end()
+            text_after = text[start_pos:start_pos+100]
+            nome_match = re.search(r'([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,80})', text_after)
+            if nome_match:
+                nome = nome_match.group(1).strip()
+                nome = re.sub(r'\d+', '', nome).strip()
+                if len(nome) >= 5:
+                    return nome
+        
+        return None
+    
+    def _extract_banco_nome(self, text: str, linha_digitavel: Optional[str]) -> Optional[str]:
+        """
+        Identifica o nome do banco emissor do boleto.
+        
+        Usa o código bancário (3 primeiros dígitos da linha digitável)
+        para mapear para o nome oficial do banco.
+        
+        Fallback: Se código não estiver no mapeamento, retorna "BANCO_XXX".
+        
+        Args:
+            text: Texto do boleto
+            linha_digitavel: Linha digitável já extraída
+            
+        Returns:
+            str: Nome do banco ou "BANCO_XXX" para códigos não mapeados
+        """
+        if linha_digitavel:
+            # Extrai os 3 primeiros dígitos (código do banco)
+            codigo_banco = linha_digitavel[:3]
+            # Mapeia para nome oficial usando dicionário
+            return NOMES_BANCOS.get(codigo_banco, f"BANCO_{codigo_banco}")
+        
+        # Fallback: busca código do banco no texto
+        match = re.search(r'(?i)(?:Banco|C[oó]digo\s+Banco)[^\d]*(\d{3})', text)
+        if match:
+            codigo = match.group(1)
+            return NOMES_BANCOS.get(codigo, f"BANCO_{codigo}")
+        
+        return None
+    
+    def _extract_agencia(self, text: str) -> Optional[str]:
+        """
+        Extrai o número da agência bancária normalizado.
+        
+        Normalização:
+        - Remove espaços e pontos
+        - Mantém formato "1234-5" (número-dígito verificador)
+        - Se não houver dígito, retorna apenas o número
+        
+        Conformidade: Formato normalizado facilita integração futura com CNAB.
+        
+        Returns:
+            str: Agência no formato "1234-5" ou None
+        """
+        patterns = [
+            r'(?i)Ag[eê]ncia[^\d]*(\d{1,5})[\s\-]?(\d)?',
+            r'(?i)Ag[\.\s]*[:\s]*(\d{1,5})[\s\-]?(\d)?',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                numero = match.group(1).strip()
+                digito = match.group(2) if match.lastindex >= 2 else None
+                
+                # Remove pontos e espaços
+                numero = numero.replace('.', '').replace(' ', '')
+                
+                # Formata com hífen se houver dígito
+                if digito:
+                    return f"{numero}-{digito}"
+                return numero
+        
+        return None
+    
+    def _extract_conta_corrente(self, text: str) -> Optional[str]:
+        """
+        Extrai o número da conta corrente normalizado.
+        
+        Normalização:
+        - Remove espaços e pontos
+        - Mantém formato "123456-7" (número-dígito verificador)
+        - Se não houver dígito, retorna apenas o número
+        
+        Returns:
+            str: Conta corrente no formato "123456-7" ou None
+        """
+        patterns = [
+            r'(?i)Conta\s+Corrente[^\d]*(\d{1,12})[\s\-]?(\d)?',
+            r'(?i)C/?C[^\d]*(\d{1,12})[\s\-]?(\d)?',
+            r'(?i)Conta[^\d]*(\d{1,12})[\s\-]?(\d)?',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                numero = match.group(1).strip()
+                digito = match.group(2) if match.lastindex >= 2 else None
+                
+                # Remove pontos e espaços
+                numero = numero.replace('.', '').replace(' ', '')
+                
+                # Valida tamanho mínimo (evita capturar IDs pequenos)
+                if len(numero) < 4:
+                    continue
+                
+                # Formata com hífen se houver dígito
+                if digito:
+                    return f"{numero}-{digito}"
+                return numero
         
         return None

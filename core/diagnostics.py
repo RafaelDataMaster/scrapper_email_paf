@@ -3,11 +3,15 @@ Módulo centralizado para diagnóstico e análise de qualidade de extração.
 
 Este módulo consolida a lógica de validação e relatórios de diagnóstico,
 eliminando duplicação entre scripts de validação e análise.
+
+Conformidade: Implementa validação de 04 dias úteis conforme Política
+Interna 5.9 e POP 4.10 (Master Internet).
 """
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from core.models import InvoiceData, BoletoData
+from config.feriados_sp import SPBusinessCalendar
 
 @dataclass
 class DiagnosticReport:
@@ -40,31 +44,89 @@ class ExtractionDiagnostics:
     
     Centraliza as regras de validação e geração de relatórios para
     evitar duplicação entre scripts de diagnóstico e validação.
+    
+    Conformidade: Valida prazo de 04 dias úteis (Política 5.9 e POP 4.10).
     """
+    
+    # Calendário de SP com cache LRU (feriados nacionais + municipais)
+    _calendario = SPBusinessCalendar()
+    
+    @staticmethod
+    def validar_prazo_vencimento(dt_classificacao: Optional[str], 
+                                  vencimento: Optional[str]) -> Tuple[bool, int]:
+        """
+        Valida se há no mínimo 04 dias úteis entre classificação e vencimento.
+        
+        Conformidade: Política Interna 5.9 e POP 4.10 exigem lançamento com
+        antecedência mínima de 04 dias úteis ao vencimento.
+        
+        Considera:
+        - Feriados nacionais
+        - Feriados estaduais de São Paulo
+        - Feriados municipais de São Paulo (capital)
+        - Finais de semana (sábado e domingo)
+        
+        Args:
+            dt_classificacao: Data de classificação no formato ISO (YYYY-MM-DD)
+            vencimento: Data de vencimento no formato ISO (YYYY-MM-DD)
+            
+        Returns:
+            Tupla (prazo_ok, quantidade_dias_uteis)
+            - prazo_ok: True se >= 4 dias úteis, False caso contrário
+            - quantidade_dias_uteis: Número de dias úteis calculado
+            
+        Examples:
+            >>> # Exemplo: classificação 03/01/2025, vencimento 30/01/2025
+            >>> # Considerando 25/01 feriado (Aniversário SP)
+            >>> ok, dias = ExtractionDiagnostics.validar_prazo_vencimento(
+            ...     "2025-01-03", "2025-01-30")
+            >>> assert dias >= 4
+        """
+        if not dt_classificacao or not vencimento:
+            # Se não tem datas, não pode validar (retorna False, 0)
+            return (False, 0)
+        
+        try:
+            dt_class = datetime.strptime(dt_classificacao, '%Y-%m-%d')
+            dt_venc = datetime.strptime(vencimento, '%Y-%m-%d')
+            
+            # Calcula dias úteis usando calendário de SP
+            dias_uteis = ExtractionDiagnostics._calendario.get_working_days_delta(
+                dt_class, dt_venc
+            )
+            
+            # Conformidade: mínimo 04 dias úteis
+            prazo_ok = dias_uteis >= 4
+            
+            return (prazo_ok, dias_uteis)
+            
+        except (ValueError, TypeError):
+            # Erro no parse das datas
+            return (False, 0)
     
     @staticmethod
     def classificar_nfse(result: InvoiceData) -> Tuple[bool, List[str]]:
         """
         Classifica uma NFSe como sucesso ou falha.
         
-        Critérios de SUCESSO: Número da Nota preenchido E Valor > 0
+        Critérios de SUCESSO (Conformidade PAF):
+        - Número da Nota preenchido
+        - Valor > 0
+        - Razão Social (fornecedor_nome) preenchida
+        - Prazo de 04 dias úteis ao vencimento (se houver vencimento)
         
         Args:
             result: Dados extraídos da NFSe
             
         Returns:
             Tupla (é_sucesso, lista_de_motivos_falha)
-            
-        Examples:
-            >>> nfse = InvoiceData(arquivo_origem="teste.pdf", texto_bruto="...", 
-            ...                    numero_nota="12345", valor_total=100.0)
-            >>> sucesso, motivos = ExtractionDiagnostics.classificar_nfse(nfse)
-            >>> assert sucesso is True
-            >>> assert motivos == []
         """
         motivos = []
+        
+        # Validações básicas
         tem_numero = result.numero_nota and result.numero_nota.strip()
         tem_valor = result.valor_total > 0
+        tem_fornecedor = bool(result.fornecedor_nome and result.fornecedor_nome.strip())
         
         if not tem_numero:
             motivos.append('SEM_NUMERO')
@@ -72,31 +134,50 @@ class ExtractionDiagnostics:
             motivos.append('VALOR_ZERO')
         if not result.cnpj_prestador:
             motivos.append('SEM_CNPJ')
+        if not tem_fornecedor:
+            motivos.append('SEM_RAZAO_SOCIAL')
         
-        return (tem_numero and tem_valor, motivos)
+        # Validação de prazo (Política 5.9 e POP 4.10)
+        if result.vencimento:
+            prazo_ok, dias_uteis = ExtractionDiagnostics.validar_prazo_vencimento(
+                result.dt_classificacao, result.vencimento
+            )
+            if not prazo_ok:
+                motivos.append(f'PRAZO_INSUFICIENTE_{dias_uteis}d')
+        
+        # Sucesso: tem campos obrigatórios + prazo OK (se aplicável)
+        sucesso = tem_numero and tem_valor and tem_fornecedor
+        if result.vencimento:
+            prazo_ok, _ = ExtractionDiagnostics.validar_prazo_vencimento(
+                result.dt_classificacao, result.vencimento
+            )
+            sucesso = sucesso and prazo_ok
+        
+        return (sucesso, motivos)
     
     @staticmethod
     def classificar_boleto(result: BoletoData) -> Tuple[bool, List[str]]:
         """
         Classifica um Boleto como sucesso ou falha.
         
-        Critérios de SUCESSO: Valor > 0 E (Vencimento OU Linha Digitável)
+        Critérios de SUCESSO (Conformidade PAF):
+        - Valor > 0
+        - Vencimento OU Linha Digitável
+        - Razão Social (fornecedor_nome) preenchida
+        - Prazo de 04 dias úteis ao vencimento
         
         Args:
             result: Dados extraídos do boleto
             
         Returns:
             Tupla (é_sucesso, lista_de_motivos_falha)
-            
-        Examples:
-            >>> boleto = BoletoData(arquivo_origem="teste.pdf", texto_bruto="...",
-            ...                     valor_documento=500.0, vencimento="2025-12-31")
-            >>> sucesso, motivos = ExtractionDiagnostics.classificar_boleto(boleto)
-            >>> assert sucesso is True
         """
         motivos = []
+        
+        # Validações básicas
         tem_valor = result.valor_documento > 0
         tem_identificacao = result.vencimento or result.linha_digitavel
+        tem_fornecedor = bool(result.fornecedor_nome and result.fornecedor_nome.strip())
         
         if not tem_valor:
             motivos.append('VALOR_ZERO')
@@ -104,8 +185,22 @@ class ExtractionDiagnostics:
             motivos.append('SEM_VENCIMENTO')
         if not result.linha_digitavel:
             motivos.append('SEM_LINHA_DIGITAVEL')
+        if not tem_fornecedor:
+            motivos.append('SEM_RAZAO_SOCIAL')
         
-        return (tem_valor and tem_identificacao, motivos)
+        # Validação de prazo (Política 5.9 e POP 4.10)
+        prazo_ok = True
+        if result.vencimento:
+            prazo_ok, dias_uteis = ExtractionDiagnostics.validar_prazo_vencimento(
+                result.dt_classificacao, result.vencimento
+            )
+            if not prazo_ok:
+                motivos.append(f'PRAZO_INSUFICIENTE_{dias_uteis}d')
+        
+        # Sucesso: tem campos obrigatórios + prazo OK
+        sucesso = tem_valor and tem_identificacao and tem_fornecedor and prazo_ok
+        
+        return (sucesso, motivos)
     
     @staticmethod
     def gerar_relatorio_texto(dados: Dict) -> str:

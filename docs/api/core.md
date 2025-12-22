@@ -19,6 +19,7 @@ O pacote `core` é responsável por:
 Orquestrador principal que coordena todo o pipeline de processamento.
 
 **Responsabilidades:**
+
 - Receber PDF de entrada
 - Selecionar estratégia de extração de texto apropriada
 - Identificar tipo de documento (NFSe vs Boleto)
@@ -30,10 +31,7 @@ Orquestrador principal que coordena todo o pipeline de processamento.
       show_root_heading: true
       show_source: false
       members:
-        - __init__
         - process
-        - _select_strategy
-        - _route_to_extractor
 
 ---
 
@@ -46,14 +44,22 @@ Estruturas de dados imutáveis usando `@dataclass`.
 Modelo para Notas Fiscais de Serviço Eletrônica (NFSe).
 
 **Campos:**
+
 - `arquivo_origem` (str): Nome do arquivo PDF original
 - `texto_bruto` (str): Primeiros 500 caracteres do texto limpo (útil para debug/auditoria)
   - **Implementação:** Remove espaços/quebras primeiro, depois pega 500 chars
   - **Formato:** `' '.join(raw_text.split())[:500]`
 - `cnpj_prestador` (Optional[str]): CNPJ do prestador formatado
+- `fornecedor_nome` (Optional[str]): Razão Social do prestador (coluna FORNECEDOR na planilha PAF)
 - `numero_nota` (Optional[str]): Número da nota fiscal
 - `data_emissao` (Optional[str]): Data no formato ISO (YYYY-MM-DD)
 - `valor_total` (float): Valor total da nota
+- `vencimento` (Optional[str]): Data de vencimento no formato ISO (YYYY-MM-DD)
+- `dt_classificacao` (Optional[str]): Data de classificação no formato ISO (YYYY-MM-DD)
+- `forma_pagamento` (Optional[str]): Forma de pagamento (PIX, TED, BOLETO)
+- `tipo_doc_paf` (str): Tipo de documento para PAF (default: "NF")
+- `trat_paf` (Optional[str]): Responsável pela classificação (coluna TRAT PAF)
+- `lanc_sistema` (str): Status de lançamento no ERP (default: "PENDENTE")
 
 ::: core.models.InvoiceData
     options:
@@ -65,20 +71,27 @@ Modelo para Notas Fiscais de Serviço Eletrônica (NFSe).
 Modelo para Boletos Bancários.
 
 **Campos:**
+
 - `arquivo_origem` (str): Nome do arquivo PDF original
 - `texto_bruto` (str): Primeiros 500 caracteres do texto limpo
   - **Implementação:** Remove espaços/quebras primeiro, depois pega 500 chars
   - **Formato:** `' '.join(raw_text.split())[:500]`
   - **Uso:** Debug, auditoria, treino de ML futuro
 - `cnpj_beneficiario` (Optional[str]): CNPJ do beneficiário
+- `fornecedor_nome` (Optional[str]): Razão Social do beneficiário (coluna FORNECEDOR na planilha PAF)
 - `valor_documento` (float): Valor nominal do boleto
 - `vencimento` (Optional[str]): Data de vencimento (YYYY-MM-DD)
   - **Fallback:** Busca primeira data DD/MM/YYYY mesmo sem label "Vencimento:"
+- `dt_classificacao` (Optional[str]): Data de classificação no formato ISO (YYYY-MM-DD)
 - `numero_documento` (Optional[str]): Número do documento
   - **Suporta:** Formato ano.número (ex: 2025.122) e 8 variações de padrão
 - `linha_digitavel` (Optional[str]): Código de barras
 - `nosso_numero` (Optional[str]): Identificação do banco
 - `referencia_nfse` (Optional[str]): NFSe vinculada (se encontrado)
+- `forma_pagamento` (Optional[str]): Forma de pagamento (default: "BOLETO")
+- `tipo_doc_paf` (str): Tipo de documento para PAF (default: "BOLETO")
+- `trat_paf` (Optional[str]): Responsável pela classificação
+- `lanc_sistema` (str): Status de lançamento no ERP (default: "PENDENTE")
 
 ::: core.models.BoletoData
     options:
@@ -94,6 +107,7 @@ Classe abstrata base para todos os extratores de dados.
 **Padrão de Design:** Template Method
 
 **Métodos Abstratos:**
+
 - `can_handle(text: str) -> bool`: Verifica se o extrator pode processar o documento
 - `extract(text: str) -> Dict[str, Any]`: Extrai dados estruturados do texto
 
@@ -113,6 +127,7 @@ Contratos para implementação de componentes extensíveis.
 Interface para estratégias de extração de texto de PDFs.
 
 **Implementações:**
+
 - `NativePdfStrategy` - Usa PDFPlumber
 - `TesseractOcrStrategy` - Usa OCR
 - `SmartExtractionStrategy` - Fallback automático
@@ -126,6 +141,7 @@ Interface para estratégias de extração de texto de PDFs.
 Interface para conectores de entrada de dados.
 
 **Implementações:**
+
 - `ImapIngestor` - Servidor IMAP/Email
 
 ::: core.interfaces.EmailIngestorStrategy

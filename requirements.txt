@@ -6,6 +6,12 @@ pdf2image
 pillow
 python-dotenv
 
+# Conformidade PAF - Google Sheets e Validações
+gspread>=6.0.0
+tenacity>=8.0.0
+workalendar>=17.0.0
+python-dateutil>=2.8.0
+
 # Dependências da Documentação (Para o Netlify)
 mkdocs
 mkdocs-material

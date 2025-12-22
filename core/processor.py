@@ -7,6 +7,7 @@ from core.models import InvoiceData, BoletoData
 from core.interfaces import TextExtractionStrategy
 from strategies.fallback import SmartExtractionStrategy
 from core.extractors import EXTRACTOR_REGISTRY
+from config.settings import TRAT_PAF_RESPONSAVEL
 import extractors.generic
 import extractors.boleto
 
@@ -60,28 +61,61 @@ class BaseInvoiceProcessor(ABC):
             extractor = self._get_extractor(raw_text)
             extracted_data = extractor.extract(raw_text)
             
+            # Dados comuns PAF (aplicados a todos os documentos)
+            now_iso = datetime.now().strftime('%Y-%m-%d')
+            common_data = {
+                'data_processamento': now_iso,
+                'dt_classificacao': now_iso,
+                'trat_paf': TRAT_PAF_RESPONSAVEL,
+                'lanc_sistema': 'PENDENTE',
+            }
+            
             # 3. Identifica o tipo e cria o modelo apropriado
             if extracted_data.get('tipo_documento') == 'BOLETO':
                 return BoletoData(
                     arquivo_origem=os.path.basename(file_path),
-                    texto_bruto=' '.join(raw_text.split())[:500],  # Remove whitespace, then take 500 chars
+                    texto_bruto=' '.join(raw_text.split())[:500],
+                    # Campos PAF comuns
+                    **common_data,
+                    # Campos básicos do boleto
                     cnpj_beneficiario=extracted_data.get('cnpj_beneficiario'),
                     valor_documento=extracted_data.get('valor_documento', 0.0),
                     vencimento=extracted_data.get('vencimento'),
                     numero_documento=extracted_data.get('numero_documento'),
                     linha_digitavel=extracted_data.get('linha_digitavel'),
                     nosso_numero=extracted_data.get('nosso_numero'),
-                    referencia_nfse=extracted_data.get('referencia_nfse')
+                    referencia_nfse=extracted_data.get('referencia_nfse'),
+                    # Campos PAF (novos)
+                    fornecedor_nome=extracted_data.get('fornecedor_nome'),
+                    banco_nome=extracted_data.get('banco_nome'),
+                    agencia=extracted_data.get('agencia'),
+                    conta_corrente=extracted_data.get('conta_corrente'),
+                    numero_pedido=extracted_data.get('numero_pedido'),
                 )
             else:
                 # NFSe
                 return InvoiceData(
                     arquivo_origem=os.path.basename(file_path),
-                    texto_bruto=' '.join(raw_text.split())[:500],  # Remove whitespace, then take 500 chars
+                    texto_bruto=' '.join(raw_text.split())[:500],
+                    # Campos PAF comuns
+                    **common_data,
+                    # Campos básicos da NFSe
                     cnpj_prestador=extracted_data.get('cnpj_prestador'),
                     numero_nota=extracted_data.get('numero_nota'),
                     valor_total=extracted_data.get('valor_total', 0.0),
-                    data_emissao=extracted_data.get('data_emissao')
+                    data_emissao=extracted_data.get('data_emissao'),
+                    # Campos PAF (novos)
+                    fornecedor_nome=extracted_data.get('fornecedor_nome'),
+                    vencimento=extracted_data.get('vencimento'),
+                    numero_pedido=extracted_data.get('numero_pedido'),
+                    forma_pagamento=extracted_data.get('forma_pagamento'),
+                    # Impostos individuais
+                    valor_ir=extracted_data.get('valor_ir'),
+                    valor_inss=extracted_data.get('valor_inss'),
+                    valor_csll=extracted_data.get('valor_csll'),
+                    valor_iss=extracted_data.get('valor_iss'),
+                    valor_icms=extracted_data.get('valor_icms'),
+                    base_calculo_icms=extracted_data.get('base_calculo_icms'),
                 )
             
         except ValueError as e:

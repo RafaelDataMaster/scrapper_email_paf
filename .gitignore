@@ -10,6 +10,11 @@ __pycache__/
 .DS_Store
 temp_email/
 *.log
+logs/
 reuniao.md
 *.cache
+*.txt
 
+# Credenciais Google Sheets (Segurança)
+credentials.json
+token.json

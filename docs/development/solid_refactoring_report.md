@@ -30,6 +30,7 @@ Todas as 4 melhorias sugeridas no feedback foram **implementadas com sucesso**, 
 - **[core/exceptions.py](core/exceptions.py):** Documentação clara sobre quando usar `ExtractionError`
 
 **Impacto:**
+
 ```python
 # ANTES: OCR poderia quebrar o fluxo
 try:
@@ -58,6 +59,7 @@ if texto:  # Simples e seguro
   - Método abstrato `to_dict()` implementado em ambos
 
 **Impacto:**
+
 ```python
 # ANTES: Detecção frágil por hasattr
 if hasattr(result, 'valor_documento'):  # ⚠️ Duck typing
@@ -92,12 +94,13 @@ class NotaFiscalProduto(DocumentData):
   - `AttachmentDownloader`: Baixa e salva anexos com nomes únicos
   - Movido de `core/exporters.py` para melhor separação conceitual (Input vs Output)
 
-- **[run_ingestion.py](run_ingestion.py):** 
+- **[run_ingestion.py](run_ingestion.py):**
   - Refatorado para orquestrar componentes separados
   - Implementado logging estruturado (substitui todos os `print()`)
   - Timestamps, níveis de severidade e stack traces completos
 
 **Impacto:**
+
 ```python
 # ANTES: Tudo misturado em main()
 def main():
@@ -106,7 +109,7 @@ def main():
     with open(...) as f:  # Salvar arquivos
     print("Processando...")  # Log ad-hoc
     df.to_csv(...)  # Gerar CSV
-    
+  
 # DEPOIS: Responsabilidades claras
 import logging
 logger = logging.getLogger(__name__)  # Logging estruturado
@@ -139,12 +142,13 @@ exporter = GoogleSheetsExporter(credentials, sheet_id)  # ✅ Sem modificar lóg
   - Facilita testes com mocks
 
 **Impacto:**
+
 ```python
 # ANTES: Acoplamento concreto
 class BaseInvoiceProcessor:
     def __init__(self):
         self.reader = SmartExtractionStrategy()  # ⚠️ Hard-coded
-        
+  
 def main():
     ingestor = ImapIngestor(...)  # ⚠️ Hard-coded
 
@@ -166,6 +170,7 @@ result = processor.process("fake.pdf")  # ✅ Sem internet, sem arquivos reais
 Após validação dos princípios SOLID, foram aplicadas 4 melhorias adicionais para produção:
 
 ### 1. Observabilidade no OCR
+
 **Arquivo:** [strategies/ocr.py](../../strategies/ocr.py)
 
 - Adicionado `logging.warning()` antes de retornar string vazia
@@ -179,6 +184,7 @@ except Exception as e:
 ```
 
 ### 2. Reorganização do AttachmentDownloader
+
 **Movido:** `core/exporters.py` → `ingestors/utils.py`
 
 - Separação conceitual: Input (ingestors/) vs Output (exporters/)
@@ -186,6 +192,7 @@ except Exception as e:
 - Código mais intuitivo para manutenção
 
 ### 3. Logging Estruturado
+
 **Arquivo:** [run_ingestion.py](../../run_ingestion.py)
 
 - Todos os `print()` substituídos por `logging`
@@ -203,6 +210,7 @@ logger.error(f"Erro: {e}", exc_info=True)  # Stack trace completo
 ```
 
 ### 4. Dockerfile Otimizado
+
 **Arquivo:** [Dockerfile](../../Dockerfile)
 
 - Download do `tessdata_best/por.traineddata` do GitHub oficial
@@ -216,6 +224,7 @@ RUN wget -q https://github.com/tesseract-ocr/tessdata_best/raw/main/por.trainedd
 ```
 
 **Benefícios:**
+
 - ✅ Debug remoto facilitado (logs com timestamp)
 - ✅ Monitoramento em produção (níveis de log)
 - ✅ OCR mais preciso (traineddata best)
@@ -226,6 +235,7 @@ RUN wget -q https://github.com/tesseract-ocr/tessdata_best/raw/main/por.trainedd
 ## 📊 Cobertura de Testes
 
 ### Novos Testes Criados
+
 **Arquivo:** [tests/test_solid_refactoring.py](tests/test_solid_refactoring.py)
 
 | Princípio | Testes | Status |
@@ -238,6 +248,7 @@ RUN wget -q https://github.com/tesseract-ocr/tessdata_best/raw/main/por.trainedd
 | **TOTAL** | **14 testes** | ✅ **100%** |
 
 ### Testes Existentes Mantidos
+
 **Arquivo:** [tests/test_extractors.py](tests/test_extractors.py)
 
 - ✅ 23 testes existentes continuam passando
@@ -249,12 +260,14 @@ RUN wget -q https://github.com/tesseract-ocr/tessdata_best/raw/main/por.trainedd
 ## 📊 Métricas de Qualidade
 
 ### Antes da Refatoração
+
 - ⚠️ 6 violações SOLID críticas
 - ⚠️ Código difícil de testar (dependências hard-coded)
 - ⚠️ Adicionar novo tipo = modificar 3+ arquivos
 - ⚠️ Lógica de exportação acoplada ao orquestrador
 
 ### Depois da Refatoração
+
 - ✅ 0 violações SOLID
 - ✅ 100% testável com mocks
 - ✅ Adicionar novo tipo = criar 1 classe `DocumentData`
@@ -265,6 +278,7 @@ RUN wget -q https://github.com/tesseract-ocr/tessdata_best/raw/main/por.trainedd
 ## 🚀 Próximos Passos Recomendados
 
 ### 1. Implementar GoogleSheetsExporter
+
 ```python
 # core/exporters.py já tem o esqueleto pronto
 class GoogleSheetsExporter(DataExporter):
@@ -275,7 +289,8 @@ class GoogleSheetsExporter(DataExporter):
 ```
 
 ### 2. Criar Fixtures de Testes Reais (quando receberem PDFs do FAP)
-```
+
+```bash
 tests/
   fixtures/
     boletos_reais/
@@ -288,11 +303,12 @@ tests/
 ```
 
 **Teste Data-Driven sugerido:**
+
 ```python
 def test_boletos_reais_contra_gabarito(self):
     with open('tests/fixtures/boletos_reais/gabarito.json') as f:
         gabarito = json.load(f)
-    
+  
     for pdf_name, expected_data in gabarito.items():
         result = processor.process(f'tests/fixtures/boletos_reais/{pdf_name}')
         self.assertEqual(result.valor_documento, expected_data['valor'])
@@ -300,6 +316,7 @@ def test_boletos_reais_contra_gabarito(self):
 ```
 
 ### 3. Adicionar CI/CD
+
 - Configurar GitHub Actions para rodar testes automaticamente
 - Adicionar coverage report (pytest-cov)
 - Gate de qualidade: mínimo 80% de cobertura
@@ -309,11 +326,13 @@ def test_boletos_reais_contra_gabarito(self):
 ## 📁 Arquivos Modificados
 
 ### Criados
+
 - ✅ [core/exporters.py](core/exporters.py) (160 linhas) - FileSystemManager, DataExporter, CsvExporter
 - ✅ [ingestors/utils.py](ingestors/utils.py) (47 linhas) - AttachmentDownloader
 - ✅ [tests/test_solid_refactoring.py](tests/test_solid_refactoring.py) (304 linhas)
 
 ### Modificados
+
 - ✅ [core/exceptions.py](core/exceptions.py) - Documentação de ExtractionError
 - ✅ [core/models.py](core/models.py) - Classe base DocumentData + doc_type
 - ✅ [core/processor.py](core/processor.py) - Injeção de dependência
@@ -335,6 +354,7 @@ def test_boletos_reais_contra_gabarito(self):
 | **Bônus: Testes data-driven** | 📋 Documentado | Pronto para implementar quando receberem PDFs do FAP |
 
 ### 🌟 Melhorias Adicionais (Nível Sênior)
+
 | Sugestão | Status | Evidência |
 |----------|--------|--------|
 | **1. Logging no OCR (Observabilidade)** | ✅ Implementado | `logger.warning()` captura erros sem quebrar LSP |

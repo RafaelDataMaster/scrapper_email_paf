@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 @dataclass
 class DocumentData(ABC):
@@ -13,10 +14,20 @@ class DocumentData(ABC):
     Attributes:
         arquivo_origem (str): Nome do arquivo PDF processado.
         texto_bruto (str): Snippet do texto extraído (para debug).
+        data_processamento (Optional[str]): Data de processamento no formato ISO (YYYY-MM-DD).
+        setor (Optional[str]): Setor responsável (ex: 'RH', 'MKT').
+        empresa (Optional[str]): Empresa (ex: 'CSC', 'MOC').
+        observacoes (Optional[str]): Observações gerais para a planilha PAF.
+        obs_interna (Optional[str]): Observações internas para uso do time técnico.
         doc_type (str): Tipo do documento ('NFSE', 'BOLETO', etc.).
     """
     arquivo_origem: str
     texto_bruto: str
+    data_processamento: Optional[str] = None
+    setor: Optional[str] = None
+    empresa: Optional[str] = None
+    observacoes: Optional[str] = None
+    obs_interna: Optional[str] = None
     
     @property
     @abstractmethod
@@ -28,24 +39,115 @@ class DocumentData(ABC):
     def to_dict(self) -> dict:
         """Converte o documento para dicionário. Usado para exportação."""
         pass
+    
+    @abstractmethod
+    def to_sheets_row(self) -> list:
+        """
+        Converte o documento para lista de 18 valores na ordem da planilha PAF.
+        
+        Ordem PAF: DATA, SETOR, EMPRESA, FORNECEDOR, NF, EMISSÃO, VALOR, 
+        Nº PEDIDO, VENCIMENTO, FORMA PAGTO, (vazio), DT CLASS, Nº FAT, 
+        TP DOC, TRAT PAF, LANC SISTEMA, OBSERVAÇÕES, OBS INTERNA
+        
+        Returns:
+            list: Lista com 18 elementos para inserção direta no Google Sheets
+        """
+        pass
 
 @dataclass
 class InvoiceData(DocumentData):
     """
-    Modelo de dados padronizado para uma Nota Fiscal de Serviço.
+    Modelo de dados padronizado para uma Nota Fiscal de Serviço (NFSe).
+
+    Alinhado com as 18 colunas da planilha "PAF NOVO - SETORES CSC".
+    Conformidade: Política Interna 5.9 e POP 4.10 (Master Internet).
 
     Attributes:
         arquivo_origem (str): Nome do arquivo PDF processado.
         texto_bruto (str): Snippet do texto extraído (para fins de debug).
+        
+        # Identificação e Fornecedor
         cnpj_prestador (Optional[str]): CNPJ formatado do prestador de serviço.
+        fornecedor_nome (Optional[str]): Razão Social do prestador (coluna FORNECEDOR).
         numero_nota (Optional[str]): Número da nota fiscal limpo.
-        data_emissao (Optional[str]): Data de emissão no formato YYYY-MM-DD.
+        serie_nf (Optional[str]): Série da nota fiscal.
+        data_emissao (Optional[str]): Data de emissão no formato ISO (YYYY-MM-DD).
+        
+        # Valores e Impostos Individuais
         valor_total (float): Valor total líquido da nota.
+        valor_ir (Optional[float]): Imposto de Renda retido.
+        valor_inss (Optional[float]): INSS retido.
+        valor_csll (Optional[float]): CSLL retido.
+        valor_iss (Optional[float]): ISS devido ou retido.
+        valor_icms (Optional[float]): ICMS (quando aplicável).
+        base_calculo_icms (Optional[float]): Base de cálculo do ICMS.
+        
+        # Pagamento e Classificação PAF
+        vencimento (Optional[str]): Data de vencimento no formato ISO (YYYY-MM-DD).
+        forma_pagamento (Optional[str]): PIX, TED, BOLETO, etc.
+        numero_pedido (Optional[str]): Número do pedido/PC (coluna Nº PEDIDO).
+        numero_fatura (Optional[str]): Número da fatura (coluna Nº FAT).
+        tipo_doc_paf (str): Tipo de documento para PAF (default: "NF").
+        dt_classificacao (Optional[str]): Data de classificação no formato ISO.
+        trat_paf (Optional[str]): Responsável pela classificação (coluna TRAT PAF).
+        lanc_sistema (str): Status de lançamento no ERP (default: "PENDENTE").
+        
+        # Campos Secundários (Implementação Fase 2)
+        cfop (Optional[str]): Código Fiscal de Operações e Prestações.
+        cst (Optional[str]): Código de Situação Tributária.
+        ncm (Optional[str]): Nomenclatura Comum do Mercosul.
+        natureza_operacao (Optional[str]): Natureza da operação fiscal.
+        
+        # Rastreabilidade
+        link_drive (Optional[str]): URL do documento no Google Drive.
     """
     cnpj_prestador: Optional[str] = None
+    fornecedor_nome: Optional[str] = None
     numero_nota: Optional[str] = None
+    serie_nf: Optional[str] = None
     data_emissao: Optional[str] = None
     valor_total: float = 0.0
+    
+    # Impostos individuais
+    valor_ir: Optional[float] = None
+    valor_inss: Optional[float] = None
+    valor_csll: Optional[float] = None
+    valor_iss: Optional[float] = None
+    valor_icms: Optional[float] = None
+    base_calculo_icms: Optional[float] = None
+    
+    # Campos PAF
+    vencimento: Optional[str] = None
+    forma_pagamento: Optional[str] = None
+    numero_pedido: Optional[str] = None
+    numero_fatura: Optional[str] = None
+    tipo_doc_paf: str = "NF"
+    dt_classificacao: Optional[str] = None
+    trat_paf: Optional[str] = None
+    lanc_sistema: str = "PENDENTE"
+    
+    # TODO: Implementar em segunda fase - campos secundários para compliance fiscal completo
+    cfop: Optional[str] = None
+    cst: Optional[str] = None
+    ncm: Optional[str] = None
+    natureza_operacao: Optional[str] = None
+    
+    link_drive: Optional[str] = None
+    
+    @property
+    def total_retencoes(self) -> float:
+        """
+        Calcula o total de retenções federais (IR + INSS + CSLL).
+        
+        Usado para exportação e validações financeiras.
+        Considera apenas valores não-None para evitar erros de cálculo.
+        
+        Returns:
+            float: Soma das retenções ou 0.0 se todas forem None
+        """
+        valores = [self.valor_ir, self.valor_inss, self.valor_csll]
+        retencoes = [v for v in valores if v is not None]
+        return sum(retencoes) if retencoes else 0.0
     
     @property
     def doc_type(self) -> str:
@@ -53,40 +155,169 @@ class InvoiceData(DocumentData):
         return 'NFSE'
     
     def to_dict(self) -> dict:
-        """Converte InvoiceData para dicionário."""
+        """
+        Converte InvoiceData para dicionário mantendo semântica None.
+        
+        Mantém valores None para campos não extraídos (importante para debug).
+        Use to_sheets_row() para exportação com conversões apropriadas.
+        """
         return {
             'tipo_documento': self.doc_type,
             'arquivo_origem': self.arquivo_origem,
+            'data_processamento': self.data_processamento,
+            'setor': self.setor,
+            'empresa': self.empresa,
             'cnpj_prestador': self.cnpj_prestador,
+            'fornecedor_nome': self.fornecedor_nome,
             'numero_nota': self.numero_nota,
+            'serie_nf': self.serie_nf,
             'data_emissao': self.data_emissao,
             'valor_total': self.valor_total,
+            'valor_ir': self.valor_ir,
+            'valor_inss': self.valor_inss,
+            'valor_csll': self.valor_csll,
+            'valor_iss': self.valor_iss,
+            'valor_icms': self.valor_icms,
+            'base_calculo_icms': self.base_calculo_icms,
+            'total_retencoes': self.total_retencoes,
+            'vencimento': self.vencimento,
+            'forma_pagamento': self.forma_pagamento,
+            'numero_pedido': self.numero_pedido,
+            'numero_fatura': self.numero_fatura,
+            'tipo_doc_paf': self.tipo_doc_paf,
+            'dt_classificacao': self.dt_classificacao,
+            'trat_paf': self.trat_paf,
+            'lanc_sistema': self.lanc_sistema,
+            'cfop': self.cfop,
+            'cst': self.cst,
+            'ncm': self.ncm,
+            'natureza_operacao': self.natureza_operacao,
+            'link_drive': self.link_drive,
+            'observacoes': self.observacoes,
+            'obs_interna': self.obs_interna,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None
         }
+    
+    def to_sheets_row(self) -> list:
+        """
+        Converte InvoiceData para lista de 18 valores na ordem da planilha PAF.
+        
+        Ordem das colunas PAF:
+        1. DATA (processamento) - 2. SETOR - 3. EMPRESA - 4. FORNECEDOR
+        5. NF - 6. EMISSÃO - 7. VALOR - 8. Nº PEDIDO
+        9. VENCIMENTO - 10. FORMA PAGTO - 11. (vazio/índice)
+        12. DT CLASS - 13. Nº FAT - 14. TP DOC - 15. TRAT PAF
+        16. LANC SISTEMA - 17. OBSERVAÇÕES - 18. OBS INTERNA
+        
+        Conversões aplicadas:
+        - Datas ISO (YYYY-MM-DD) → formato brasileiro (DD/MM/YYYY)
+        - None numéricos → 0.0
+        - None strings → ""
+        
+        Returns:
+            list: Lista com 18 elementos para append no Google Sheets
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            """Converte data ISO para formato brasileiro DD/MM/YYYY."""
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+        
+        def fmt_num(value: Optional[float]) -> float:
+            """Converte None para 0.0 em campos numéricos."""
+            return value if value is not None else 0.0
+        
+        def fmt_str(value: Optional[str]) -> str:
+            """Converte None para string vazia."""
+            return value if value is not None else ""
+        
+        return [
+            fmt_date(self.data_processamento),  # 1. DATA
+            fmt_str(self.setor),                 # 2. SETOR
+            fmt_str(self.empresa),               # 3. EMPRESA
+            fmt_str(self.fornecedor_nome),       # 4. FORNECEDOR
+            fmt_str(self.numero_nota),           # 5. NF
+            fmt_date(self.data_emissao),         # 6. EMISSÃO
+            fmt_num(self.valor_total),           # 7. VALOR
+            fmt_str(self.numero_pedido),         # 8. Nº PEDIDO
+            fmt_date(self.vencimento),           # 9. VENCIMENTO
+            fmt_str(self.forma_pagamento),       # 10. FORMA PAGTO
+            "",                                  # 11. (coluna vazia/índice)
+            fmt_date(self.dt_classificacao),     # 12. DT CLASS
+            fmt_str(self.numero_fatura),         # 13. Nº FAT
+            fmt_str(self.tipo_doc_paf),          # 14. TP DOC
+            fmt_str(self.trat_paf),              # 15. TRAT PAF
+            fmt_str(self.lanc_sistema),          # 16. LANC SISTEMA
+            fmt_str(self.observacoes),           # 17. OBSERVAÇÕES
+            fmt_str(self.obs_interna),           # 18. OBS INTERNA
+        ]
 
 @dataclass
 class BoletoData(DocumentData):
     """
     Modelo de dados para Boletos Bancários.
+    
+    Alinhado com as 18 colunas da planilha "PAF NOVO - SETORES CSC".
+    Conformidade: Política Interna 5.9 e POP 4.10 (Master Internet).
 
     Attributes:
         arquivo_origem (str): Nome do arquivo PDF processado.
         texto_bruto (str): Snippet do texto extraído.
+        
+        # Identificação e Fornecedor
         cnpj_beneficiario (Optional[str]): CNPJ do beneficiário (quem recebe).
+        fornecedor_nome (Optional[str]): Razão Social do beneficiário (coluna FORNECEDOR).
+        
+        # Valores
         valor_documento (float): Valor nominal do boleto.
-        vencimento (Optional[str]): Data de vencimento no formato YYYY-MM-DD.
-        numero_documento (Optional[str]): Número do documento/fatura.
+        
+        # Dados de Vencimento e Pagamento
+        vencimento (Optional[str]): Data de vencimento no formato ISO (YYYY-MM-DD).
+        forma_pagamento (str): Forma de pagamento (default: "BOLETO").
+        
+        # Identificação do Documento
+        numero_documento (Optional[str]): Número do documento/fatura (coluna NF).
         linha_digitavel (Optional[str]): Linha digitável do boleto.
         nosso_numero (Optional[str]): Nosso número (identificação do banco).
         referencia_nfse (Optional[str]): Número da NFSe vinculada (se encontrado).
+        
+        # Dados Bancários
+        banco_nome (Optional[str]): Nome do banco emissor (identificado via código).
+        agencia (Optional[str]): Agência no formato normalizado (ex: "1234-5").
+        conta_corrente (Optional[str]): Conta corrente no formato normalizado (ex: "123456-7").
+        
+        # Classificação PAF
+        numero_pedido (Optional[str]): Número do pedido/PC (coluna Nº PEDIDO).
+        tipo_doc_paf (str): Tipo de documento para PAF (default: "FT" - Fatura).
+        dt_classificacao (Optional[str]): Data de classificação no formato ISO.
+        trat_paf (Optional[str]): Responsável pela classificação (coluna TRAT PAF).
+        lanc_sistema (str): Status de lançamento no ERP (default: "PENDENTE").
     """
     cnpj_beneficiario: Optional[str] = None
+    fornecedor_nome: Optional[str] = None
     valor_documento: float = 0.0
     vencimento: Optional[str] = None
+    forma_pagamento: str = "BOLETO"
     numero_documento: Optional[str] = None
     linha_digitavel: Optional[str] = None
     nosso_numero: Optional[str] = None
     referencia_nfse: Optional[str] = None
+    
+    # Dados bancários
+    banco_nome: Optional[str] = None
+    agencia: Optional[str] = None
+    conta_corrente: Optional[str] = None
+    
+    # Campos PAF
+    numero_pedido: Optional[str] = None
+    tipo_doc_paf: str = "FT"
+    dt_classificacao: Optional[str] = None
+    trat_paf: Optional[str] = None
+    lanc_sistema: str = "PENDENTE"
     
     @property
     def doc_type(self) -> str:
@@ -94,16 +325,95 @@ class BoletoData(DocumentData):
         return 'BOLETO'
     
     def to_dict(self) -> dict:
-        """Converte BoletoData para dicionário."""
+        """
+        Converte BoletoData para dicionário mantendo semântica None.
+        
+        Mantém valores None para campos não extraídos (importante para debug).
+        Use to_sheets_row() para exportação com conversões apropriadas.
+        """
         return {
             'tipo_documento': self.doc_type,
             'arquivo_origem': self.arquivo_origem,
+            'data_processamento': self.data_processamento,
+            'setor': self.setor,
+            'empresa': self.empresa,
             'cnpj_beneficiario': self.cnpj_beneficiario,
+            'fornecedor_nome': self.fornecedor_nome,
             'valor_documento': self.valor_documento,
             'vencimento': self.vencimento,
+            'forma_pagamento': self.forma_pagamento,
             'numero_documento': self.numero_documento,
             'linha_digitavel': self.linha_digitavel,
             'nosso_numero': self.nosso_numero,
             'referencia_nfse': self.referencia_nfse,
+            'banco_nome': self.banco_nome,
+            'agencia': self.agencia,
+            'conta_corrente': self.conta_corrente,
+            'numero_pedido': self.numero_pedido,
+            'tipo_doc_paf': self.tipo_doc_paf,
+            'dt_classificacao': self.dt_classificacao,
+            'trat_paf': self.trat_paf,
+            'lanc_sistema': self.lanc_sistema,
+            'observacoes': self.observacoes,
+            'obs_interna': self.obs_interna,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None
         }
+    
+    def to_sheets_row(self) -> list:
+        """
+        Converte BoletoData para lista de 18 valores na ordem da planilha PAF.
+        
+        Mapeia campos de boleto para estrutura PAF:
+        - numero_documento → coluna NF
+        - valor_documento → coluna VALOR
+        - forma_pagamento = "BOLETO" (default)
+        - tipo_doc_paf = "FT" (Fatura/Título Financeiro)
+        
+        Ordem das colunas PAF:
+        1. DATA (processamento) - 2. SETOR - 3. EMPRESA - 4. FORNECEDOR
+        5. NF - 6. EMISSÃO - 7. VALOR - 8. Nº PEDIDO
+        9. VENCIMENTO - 10. FORMA PAGTO - 11. (vazio/índice)
+        12. DT CLASS - 13. Nº FAT - 14. TP DOC - 15. TRAT PAF
+        16. LANC SISTEMA - 17. OBSERVAÇÕES - 18. OBS INTERNA
+        
+        Returns:
+            list: Lista com 18 elementos para append no Google Sheets
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            """Converte data ISO para formato brasileiro DD/MM/YYYY."""
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+        
+        def fmt_num(value: Optional[float]) -> float:
+            """Converte None para 0.0 em campos numéricos."""
+            return value if value is not None else 0.0
+        
+        def fmt_str(value: Optional[str]) -> str:
+            """Converte None para string vazia."""
+            return value if value is not None else ""
+        
+        return [
+            fmt_date(self.data_processamento),  # 1. DATA
+            fmt_str(self.setor),                 # 2. SETOR
+            fmt_str(self.empresa),               # 3. EMPRESA
+            fmt_str(self.fornecedor_nome),       # 4. FORNECEDOR
+            fmt_str(self.numero_documento),      # 5. NF (número do documento)
+            "",                                  # 6. EMISSÃO (boleto não tem emissão, apenas vencimento)
+            fmt_num(self.valor_documento),       # 7. VALOR
+            fmt_str(self.numero_pedido),         # 8. Nº PEDIDO
+            fmt_date(self.vencimento),           # 9. VENCIMENTO
+            fmt_str(self.forma_pagamento),       # 10. FORMA PAGTO
+            "",                                  # 11. (coluna vazia/índice)
+            fmt_date(self.dt_classificacao),     # 12. DT CLASS
+            fmt_str(self.numero_documento),      # 13. Nº FAT (mesmo que NF para boletos)
+            fmt_str(self.tipo_doc_paf),          # 14. TP DOC
+            fmt_str(self.trat_paf),              # 15. TRAT PAF
+            fmt_str(self.lanc_sistema),          # 16. LANC SISTEMA
+            fmt_str(self.observacoes),           # 17. OBSERVAÇÕES
+            fmt_str(self.obs_interna),           # 18. OBS INTERNA
+        ]

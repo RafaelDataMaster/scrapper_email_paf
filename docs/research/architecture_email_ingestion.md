@@ -17,12 +17,14 @@ Este relatório propõe uma arquitetura robusta para ingestão de e-mails em Pyt
 ## 2. Protocolos de Conectividade e Estratégias de Acesso
 
 ### 2.1 Análise do Protocolo IMAP
+
 O IMAP (RFC 3501) é o denominador comum na interoperabilidade. Diferente do POP3, ele permite conexão persistente e manipulação remota, essencial para pipelines que gerenciam estado.
 
 * **Desafios de Performance:** Comandos de busca complexos (`SEARCH`) são executados no servidor e podem se tornar gargalos em caixas de correio grandes.
 * **Desafios de Parsing:** O conteúdo chega como bytes brutos. O cliente deve lidar com decodificação de cabeçalhos (RFC 2047), travessia de árvores MIME e conversão de *charsets* para evitar *mojibake*.
 
 ### 2.2 APIs Proprietárias: Microsoft Graph e Gmail API
+
 As APIs RESTful modernas abstraem a complexidade do protocolo de e-mail.
 
 * **Microsoft Graph:** Permite filtragem OData eficiente no servidor (ex: `$filter=hasAttachments eq true`) e suporta *Webhooks* para arquitetura orientada a eventos, eliminando o *polling*.
@@ -52,10 +54,13 @@ A automação exige superar o modelo de "usuário e senha". O padrão é OAuth 2
 Para evitar "código espaguete", aplicam-se padrões do GoF:
 
 ### 4.1 Factory Pattern (Conectores)
+
 Abstrai a criação de objetos de conexão. Uma `EmailConnectorFactory` decide se instancia um `GmailConnector` ou `ImapConnector` baseada na configuração, facilitando a adição de novos provedores (*Open-Closed Principle*).
 
 ### 4.2 Strategy Pattern (Extração)
+
 Encapsula algoritmos de extração para lidar com a variabilidade:
+
 * `AWSBillingStrategy`: Parser de texto estruturado.
 * `PDFInvoiceStrategy`: Extração de anexos.
 * `LLMExtractionStrategy`: Fallback usando IA.
@@ -63,6 +68,7 @@ Encapsula algoritmos de extração para lidar com a variabilidade:
 O sistema seleciona a estratégia em tempo de execução. Pode-se usar **Chain of Responsibility** para tentar estratégias baratas (Regex) antes das caras (LLM).
 
 ### 4.3 Decorator Pattern
+
 Adiciona resiliência (*retries*, *logging*) sem poluir a lógica de negócio. Ex: `@retry_on_network_error` envolvendo chamadas de API.
 
 ## 5. Arquitetura Distribuída
@@ -76,13 +82,16 @@ Para escalar, o processamento deve ser assíncrono (*Producer-Consumer*).
 ## 6. Técnicas de Extração de Dados
 
 ### 6.1 HTML Parsing (BeautifulSoup)
+
 Para e-mails transacionais. Limpeza (`bleach`) e seletores CSS precisos (`soup.select`) são fundamentais. Tabelas aninhadas exigem normalização.
 
 ### 6.2 Regex e LLMs
+
 * **Regex:** Bom para padrões universais (CNPJ, Datas), frágil para layouts.
 * **LLMs:** Usados para extração semântica. Converte-se HTML para Markdown e instrui-se o modelo a retornar JSON (validado via Pydantic).
 
 ### 6.3 Anexos (PDF e OCR)
+
 * **PDFs Nativos:** `pdfplumber` para extração posicional (tabelas).
 * **Imagens:** OCR com Tesseract (com pré-processamento OpenCV) ou APIs de visão (AWS Textract, Google Document AI).
 
@@ -151,9 +160,9 @@ class LLMFallbackStrategy(EmailExtractionStrategy):
     def extract(self, email_content, attachments=None):
         soup = BeautifulSoup(email_content, 'html.parser')
         clean_text = soup.get_text(separator=' ', strip=True)[:10000]
-        
+  
         system_prompt = "Extraia Data, Fornecedor e Valor em JSON."
-        
+  
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[

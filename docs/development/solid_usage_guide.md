@@ -177,7 +177,6 @@ class GoogleSheetsExporter(DataExporter):
         worksheet.update('A1', values)
         logger.info(f"✅ {len(data)} registros exportados para '{destination}'")
 ```
-```
 
 ### Passo 3: Usar no `run_ingestion.py`
 
@@ -328,21 +327,24 @@ processor = BaseInvoiceProcessor(reader=custom_strategy)
 
 Ao estender o sistema, siga estas diretrizes:
 
-### ✅ Para Novos Tipos de Documento:
+### ✅ Para Novos Tipos de Documento
+
 - [ ] Herdar de `DocumentData`
 - [ ] Implementar propriedade `doc_type`
 - [ ] Implementar método `to_dict()`
 - [ ] Criar extrator com `@register_extractor`
 - [ ] Adicionar testes em `tests/test_extractors.py`
 
-### ✅ Para Novas Estratégias:
+### ✅ Para Novas Estratégias
+
 - [ ] Herdar de `TextExtractionStrategy`
 - [ ] Retornar `""` em falhas recuperáveis
 - [ ] Lançar `ExtractionError` apenas em falhas críticas
 - [ ] Validar texto extraído (mínimo 50 caracteres)
 - [ ] Adicionar testes em `tests/test_strategies.py`
 
-### ✅ Para Novos Exportadores:
+### ✅ Para Novos Exportadores
+
 - [ ] Herdar de `DataExporter`
 - [ ] Implementar método `export(data, destination)`
 - [ ] Usar `doc.to_dict()` para conversão

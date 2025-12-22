@@ -7,12 +7,14 @@ O sistema agora processa **Notas Fiscais (NFSe)** e **Boletos Bancários** autom
 ## Dados Extraídos
 
 ### NFSe (Nota Fiscal de Serviço Eletrônica)
+
 - CNPJ do Prestador
 - Número da Nota
 - Data de Emissão
 - Valor Total
 
 ### Boletos Bancários
+
 - CNPJ do Beneficiário (quem recebe)
 - Valor do Documento
 - Data de Vencimento
@@ -32,6 +34,7 @@ python run_ingestion.py
 ```
 
 O sistema irá:
+
 1. Conectar ao email e baixar anexos
 2. Classificar automaticamente cada PDF (NFSe ou Boleto)
 3. Extrair dados específicos de cada tipo
@@ -187,6 +190,7 @@ python scripts/test_boleto_extractor.py
 ```
 
 Este script valida:
+
 - ✅ Identificação correta de boletos
 - ✅ Extração de todos os campos
 - ✅ Diferenciação entre NFSe e Boletos

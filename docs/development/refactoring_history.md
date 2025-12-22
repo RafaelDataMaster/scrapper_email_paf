@@ -11,7 +11,7 @@ Implementação completa dos princípios SOLID baseada em feedback técnico de r
 **Arquivos:** [`strategies/ocr.py`](../../strategies/ocr.py), [`strategies/fallback.py`](../../strategies/fallback.py), [`core/exceptions.py`](../../core/exceptions.py)
 
 **Problema:** Estratégias de extração tinham comportamentos inconsistentes em falhas:
-- `NativePdfStrategy` e `TablePdfStrategy` retornavam `""` 
+- `NativePdfStrategy` e `TablePdfStrategy` retornavam `""`
 - `TesseractOcrStrategy` lançava `Exception`
 - `SmartExtractionStrategy` (fallback) podia ser interrompida por exceções inesperadas
 
@@ -151,6 +151,7 @@ Após validação dos princípios SOLID, foram aplicadas 4 melhorias para produ�
 - Código pegava primeiros 500 caracteres **antes** de remover espaços: `[:500].split()`
 
 #### Solução Implementada
+
 ```python
 # ANTES (errado)
 texto_bruto=' '.join(raw_text[:500].split())  # Pega 500 chars, depois limpa
@@ -271,6 +272,7 @@ def _extract_numero_documento(self, text: str) -> Optional[str]:
 #### Solução Implementada
 
 **Padrões com re.DOTALL para multi-linha:**
+
 ```python
 def _extract_nosso_numero(self, text: str) -> Optional[str]:
     patterns = [
@@ -345,6 +347,7 @@ def _extract_nosso_numero(self, text: str) -> Optional[str]:
 **3 Níveis de Fallback:**
 
 1. **Padrões Específicos Ampliados**
+
    ```python
    # Com R$ explícito
    r'(?i)Valor\s+do\s+Documento\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})'
@@ -453,6 +456,7 @@ Estratégia especializada em documentos com tabelas:
 3. Facilita extração por regex em layouts complexos
 
 **Exemplo de conversão:**
+
 ```
 Tabela Original:
 | Beneficiário | Vencimento | Valor    |
@@ -503,7 +507,7 @@ _* Para boletos com linha digitável válida_
 
 ## ✅ Fase 1: Eliminação de Redundâncias (Anterior)
 
-### 1. **Módulo Centralizado de Diagnósticos** 
+### 1. **Módulo Centralizado de Diagnósticos**
 **Arquivo:** [`core/diagnostics.py`](core/diagnostics.py)
 
 - ✅ Criado módulo `ExtractionDiagnostics` com lógica de validação centralizada
@@ -525,6 +529,7 @@ _* Para boletos com linha digitável válida_
 - ✅ Elimina duplicação de código de path resolution em todos os scripts
 
 **Antes (em cada script):**
+
 ```python
 import sys
 from pathlib import Path
@@ -533,6 +538,7 @@ sys.path.append(str(PROJECT_ROOT))
 ```
 
 **Depois:**
+
 ```python
 from _init_env import setup_project_path
 setup_project_path()
@@ -577,6 +583,7 @@ setup_project_path()
 4. `TestEdgeCases` - 3 testes de casos extremos
 
 **Execução:**
+
 ```bash
 python tests/test_extractors.py
 # Resultado: 23 testes passando ✅
@@ -587,6 +594,7 @@ python tests/test_extractors.py
 ## 📊 Comparação: Antes vs Depois
 
 ### **Antes da Refatoração:**
+
 ```
 scripts/test_rules_extractors.py
 ├── classificar_nfse()           ❌ Duplicado
@@ -602,6 +610,7 @@ scripts/diagnose_failures.py
 ```
 
 ### **Depois da Refatoração:**
+
 ```
 core/diagnostics.py
 ├── classificar_nfse()           ✅ Centralizado
@@ -676,16 +685,19 @@ tests/test_extractors.py
 ## 🧪 Como Executar os Testes
 
 ### Testes Unitários
+
 ```bash
 python tests/test_extractors.py
 ```
 
 ### Validação com Arquivos Reais
+
 ```bash
 python scripts/validate_extraction_rules.py
 ```
 
 ### Diagnóstico de Falhas
+
 ```bash
 python scripts/diagnose_failures.py
 ```

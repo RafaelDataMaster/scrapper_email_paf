@@ -1,4 +1,6 @@
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -50,3 +52,39 @@ EMAIL_FOLDER = os.getenv('EMAIL_FOLDER', 'INBOX')
 # Validação básica para não rodar sem config
 if not all([EMAIL_HOST, EMAIL_USER, EMAIL_PASS]):
     print("⚠️ AVISO: Credenciais de e-mail não configuradas totalmente no .env")
+
+# --- Configurações PAF (Planilha de Autorização de Faturamento) ---
+# Responsável pela classificação que aparecerá na coluna 15 (TRAT PAF) da planilha
+TRAT_PAF_RESPONSAVEL = os.getenv('TRAT_PAF_RESPONSAVEL', 'SISTEMA_AUTO')
+
+# --- Configuração de Logging com Rotação ---
+# Conformidade: Rastreabilidade exigida pela Política Interna
+# RotatingFileHandler evita crescimento descontrolado de logs
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+LOG_FILE = LOG_DIR / "scrapper.log"
+
+# Configuração do logger raiz
+logger = logging.getLogger('scrapper')
+logger.setLevel(logging.INFO)
+
+# Handler com rotação: 10MB por arquivo, mantém 5 backups
+rotating_handler = RotatingFileHandler(
+    LOG_FILE,
+    maxBytes=10 * 1024 * 1024,  # 10MB
+    backupCount=5,
+    encoding='utf-8'
+)
+
+# Formato detalhado para auditoria
+log_formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+rotating_handler.setFormatter(log_formatter)
+logger.addHandler(rotating_handler)
+
+# Também envia para console
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+logger.addHandler(console_handler)

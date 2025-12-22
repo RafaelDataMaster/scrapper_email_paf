@@ -5,12 +5,14 @@ O módulo `core.diagnostics` fornece ferramentas para validação, classificaç�
 ## Visão Geral
 
 **Responsabilidades:**
+
 - Classificar extrações como sucesso ou falha
 - Identificar motivos específicos de falha
 - Gerar relatórios estatísticos
 - Diagnosticar problemas automaticamente
 
 **Uso principal:**
+
 - Scripts de validação ([`validate_extraction_rules.py`](../../scripts/validate_extraction_rules.py))
 - Scripts de diagnóstico ([`diagnose_failures.py`](../../scripts/diagnose_failures.py))
 - Análise de lotes de processamento
@@ -23,20 +25,66 @@ Classe principal com métodos estáticos para análise de qualidade.
 
 ### Métodos
 
+#### `validar_prazo_vencimento(dt_classificacao: Optional[str], vencimento: Optional[str]) -> Tuple[bool, int]`
+
+Valida se há no mínimo 04 dias úteis entre classificação e vencimento.
+
+**Conformidade:** Política Interna 5.9 e POP 4.10 exigem lançamento com antecedência mínima de 04 dias úteis ao vencimento.
+
+**Considera:**
+
+- Feriados nacionais
+- Feriados estaduais de São Paulo
+- Feriados municipais de São Paulo (capital)
+- Finais de semana (sábado e domingo)
+
+**Parâmetros:**
+
+- `dt_classificacao`: Data de classificação no formato ISO (YYYY-MM-DD)
+- `vencimento`: Data de vencimento no formato ISO (YYYY-MM-DD)
+
+**Retorna:**
+
+Tupla `(prazo_ok, quantidade_dias_uteis)`
+
+- `prazo_ok`: True se >= 4 dias úteis, False caso contrário
+- `quantidade_dias_uteis`: Número de dias úteis calculado
+
+**Exemplo:**
+
+```python
+from core.diagnostics import ExtractionDiagnostics
+
+# Classificação: 03/01/2025, Vencimento: 30/01/2025
+ok, dias = ExtractionDiagnostics.validar_prazo_vencimento(
+    "2025-01-03", "2025-01-30"
+)
+print(f"Prazo OK: {ok}, Dias úteis: {dias}")  # True, 19 (considerando feriados)
+```
+
+---
+
 #### `classificar_nfse(result: InvoiceData) -> Tuple[bool, List[str]]`
 
 Classifica uma NFSe extraída como sucesso ou falha baseado em critérios de negócio.
 
-**Critérios de Sucesso:**
+**Critérios de Sucesso (Conformidade PAF):**
+
 - ✅ Número da nota presente e não vazio
 - ✅ Valor total maior que zero
+- ✅ Razão Social (fornecedor_nome) preenchida
+- ✅ Prazo de 04 dias úteis ao vencimento (se houver vencimento)
 
 **Códigos de Falha:**
+
 - `SEM_NUMERO`: Número da nota ausente ou vazio
 - `VALOR_ZERO`: Valor total zero ou ausente
 - `SEM_CNPJ`: CNPJ do prestador não encontrado
+- `SEM_RAZAO_SOCIAL`: Fornecedor não identificado
+- `PRAZO_INSUFICIENTE_Xd`: Menos de 4 dias úteis até o vencimento (X = quantidade de dias)
 
 **Exemplo:**
+
 ```python
 from core.diagnostics import ExtractionDiagnostics
 from core.models import InvoiceData
@@ -73,19 +121,27 @@ print(f"Motivos: {motivos}")     # ['SEM_NUMERO', 'VALOR_ZERO']
 
 Classifica um boleto extraído como sucesso ou falha.
 
-**Critérios de Sucesso:**
+**Critérios de Sucesso (Conformidade PAF):**
+
 - ✅ Valor do documento maior que zero
-- ✅ Vencimento **OU** linha digitável presente
+- ✅ Vencimento preenchido
+- ✅ Linha digitável OU vencimento presente
+- ✅ Razão Social (fornecedor_nome) preenchida
+- ✅ Prazo de 04 dias úteis ao vencimento
 
 **Códigos de Falha:**
+
 - `VALOR_ZERO`: Valor do documento não encontrado ou zero
 - `SEM_VENCIMENTO`: Data de vencimento ausente
 - `SEM_LINHA_DIGITAVEL`: Código de barras/linha digitável ausente
+- `SEM_RAZAO_SOCIAL`: Fornecedor não identificado
+- `PRAZO_INSUFICIENTE_Xd`: Menos de 4 dias úteis até o vencimento (X = quantidade de dias)
 
 **Lógica:**
 Um boleto é considerado válido se tem valor **E** pelo menos uma identificação (vencimento ou linha digitável).
 
 **Exemplo:**
+
 ```python
 from core.diagnostics import ExtractionDiagnostics
 from core.models import BoletoData
@@ -121,6 +177,7 @@ print(f"Motivos: {motivos}")     # ['VALOR_ZERO']
 Gera relatório formatado em texto com estatísticas de extração.
 
 **Parâmetros:**
+
 ```python
 dados = {
     'total': 100,                      # Total de arquivos processados
@@ -135,7 +192,8 @@ dados = {
 ```
 
 **Retorna:**
-```
+
+```text
 ================================================================================
 📊 RELATÓRIO DE QUALIDADE DA EXTRAÇÃO
 ================================================================================
@@ -166,6 +224,7 @@ dados = {
 ```
 
 **Exemplo de uso:**
+
 ```python
 from core.diagnostics import ExtractionDiagnostics
 
@@ -191,6 +250,7 @@ print(relatorio)
 Gera relatório e salva em arquivo de texto.
 
 **Exemplo:**
+
 ```python
 from pathlib import Path
 from core.diagnostics import ExtractionDiagnostics
@@ -213,6 +273,7 @@ Tenta classificar automaticamente o tipo de falha de extração usando heurísti
 4. **NÚMERO**: Se número da nota está vazio
 
 **Exemplo:**
+
 ```python
 from core.diagnostics import ExtractionDiagnostics
 
@@ -316,6 +377,7 @@ class DiagnosticReport:
 ```
 
 **Uso:**
+
 ```python
 from core.diagnostics import DiagnosticReport
 

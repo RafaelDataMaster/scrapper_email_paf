@@ -16,7 +16,7 @@ with pdfplumber.open('caminho/do/arquivo.pdf') as pdf:
     print(repr(text))  # repr() mostra \n, \t, espaços
 ```
 
-**Por que usar `repr()`?** 
+**Por que usar `repr()`?**
 
 A função `repr()` mostra caracteres invisíveis como:
 - Quebras de linha: `\n`
@@ -30,6 +30,7 @@ Isso é crucial para entender o layout real do documento.
 Diferentes PDFs têm diferentes estruturas. Identifique o tipo de layout:
 
 ### Layout Tabular
+
 ```python
 # Exemplo: label e valor na mesma linha com outros dados
 text = """
@@ -40,6 +41,7 @@ Nº Documento  Espécie  Moeda  Valor
 ```
 
 ### Layout Multi-linha
+
 ```python
 # Exemplo: label em uma linha, valor em outra
 text = """
@@ -51,6 +53,7 @@ CARRIER TELECOM - CNPJ
 ```
 
 ### Layout com Label como Imagem
+
 ```python
 # Exemplo: label não está no texto OCR
 text = """
@@ -387,12 +390,14 @@ O campo nosso_numero não está funcionando, pode consertar?
 **Problema:** Capturava "08" (da data 08/11/2025) em vez de "2/1"
 
 **Texto:**
+
 ```
 Nº Documento  Espécie  Moeda  Valor
 08/11/2025    2/1      DM     R$ 4.789,00
 ```
 
 **Solução:**
+
 ```python
 # Padrão que pula a data completa DD/MM/YYYY
 pattern = r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)'
@@ -403,6 +408,7 @@ pattern = r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)'
 **Problema:** Capturava "230/0001-64" (fragmento do CNPJ) em vez de "109/00000507-1"
 
 **Texto:**
+
 ```
 Nosso Número
 CARRIER TELECOM - CNPJ
@@ -411,6 +417,7 @@ CARRIER TELECOM - CNPJ
 ```
 
 **Solução:**
+
 ```python
 # Formato bancário específico: 2-3 dígitos / 7+ dígitos - dígito
 pattern = r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)'
@@ -422,6 +429,7 @@ pattern = r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)'
 **Problema:** Label "Nosso Número" estava renderizado como imagem (OCR não pegou)
 
 **Texto:**
+
 ```
 [imagem]
 109/42150105-8
@@ -429,6 +437,7 @@ pattern = r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)'
 ```
 
 **Solução:**
+
 ```python
 # Fallback genérico: formato preciso sem depender de label
 pattern = r'\b(\d{3}/\d{8}-\d)\b'

@@ -10,8 +10,8 @@ O módulo de ingestão conecta-se a uma conta de e-mail via protocolo IMAP, busc
 
 Por razões de segurança, as credenciais de e-mail **nunca** devem ser colocadas diretamente no código. Utilizamos um arquivo `.env` para gerenciar essas variáveis.
 
-1.  Crie um arquivo chamado `.env` na raiz do projeto (você pode copiar o modelo `.env.example`).
-2.  Preencha as seguintes variáveis:
+1. Crie um arquivo chamado `.env` na raiz do projeto (você pode copiar o modelo `.env.example`).
+2. Preencha as seguintes variáveis:
 
 ```ini
 # Configurações do Servidor IMAP
@@ -34,12 +34,12 @@ python run_ingestion.py
 
 ### O que o script faz?
 
-1.  **Conecta** ao servidor de e-mail usando SSL.
-2.  **Busca** e-mails com o assunto "Nota Fiscal" (configurável no código).
-3.  **Baixa** os anexos PDF para uma pasta temporária (`temp_email/`).
-    *   *Nota:* O sistema gera nomes de arquivos únicos (UUID) para evitar que notas com nomes iguais (ex: `invoice.pdf`) se sobrescrevam.
-4.  **Processa** cada arquivo baixado usando o `BaseInvoiceProcessor`.
-5.  **Gera** um relatório consolidado em `data/output/relatorio_ingestao.csv`.
+1. **Conecta** ao servidor de e-mail usando SSL.
+2. **Busca** e-mails com o assunto "Nota Fiscal" (configurável no código).
+3. **Baixa** os anexos PDF para uma pasta temporária (`temp_email/`).
+   * *Nota:* O sistema gera nomes de arquivos únicos (UUID) para evitar que notas com nomes iguais (ex: `invoice.pdf`) se sobrescrevam.
+4. **Processa** cada arquivo baixado usando o `BaseInvoiceProcessor`.
+5. **Gera** um relatório consolidado em `data/output/relatorio_ingestao.csv`.
 
 ## Personalização
 

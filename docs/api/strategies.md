@@ -28,11 +28,13 @@ Extração de texto nativo usando a biblioteca PDFPlumber.
 ### Quando Usar
 
 ✅ **Ideal para:**
+
 - PDFs gerados digitalmente (Word → PDF, sistema → PDF)
 - Notas fiscais eletrônicas emitidas por sistemas
 - Boletos gerados por APIs bancárias
 
 ❌ **Não funciona em:**
+
 - PDFs escaneados (scanner)
 - Documentos fotografados
 - PDFs protegidos ou corrompidos
@@ -70,6 +72,7 @@ Extração de estruturas tabulares usando PDFPlumber.
 ### Quando Usar
 
 ✅ **Ideal para:**
+
 - Boletos com layout tabular (cabeçalhos separados dos valores)
 - Documentos onde rótulos e valores estão em colunas diferentes
 - PDFs com estrutura de dados tabulares
@@ -99,7 +102,7 @@ def extract_tables(pdf_path: str) -> str:
 
 **Exemplo de Conversão:**
 
-```
+```text
 Tabela Original:
 | Beneficiário | Vencimento | Valor |
 |--------------|------------|-------|
@@ -131,12 +134,14 @@ Extração de texto usando OCR (Optical Character Recognition) com Tesseract.
 ### Quando Usar
 
 ✅ **Ideal para:**
+
 - PDFs escaneados (digitalização física)
 - Documentos fotografados
 - Imagens com texto
 - Fallback quando extração nativa falha
 
 ❌ **Limitações:**
+
 - Pode ter erros de reconhecimento (OCR não é 100% preciso)
 - Mais lento (processa página como imagem)
 - Requer instalação externa do Tesseract
@@ -144,6 +149,7 @@ Extração de texto usando OCR (Optical Character Recognition) com Tesseract.
 ### Pré-requisitos
 
 **Windows:**
+
 ```powershell
 # Instalar Tesseract
 choco install tesseract
@@ -153,6 +159,7 @@ $env:PATH += ";C:\Program Files\Tesseract-OCR"
 ```
 
 **Linux:**
+
 ```bash
 sudo apt-get install tesseract-ocr tesseract-ocr-por
 ```
@@ -169,6 +176,7 @@ lang = 'por'  # Português
 ```
 
 **Parâmetros:**
+
 - `--psm 1`: Automatic page segmentation with OSD
 - `--oem 3`: Default OCR Engine mode (LSTM)
 
@@ -207,6 +215,7 @@ graph TD
 ### Critérios de Validação
 
 O texto é considerado "bom" se:
+
 - Não está vazio
 - Tem pelo menos 50 caracteres
 - Contém palavras reconhecíveis (não é lixo binário)
@@ -215,6 +224,7 @@ O texto é considerado "bom" se:
 ### Quando Usar
 
 ✅ **Recomendado para:**
+
 - Processamento em produção (máxima resiliência)
 - Lotes mistos (PDFs digitais + escaneados)
 - Quando não se sabe o tipo de documento
@@ -336,6 +346,7 @@ python -m pytest tests/test_strategies.py -v
 ```
 
 **Cobertura:**
+
 - ✅ Extração de PDFs digitais
 - ✅ Extração de PDFs escaneados
 - ✅ Fallback automático

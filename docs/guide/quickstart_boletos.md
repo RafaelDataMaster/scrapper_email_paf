@@ -9,6 +9,7 @@ python scripts/test_boleto_extractor.py
 ```
 
 **Saída esperada:**
+
 - ✅ BoletoExtractor reconheceu o boleto
 - ✅ BoletoExtractor corretamente rejeitou a NFSe
 - ✅ GenericExtractor reconheceu a NFSe
@@ -20,6 +21,7 @@ python run_ingestion.py
 ```
 
 **O que acontece:**
+
 1. Conecta ao email configurado
 2. Baixa anexos PDF
 3. Classifica automaticamente (NFSe ou Boleto)
@@ -27,6 +29,7 @@ python run_ingestion.py
 5. Gera dois CSVs separados
 
 **Arquivos gerados:**
+
 - `data/output/relatorio_nfse.csv`
 - `data/output/relatorio_boletos.csv`
 
@@ -37,6 +40,7 @@ python scripts/analyze_boletos.py
 ```
 
 **O script mostra:**
+
 - 📊 Estatísticas gerais (totais, médias)
 - 🔗 Análise de vinculação (3 métodos)
 - ⚠️ Alertas de vencimento
@@ -67,6 +71,7 @@ print(f"Soma Boletos: R$ {df_boleto['valor_documento'].sum():,.2f}")
 ### Excel
 
 Abra os arquivos diretamente no Excel:
+
 - `data/output/relatorio_nfse.csv`
 - `data/output/relatorio_boletos.csv`
 
@@ -166,6 +171,7 @@ print(f"Valor total: R$ {nfse_fornecedor['valor_total'].sum():,.2f}")
 ### Problema: CSV vazio ou sem dados
 
 **Solução:**
+
 1. Verifique se há PDFs na pasta de entrada
 2. Confirme que o email está configurado corretamente
 3. Execute o teste: `python scripts/test_boleto_extractor.py`
@@ -173,13 +179,16 @@ print(f"Valor total: R$ {nfse_fornecedor['valor_total'].sum():,.2f}")
 ### Problema: Boletos sendo identificados como NFSe
 
 **Solução:**
+
 O `BoletoExtractor` verifica automaticamente. Se houver problema:
+
 1. Verifique o score de palavras-chave em [extractors/boleto.py](extractors/boleto.py#L27)
 2. Ajuste os thresholds se necessário
 
 ### Problema: Dados não sendo extraídos corretamente
 
 **Solução:**
+
 1. Verifique o arquivo em `data/debug_output/`
 2. Ajuste as regex em `BoletoExtractor._extract_*()` conforme necessário
 3. Teste com: `python scripts/test_boleto_extractor.py`

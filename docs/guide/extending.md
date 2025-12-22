@@ -72,9 +72,9 @@ Basta colocar um PDF correspondente na pasta `nfs/` e rodar o `main.py`. O siste
 
 ## Dicas para Expressões Regulares (Regex)
 
-*   Use `(?i)` no início da regex para ignorar maiúsculas/minúsculas.
-*   Use `\s*` para lidar com espaços variáveis entre o rótulo e o valor.
-*   Teste suas regex em sites como [regex101.com](https://regex101.com/).
+* Use `(?i)` no início da regex para ignorar maiúsculas/minúsculas.
+* Use `\s*` para lidar com espaços variáveis entre o rótulo e o valor.
+* Teste suas regex em sites como [regex101.com](https://regex101.com/).
 
 ## Prioridade de Execução
 
@@ -88,13 +88,13 @@ O sistema agora identifica e processa **boletos bancários** automaticamente, se
 
 ### Campos Extraídos de Boletos
 
-- **CNPJ do Beneficiário**: Quem está recebendo o pagamento
-- **Valor do Documento**: Valor nominal do boleto
-- **Data de Vencimento**: Quando deve ser pago (formato YYYY-MM-DD)
-- **Número do Documento**: ID da fatura/documento
-- **Linha Digitável**: Código de barras do boleto
-- **Nosso Número**: Identificação interna do banco
-- **Referência NFSe**: Número da nota fiscal (se mencionado no boleto)
+* **CNPJ do Beneficiário**: Quem está recebendo o pagamento
+* **Valor do Documento**: Valor nominal do boleto
+* **Data de Vencimento**: Quando deve ser pago (formato YYYY-MM-DD)
+* **Número do Documento**: ID da fatura/documento
+* **Linha Digitável**: Código de barras do boleto
+* **Nosso Número**: Identificação interna do banco
+* **Referência NFSe**: Número da nota fiscal (se mencionado no boleto)
 
 ### Vinculando Boletos a NFSe
 
@@ -107,8 +107,8 @@ Você pode cruzar os dados dos boletos com as notas fiscais usando:
 ### Arquivos de Saída
 
 O sistema gera dois CSVs separados:
-- `relatorio_nfse.csv`: Contém todas as notas fiscais processadas
-- `relatorio_boletos.csv`: Contém todos os boletos identificados
+* `relatorio_nfse.csv`: Contém todas as notas fiscais processadas
+* `relatorio_boletos.csv`: Contém todos os boletos identificados
 
 ### Exemplo de Cruzamento com Pandas
 

@@ -54,6 +54,11 @@ class GenericExtractor(BaseExtractor):
     def extract(self, text: str) -> Dict[str, Any]:
         """
         Extrai campos padronizados (CNPJ, Valor, Data, Número) usando Regex.
+        
+        Campos Core (Prioridade Alta):
+        - Razão Social (fornecedor_nome)
+        - Impostos individuais (IR, INSS, CSLL, ISS, ICMS)
+        - Vencimento
 
         Args:
             text (str): Texto bruto do documento.
@@ -62,11 +67,32 @@ class GenericExtractor(BaseExtractor):
             Dict[str, Any]: Dicionário com os campos extraídos.
         """
         data = {}
-        data['tipo_documento'] = 'NFSE'  # Identifica como NFSe
+        data['tipo_documento'] = 'NFSE'
+        
+        # Campos básicos (já existentes)
         data['cnpj_prestador'] = self._extract_cnpj(text)
         data['numero_nota'] = self._extract_numero_nota(text)
         data['valor_total'] = self._extract_valor(text)
         data['data_emissao'] = self._extract_data_emissao(text)
+        
+        # Campos Core PAF (Prioridade Alta)
+        data['fornecedor_nome'] = self._extract_fornecedor_nome(text)
+        data['vencimento'] = self._extract_vencimento(text)
+        
+        # Impostos individuais (Política 5.9 - campos obrigatórios)
+        data['valor_ir'] = self._extract_ir(text)
+        data['valor_inss'] = self._extract_inss(text)
+        data['valor_csll'] = self._extract_csll(text)
+        data['valor_iss'] = self._extract_valor_iss(text)
+        data['valor_icms'] = self._extract_valor_icms(text)
+        data['base_calculo_icms'] = self._extract_base_calculo_icms(text)
+        
+        # TODO: Implementar em segunda fase - campos secundários para compliance fiscal completo
+        # data['cfop'] = self._extract_cfop(text)
+        # data['cst'] = self._extract_cst(text)
+        # data['ncm'] = self._extract_ncm(text)
+        # data['natureza_operacao'] = self._extract_natureza_operacao(text)
+        
         return data
 
     def _extract_cnpj(self, text: str):
@@ -151,5 +177,189 @@ class GenericExtractor(BaseExtractor):
                 # Remove pontos e espaços do número extraído
                 resultado = resultado.replace('.', '').replace(' ', '')
                 return resultado
+        
+        return None
+    
+    def _extract_fornecedor_nome(self, text: str) -> str:
+        """
+        Extrai a Razão Social do prestador de serviço.
+        
+        Busca por padrões comuns: "Prestador", "Razão Social", "Tomador de Serviço",
+        ou texto logo após o CNPJ.
+        
+        Returns:
+            str: Razão Social ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)Prestador[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            r'(?i)Raz[ãa]o\s+Social[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            r'(?i)Tomador[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            r'(?i)Nome[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                nome = match.group(1).strip()
+                # Remove números e limpa espaços extras
+                nome = re.sub(r'\d+', '', nome).strip()
+                if len(nome) >= 5:  # Razão social mínima
+                    return nome
+        
+        # Fallback: busca texto logo após CNPJ
+        cnpj_match = re.search(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}', text)
+        if cnpj_match:
+            # Pega os próximos 100 caracteres após o CNPJ
+            start_pos = cnpj_match.end()
+            text_after_cnpj = text[start_pos:start_pos+100]
+            nome_match = re.search(r'([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,80})', text_after_cnpj)
+            if nome_match:
+                nome = nome_match.group(1).strip()
+                # Remove padrões de data e números
+                nome = re.sub(r'\d{2}/\d{2}/\d{4}', '', nome).strip()
+                nome = re.sub(r'\d+', '', nome).strip()
+                if len(nome) >= 5:
+                    return nome
+        
+        return None
+    
+    def _extract_vencimento(self, text: str) -> str:
+        """
+        Extrai a data de vencimento da nota fiscal.
+        
+        Similar à extração de data_emissao, mas busca por keywords específicas.
+        
+        Returns:
+            str: Data no formato ISO (YYYY-MM-DD) ou None
+        """
+        patterns = [
+            r'(?i)Vencimento[:\s]+(\d{2}/\d{2}/\d{4})',
+            r'(?i)Data\s+de\s+Vencimento[:\s]+(\d{2}/\d{2}/\d{4})',
+            r'(?i)Venc[:\.\s]+(\d{2}/\d{2}/\d{4})',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                try:
+                    dt = datetime.strptime(match.group(1), '%d/%m/%Y')
+                    return dt.strftime('%Y-%m-%d')
+                except ValueError:
+                    continue
+        
+        return None
+    
+    def _extract_ir(self, text: str) -> float:
+        """
+        Extrai o valor do Imposto de Renda retido.
+        
+        Conformidade: Política 5.9 exige captura de retenções.
+        
+        Returns:
+            float: Valor do IR ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)(?:Valor\s+)?(?:do\s+)?IR\s*(?:Retido)?[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Imposto\s+de\s+Renda[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Reten[çc][ãa]o\s+IR[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+        ]
+        
+        return self._extract_valor_generico(patterns, text)
+    
+    def _extract_inss(self, text: str) -> float:
+        """
+        Extrai o valor do INSS retido.
+        
+        Returns:
+            float: Valor do INSS ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)(?:Valor\s+)?(?:do\s+)?INSS\s*(?:Retido)?[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Reten[çc][ãa]o\s+INSS[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+        ]
+        
+        return self._extract_valor_generico(patterns, text)
+    
+    def _extract_csll(self, text: str) -> float:
+        """
+        Extrai o valor da CSLL retido.
+        
+        Returns:
+            float: Valor da CSLL ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)(?:Valor\s+)?(?:da\s+)?CSLL\s*(?:Retida)?[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Reten[çc][ãa]o\s+CSLL[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Contribui[çc][ãa]o\s+Social[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+        ]
+        
+        return self._extract_valor_generico(patterns, text)
+    
+    def _extract_valor_iss(self, text: str) -> float:
+        """
+        Extrai o valor do ISS (Imposto Sobre Serviços).
+        
+        Conformidade: Campo de alta prioridade para validação fiscal.
+        
+        Returns:
+            float: Valor do ISS ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)(?:Valor\s+)?(?:do\s+)?ISS\s*(?:Retido)?[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Imposto\s+(?:Sobre\s+)?Servi[çc]os?[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Reten[çc][ãa]o\s+ISS[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+        ]
+        
+        return self._extract_valor_generico(patterns, text)
+    
+    def _extract_valor_icms(self, text: str) -> float:
+        """
+        Extrai o valor do ICMS.
+        
+        Returns:
+            float: Valor do ICMS ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)(?:Valor\s+)?(?:do\s+)?ICMS[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)Imposto\s+(?:sobre\s+)?Circula[çc][ãa]o[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+        ]
+        
+        return self._extract_valor_generico(patterns, text)
+    
+    def _extract_base_calculo_icms(self, text: str) -> float:
+        """
+        Extrai a base de cálculo do ICMS.
+        
+        Returns:
+            float: Base de cálculo do ICMS ou None se não encontrado
+        """
+        patterns = [
+            r'(?i)Base\s+(?:de\s+)?C[áa]lculo\s+(?:do\s+)?ICMS[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r'(?i)BC\s+ICMS[:\s]*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
+        ]
+        
+        return self._extract_valor_generico(patterns, text)
+    
+    def _extract_valor_generico(self, patterns: list, text: str) -> float:
+        """
+        Helper genérico para extração de valores monetários.
+        
+        Args:
+            patterns: Lista de padrões regex a tentar
+            text: Texto onde buscar
+            
+        Returns:
+            float: Valor encontrado ou None
+        """
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                valor_str = match.group(1)
+                try:
+                    valor = float(valor_str.replace('.', '').replace(',', '.'))
+                    if valor >= 0:  # Aceita zero para impostos
+                        return valor
+                except ValueError:
+                    continue
         
         return None

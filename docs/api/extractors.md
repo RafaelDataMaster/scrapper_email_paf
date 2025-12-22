@@ -30,11 +30,13 @@ Extrator genérico para Notas Fiscais de Serviço Eletrônica usando expressões
 O `GenericExtractor` aceita qualquer documento que **não seja** um boleto bancário **nem DANFE** (Nota Fiscal Eletrônica de Produto).
 
 **Indicadores de rejeição - Boletos:**
+
 - Presença de "Linha Digitável"
 - Palavras-chave: "Beneficiário", "Cedente", "Código de Barras"
 - Padrão de linha digitável (5 blocos numéricos)
 
 **Indicadores de rejeição - DANFE (Novo):**
+
 - Palavra "DANFE" no documento
 - Campos específicos de NFe produto: "CFOP", "ICMS", "Destinatário/Remetente"
 - Verificação dupla: se contém "SERVIÇO" ou "NFS-e", ainda pode ser processado
@@ -44,12 +46,14 @@ O `GenericExtractor` aceita qualquer documento que **não seja** um boleto banc�
 O extrator usa uma hierarquia de padrões regex ordenados por especificidade:
 
 **Para Número da Nota:**
+
 1. **Número da Nota com contexto explícito**: `"Número da Nota: XXXXX"`
 2. **NFS-e específico**: `"NFS-e Nº XXXXX"`
 3. **Nota Fiscal genérico**: `"Nota Fiscal Nº XXXXX"`
 4. **Número isolado** (com filtros para evitar RPS/Lote/Série)
 
 **Para Valor (Novo - Flexível):**
+
 1. **Com R$ explícito**: `"Valor Total: R$ 1.234,56"`
 2. **Sem R$ obrigatório**: `"Valor Total: 1.234,56"` (mais flexível)
 3. **Variações**: "Valor da Nota", "Total Nota", "Valor Líquido"
@@ -58,6 +62,7 @@ O extrator usa uma hierarquia de padrões regex ordenados por especificidade:
 ### Limpeza de Texto
 
 Antes da extração, o texto passa por limpeza:
+
 - Remove datas (DD/MM/AAAA) para evitar confusão com números
 - Remove identificadores auxiliares (RPS, Lote, Protocolo, Série)
 
@@ -65,13 +70,6 @@ Antes da extração, o texto passa por limpeza:
     options:
       show_root_heading: true
       show_source: false
-      members:
-        - can_handle
-        - extract
-        - _extract_cnpj
-        - _extract_numero_nota
-        - _extract_valor
-        - _extract_data_emissao
 
 ---
 
@@ -97,6 +95,7 @@ Extrator especializado em boletos bancários brasileiros.
 O `BoletoExtractor` identifica boletos através de:
 
 **Indicadores positivos (score):**
+
 - "Linha Digitável" / "Linha Digitavel"
 - "Beneficiário" / "Beneficiario"
 - "Vencimento"
@@ -107,23 +106,28 @@ O `BoletoExtractor` identifica boletos através de:
 - "Cedente"
 
 **Critério de aceitação:**
+
 - Score ≥ 3 palavras-chave **OU** padrão de linha digitável detectado
 - **E** ausência de palavras-chave de NFSe
 
 ### Extração de Valor - 3 Níveis de Fallback (Novo)
 
 #### Nível 1: Padrões Específicos
+
 Busca por "Valor do Documento" com/sem R$:
-```
+
+```text
 Valor do Documento: R$ 1.234,56
 Valor do Documento
 1.234,56
 ```
 
 #### Nível 2: Heurística de Maior Valor
+
 Se padrões específicos falharem, busca todos os valores monetários no documento e retorna o maior (geralmente o valor do documento é o maior valor em um boleto).
 
 #### Nível 3: Extração da Linha Digitável
+
 **Novo fallback crítico** para casos onde o texto está muito fragmentado:
 
 - Extrai valor dos últimos 14 dígitos da linha digitável
@@ -132,7 +136,8 @@ Se padrões específicos falharem, busca todos os valores monetários no documen
   - `VVVVVVVVVV` = Valor em centavos (10 dígitos)
 
 **Exemplo:**
-```
+
+```text
 Linha: 75691.31407 01130.051202 02685.970010 3 11690000625000
        └─────────────────────────────────┘ │ └────┘└────────┘
                     Campos                 │ Fator   Valor
@@ -146,7 +151,8 @@ Valor extraído: 0000625000 centavos = R$ 6.250,00
 #### Linha Digitável
 
 Formato padrão brasileiro:
-```
+
+```text
 XXXXX.XXXXX XXXXX.XXXXXX XXXXX.XXXXXX X XXXXXXXXXXXXXX
 ```
 
@@ -157,10 +163,12 @@ Convertido automaticamente para formato ISO (YYYY-MM-DD).
 **Padrões de extração (com fallback):**
 
 1. **Com label explícito:**
+
    - `Vencimento: DD/MM/YYYY`
    - `Data de Vencimento: DD/MM/YYYY`
 
 2. **Fallback - sem label:**
+
    - Busca primeira data no formato `DD/MM/YYYY`
    - Valida se o ano está entre 2024-2030 (datas futuras razoáveis)
    - Útil para PDFs com layout tabular onde label está distante
@@ -178,15 +186,17 @@ Campo desafiador devido à variedade de formatos e layouts.
 **9 padrões implementados (ordem de prioridade):**
 
 1. **⭐ Layout tabular com data:** `Nº Documento ... DD/MM/YYYY ... X/Y`
+
    - Pula data completa e captura número após (ex: "2/1" não "08")
    - Usa re.DOTALL para atravessar linhas
 2-3. **Com label completo:** `Número do Documento: 12345` (variações de encoding `Nú`, `Nu`, `Nü`)
 4-5. **Label abreviado:** `Nº Documento:`, `N. Documento:`, `Doc. Nº` (aceita `/` e `.`)
 6-7. **Próximo a keywords:** Busca após "Vencimento" ou "Número"
-8. **Formato ano.número:** `2025.122`, `2024.900` (comum em alguns bancos)
-9. **Fallback inteligente:** Não captura datas (validação negativa)
+2. **Formato ano.número:** `2025.122`, `2024.900` (comum em alguns bancos)
+3. **Fallback inteligente:** Não captura datas (validação negativa)
 
 **Exemplo - Layout tabular:**
+
 ```python
 # PDF com layout:
 # "Nº Documento  Espécie  Moeda  Valor"
@@ -197,6 +207,7 @@ Campo desafiador devido à variedade de formatos e layouts.
 ```
 
 **Exemplo - Formato ano.número:**
+
 ```python
 # PDF com layout:
 # "Número do Documento"
@@ -206,6 +217,7 @@ Campo desafiador devido à variedade de formatos e layouts.
 ```
 
 **Desafios resolvidos:**
+
 - ✅ Layout tabular (data antes do número)
 - ✅ Encoding UTF-8 de "Número" (ú, ü)
 - ✅ Label e valor em linhas separadas
@@ -218,19 +230,23 @@ Identificação interna do banco, formato variável por instituição.
 **Estratégia de extração em 3 níveis:**
 
 1. **Com label + re.DOTALL**: Atravessa múltiplas linhas
+
    - `Nosso Número ... 109/00000507-1` (valor pode estar em linha diferente)
    - Padrão bancário específico: 2-3 dígitos / 7+ dígitos - dígito
 
 2. **Com label (mesma linha)**: Formato simples
+
    - `Nosso Número: 26859-7`
    - Aceita qualquer formato com dígitos, hífens e barras
 
 3. **⭐ Fallback sem label**: Para casos onde label é imagem OCR
+
    - Busca padrão `XXX/XXXXXXXX-X` isolado no texto
    - Ex: `109/42150105-8` (3 dígitos / 8 dígitos - 1 dígito)
    - **Evita falsos positivos**: Não captura Agência/Conta (4 dígitos) ou CNPJ (com pontos)
 
 **Exemplo - Fallback genérico:**
+
 ```python
 # PDF onde "Nosso Número" está como imagem:
 # Texto: "...Yapay ... 2938 / 0053345-8 ... 109/42150105-8 ..."
@@ -240,6 +256,7 @@ Identificação interna do banco, formato variável por instituição.
 ```
 
 **Desafios resolvidos:**
+
 - ✅ Label e valor em linhas separadas (re.DOTALL)
 - ✅ Diferenciação de CNPJ (que tem pontos)
 - ✅ Label renderizado como imagem (fallback genérico)
@@ -248,6 +265,7 @@ Identificação interna do banco, formato variável por instituição.
 #### Referência à NFSe
 
 Alguns boletos contêm referência à nota fiscal que os originou. O extrator tenta identificar:
+
 - Padrão "NF 12345" ou "Nota 12345"
 - Padrão "Referente à NFS-e XXXXX"
 
@@ -255,16 +273,6 @@ Alguns boletos contêm referência à nota fiscal que os originou. O extrator te
     options:
       show_root_heading: true
       show_source: false
-      members:
-        - can_handle
-        - extract
-        - _extract_cnpj_beneficiario
-        - _extract_valor
-        - _extract_vencimento
-        - _extract_linha_digitavel
-        - _extract_numero_documento
-        - _extract_nosso_numero
-        - _extract_referencia_nfse
 
 ---
 
@@ -354,6 +362,7 @@ python tests/test_extractors.py
 ```
 
 **Cobertura de testes:**
+
 - ✅ Identificação de tipo de documento (`can_handle`)
 - ✅ Extração de campos individuais
 - ✅ Integração com modelos de dados

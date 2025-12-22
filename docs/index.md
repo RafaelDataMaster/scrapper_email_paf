@@ -16,25 +16,25 @@ Comece a processar notas em menos de 5 minutos.
 
 <div class="grid cards" markdown>
 
--   :material-email-fast: **Ingestão Automática**
-    
-    Configure o `.env` e baixe notas direto do Gmail/Outlook.
-    [Guia de Ingestão](guide/ingestion.md)
+- :material-email-fast: **Ingestão Automática**
+  
+  Configure o `.env` e baixe notas direto do Gmail/Outlook.
+  [Guia de Ingestão](guide/ingestion.md)
 
--   :material-file-document-outline: **Processamento Local**
-    
-    Tem uma pasta cheia de PDFs? Processe tudo de uma vez.
-    [Guia de Uso](guide/usage.md)
+- :material-file-document-outline: **Processamento Local**
+  
+  Tem uma pasta cheia de PDFs? Processe tudo de uma vez.
+  [Guia de Uso](guide/usage.md)
 
--   :material-test-tube: **Testes & Qualidade**
-    
-    Garanta que nada quebrou antes de subir para produção.
-    [Guia de Testes](guide/testing.md)
+- :material-test-tube: **Testes & Qualidade**
+  
+  Garanta que nada quebrou antes de subir para produção.
+  [Guia de Testes](guide/testing.md)
 
--   :material-api: **Referência da API**
-    
-    Detalhes técnicos das classes e métodos internos.
-    [API Reference](api.md)
+- :material-api: **Referência da API**
+  
+  Detalhes técnicos das classes e métodos internos.
+  [API Reference](api.md)
 
 </div>
 
@@ -71,17 +71,17 @@ graph TD
     style OUTPUT fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
 ```
 
------
+---
 
 ## 🔄 1. Ingestão Segura
 
 Responsável pela **monitoria e captura** dos documentos fiscais.
 
-*   **Protocolo IMAP:** Conexão persistente e segura (SSL) com provedores modernos (Gmail, Office 365).
-*   **Segurança:** Credenciais gerenciadas via variáveis de ambiente (`.env`), suportando *App Passwords* para contornar 2FA.
-*   **Resiliência:** Tratamento de colisão de nomes de arquivos usando UUIDs.
+- **Protocolo IMAP:** Conexão persistente e segura (SSL) com provedores modernos (Gmail, Office 365).
+- **Segurança:** Credenciais gerenciadas via variáveis de ambiente (`.env`), suportando *App Passwords* para contornar 2FA.
+- **Resiliência:** Tratamento de colisão de nomes de arquivos usando UUIDs.
 
------
+---
 
 ## ⛏️ 2. Extração Inteligente
 
@@ -89,10 +89,10 @@ O núcleo do projeto (`scrapper_nfe`) transforma documentos desestruturados em d
 
 ### Funcionalidades Chave
 
-1.  **Estratégia Híbrida (Fallback):**
-    *   Tenta leitura nativa (`pdfplumber`) primeiro: **~0.1s/arquivo**.
-    *   Falha graciosamente para OCR (`Tesseract`) se necessário: **~3.0s/arquivo**.
-2.  **Normalização:** Converte valores monetários (`R$ 1.234,56`) e datas para formatos padrão de banco de dados (`float`, `ISO 8601`).
+1. **Estratégia Híbrida (Fallback):**
+   - Tenta leitura nativa (`pdfplumber`) primeiro: **~0.1s/arquivo**.
+   - Falha graciosamente para OCR (`Tesseract`) se necessário: **~3.0s/arquivo**.
+2. **Normalização:** Converte valores monetários (`R$ 1.234,56`) e datas para formatos padrão de banco de dados (`float`, `ISO 8601`).
 
 ### Modelo de Dados
 
@@ -104,7 +104,7 @@ O núcleo do projeto (`scrapper_nfe`) transforma documentos desestruturados em d
 | `data_emissao` | Data de competência (ISO 8601) | `date` |
 | `valor_total` | Valor líquido da nota | `float` |
 
------
+---
 
 ## 📂 Estrutura do Projeto
 

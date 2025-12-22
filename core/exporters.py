@@ -3,13 +3,35 @@ Módulo de exportação de dados extraídos.
 
 Implementa o padrão Strategy para exportação, permitindo adicionar novos
 formatos (Google Sheets, SQL, etc.) sem modificar código existente (OCP).
+
+Conformidade: GoogleSheetsExporter com retry strategy para Política 5.9.
 """
 
 from abc import ABC, abstractmethod
 from typing import List
 from pathlib import Path
 import pandas as pd
+import logging
 from core.models import DocumentData
+
+# Imports para Google Sheets (instalados via requirements.txt)
+try:
+    import gspread
+    from gspread.exceptions import APIError
+    from tenacity import (
+        retry,
+        stop_after_attempt,
+        wait_exponential,
+        retry_if_exception_type,
+        before_sleep_log
+    )
+    GSPREAD_AVAILABLE = True
+except ImportError:
+    GSPREAD_AVAILABLE = False
+    gspread = None
+    APIError = Exception
+
+logger = logging.getLogger('scrapper')
 
 
 class DataExporter(ABC):
@@ -73,40 +95,162 @@ class CsvExporter(DataExporter):
 
 class GoogleSheetsExporter(DataExporter):
     """
-    Exportador para Google Sheets (implementação futura).
+    Exportador para Google Sheets com retry strategy.
     
-    Placeholder para integração futura com Google Sheets API.
-    Quando implementado, permitirá enviar dados diretamente para planilhas
-    sem modificar o código de orquestração.
+    Conformidade: Implementa lançamento de títulos na planilha PAF conforme
+    POP 4.4 e 4.10 (Master Internet).
+    
+    Features:
+    - Autenticação via Service Account
+    - Retry automático com exponential backoff (até 5 tentativas)
+    - Logging detalhado para auditoria
+    - Batch processing (100 linhas por vez) para performance
+    - Modo single row para tempo real (ingestão de e-mails)
     """
     
-    def __init__(self, credentials_path: str, spreadsheet_id: str):
+    def __init__(self, credentials_path: str = 'credentials.json', 
+                 spreadsheet_id: str = None):
         """
         Inicializa o exportador do Google Sheets.
         
         Args:
-            credentials_path: Caminho para o arquivo de credenciais JSON
-            spreadsheet_id: ID da planilha do Google Sheets
+            credentials_path: Caminho para o arquivo de credenciais JSON da Service Account
+            spreadsheet_id: ID da planilha do Google Sheets (extraído da URL)
+            
+        Raises:
+            ImportError: Se gspread não estiver instalado
+            FileNotFoundError: Se credentials.json não existir
         """
+        if not GSPREAD_AVAILABLE:
+            raise ImportError(
+                "gspread não está instalado. "
+                "Execute: pip install gspread tenacity"
+            )
+        
         self.credentials_path = credentials_path
         self.spreadsheet_id = spreadsheet_id
-        # TODO: Inicializar cliente da API do Google Sheets
+        self._client = None
+        self._worksheet = None
     
-    def export(self, data: List[DocumentData], destination: str) -> None:
+    def _authenticate(self):
         """
-        Exporta documentos para Google Sheets.
+        Autentica com Google Sheets API usando Service Account.
+        
+        Raises:
+            FileNotFoundError: Se credentials.json não existir
+            gspread.exceptions.GSpreadException: Se autenticação falhar
+        """
+        if self._client is None:
+            try:
+                self._client = gspread.service_account(filename=self.credentials_path)
+                logger.info(f"Autenticado com sucesso no Google Sheets")
+            except FileNotFoundError:
+                logger.error(f"Arquivo de credenciais não encontrado: {self.credentials_path}")
+                raise
+            except Exception as e:
+                logger.error(f"Erro na autenticação Google Sheets: {e}")
+                raise
+    
+    def _get_worksheet(self, destination: str):
+        """
+        Obtém referência à planilha de destino.
+        
+        Args:
+            destination: Nome da aba/worksheet (ex: "PAF NOVO - SETORES CSC")
+            
+        Returns:
+            gspread.Worksheet: Referência à aba da planilha
+        """
+        if self._worksheet is None:
+            self._authenticate()
+            spreadsheet = self._client.open_by_key(self.spreadsheet_id)
+            self._worksheet = spreadsheet.worksheet(destination)
+            logger.info(f"Conectado à planilha: {destination}")
+        return self._worksheet
+    
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(APIError),
+        before_sleep=before_sleep_log(logger, logging.WARNING)
+    )
+    def _append_rows_with_retry(self, worksheet, rows: List[List]):
+        """
+        Adiciona linhas à planilha com retry automático.
+        
+        Conformidade: Retry strategy garante resiliência contra rate limits
+        da API do Google Sheets (300 req/min).
+        
+        Args:
+            worksheet: Worksheet do gspread
+            rows: Lista de listas (cada sublista é uma linha)
+            
+        Raises:
+            APIError: Se todas as tentativas falharem
+        """
+        worksheet.append_rows(rows, value_input_option='USER_ENTERED')
+    
+    def export(self, data: List[DocumentData], destination: str, 
+               batch_size: int = 100) -> None:
+        """
+        Exporta documentos para Google Sheets em lotes.
+        
+        Conformidade: Registra títulos na planilha PAF conforme POP 4.4 e 4.10.
         
         Args:
             data: Lista de objetos DocumentData
-            destination: Nome da aba/sheet onde os dados serão inseridos
-        
+            destination: Nome da aba/worksheet na planilha
+            batch_size: Quantidade de linhas por batch (default: 100)
+            
         Raises:
-            NotImplementedError: Ainda não implementado
+            ValueError: Se lista de dados estiver vazia
+            APIError: Se API do Google Sheets falhar após retries
         """
-        raise NotImplementedError(
-            "Exportação para Google Sheets será implementada na próxima fase. "
-            "Por enquanto, use CsvExporter."
-        )
+        if not data:
+            raise ValueError("Lista de dados vazia. Nada para exportar.")
+        
+        worksheet = self._get_worksheet(destination)
+        
+        # Acumula linhas para batch processing
+        buffer = []
+        total_exported = 0
+        
+        for doc in data:
+            row = doc.to_sheets_row()  # Retorna lista com 18 valores na ordem PAF
+            buffer.append(row)
+            
+            # Envia batch quando atingir o tamanho
+            if len(buffer) >= batch_size:
+                self._append_rows_with_retry(worksheet, buffer)
+                total_exported += len(buffer)
+                logger.info(f"Batch exportado: {len(buffer)} documentos - "
+                           f"Total: {total_exported}/{len(data)}")
+                buffer = []
+        
+        # Envia linhas restantes
+        if buffer:
+            self._append_rows_with_retry(worksheet, buffer)
+            total_exported += len(buffer)
+            logger.info(f"Batch final exportado: {len(buffer)} documentos")
+        
+        logger.info(f"Exportação concluída: {total_exported} documentos para '{destination}'")
+    
+    def export_single(self, doc: DocumentData, destination: str) -> None:
+        """
+        Exporta um único documento em tempo real (modo individual).
+        
+        Ideal para ingestão de e-mails onde documentos chegam um a um.
+        
+        Args:
+            doc: Documento individual a exportar
+            destination: Nome da aba/worksheet na planilha
+        """
+        worksheet = self._get_worksheet(destination)
+        row = doc.to_sheets_row()
+        
+        self._append_rows_with_retry(worksheet, [row])
+        logger.info(f"Documento exportado com sucesso: {doc.arquivo_origem} - "
+                   f"Tipo: {doc.doc_type}")
 
 
 class FileSystemManager:
