@@ -10,6 +10,15 @@ from core.extractors import EXTRACTOR_REGISTRY
 from config.settings import TRAT_PAF_RESPONSAVEL
 import extractors.generic
 import extractors.boleto
+from core.nf_candidate import extract_nf_candidate
+from core.empresa_matcher import (
+    find_empresa_no_texto,
+    format_cnpj,
+    infer_fornecedor_from_text,
+    is_cnpj_nosso,
+    is_nome_nosso,
+    pick_first_non_our_cnpj,
+)
 
 class BaseInvoiceProcessor(ABC):
     """
@@ -48,6 +57,9 @@ class BaseInvoiceProcessor(ABC):
         """
         # 1. Leitura
         raw_text = self.reader.extract(file_path)
+
+        # Sugestão de NF (debug/auditoria): não altera o MVP
+        nf_sugestao = extract_nf_candidate(raw_text or "")
         
         if not raw_text or "Falha" in raw_text:
             # Retorna objeto vazio de NFSe por padrão
@@ -69,6 +81,52 @@ class BaseInvoiceProcessor(ABC):
                 'trat_paf': TRAT_PAF_RESPONSAVEL,
                 'lanc_sistema': 'PENDENTE',
             }
+
+            # Campos opcionais (não obrigatórios) vindos do extrator
+            for k in ('setor', 'empresa', 'observacoes'):
+                v = extracted_data.get(k)
+                if v:
+                    common_data[k] = v
+
+            # --- Regra de negócio (EMPRESA nossa) ---
+            # Se existir um CNPJ do nosso cadastro no documento, ele define a coluna EMPRESA.
+            # Qualquer outro CNPJ no documento tende a ser fornecedor/terceiro.
+            empresa_match = find_empresa_no_texto(raw_text or "")
+            if empresa_match:
+                # Padroniza para um identificador curto (ex: CSC, MASTER, OP11, RBC)
+                common_data['empresa'] = empresa_match.codigo
+
+                # Se o extrator colocou uma empresa nossa como fornecedor, limpa.
+                fn = extracted_data.get('fornecedor_nome')
+                if fn and is_nome_nosso(fn):
+                    extracted_data['fornecedor_nome'] = None
+
+                # Se o extrator capturou CNPJ nosso como "prestador/beneficiário" por engano,
+                # tenta trocar para o primeiro CNPJ não-nosso presente no texto.
+                if extracted_data.get('tipo_documento') == 'BOLETO':
+                    cnpj_ben = extracted_data.get('cnpj_beneficiario')
+                    if cnpj_ben and is_cnpj_nosso(cnpj_ben):
+                        other = pick_first_non_our_cnpj(raw_text or "")
+                        if other:
+                            extracted_data['cnpj_beneficiario'] = format_cnpj(other)
+                else:
+                    cnpj_prest = extracted_data.get('cnpj_prestador')
+                    if cnpj_prest and is_cnpj_nosso(cnpj_prest):
+                        other = pick_first_non_our_cnpj(raw_text or "")
+                        if other:
+                            extracted_data['cnpj_prestador'] = format_cnpj(other)
+
+            # Fallback conservador: se fornecedor ainda está vazio e temos empresa nossa,
+            # tenta inferir um fornecedor por linha com CNPJ (que não seja do cadastro).
+            if (not extracted_data.get('fornecedor_nome')) and empresa_match:
+                inferred = infer_fornecedor_from_text(raw_text or "", empresa_match.cnpj_digits)
+                if inferred:
+                    extracted_data['fornecedor_nome'] = inferred
+
+            if nf_sugestao.value:
+                obs_prev = extracted_data.get('obs_interna')
+                obs_nf = f"NF_CANDIDATE={nf_sugestao.value} (conf={nf_sugestao.confidence:.2f}, {nf_sugestao.reason})"
+                common_data['obs_interna'] = f"{obs_prev} | {obs_nf}" if obs_prev else obs_nf
             
             # 3. Identifica o tipo e cria o modelo apropriado
             if extracted_data.get('tipo_documento') == 'BOLETO':
@@ -81,6 +139,7 @@ class BaseInvoiceProcessor(ABC):
                     cnpj_beneficiario=extracted_data.get('cnpj_beneficiario'),
                     valor_documento=extracted_data.get('valor_documento', 0.0),
                     vencimento=extracted_data.get('vencimento'),
+                    data_emissao=extracted_data.get('data_emissao'),
                     numero_documento=extracted_data.get('numero_documento'),
                     linha_digitavel=extracted_data.get('linha_digitavel'),
                     nosso_numero=extracted_data.get('nosso_numero'),

@@ -1,6 +1,6 @@
 # Guia de Instalação e Execução
 
-Este guia descreve como configurar o ambiente de desenvolvimento e executar o extrator de NFS-e.
+Este guia descreve como configurar o ambiente de desenvolvimento e executar o pipeline do MVP (NFSe e Boletos).
 
 ## Pré-requisitos
 
@@ -42,26 +42,42 @@ Você pode alterar o comportamento do extrator através de variáveis de ambient
 
 ## Execução
 
-Para processar os arquivos na pasta `nfs/`:
+### 1) Processar e-mails (ingestão)
+
+Executa o pipeline completo (baixa anexos, classifica documento, extrai dados e gera CSVs/debug):
 
 ```bash
-python main.py
+python run_ingestion.py
 ```
 
-O script irá:
+### 2) Debug de um PDF (colunas MVP)
 
-1. Ler todos os PDFs na pasta `nfs/`.
-2. Extrair os dados (CNPJ, Valor, Data, Número).
-3. Gerar um arquivo `carga_notas_fiscais.csv` na raiz do projeto.
+Mostra as colunas PAF do MVP diretamente no terminal:
 
-### Exemplo de Resultado
+```bash
+python scripts/debug_pdf.py "caminho/para/arquivo.pdf"
+```
 
-Após processar os PDFs, o arquivo `carga_notas_fiscais.csv` será gerado com o seguinte formato:
+Para ver o texto extraído (útil em casos híbridos/OCR):
 
-| arquivo_origem | cnpj_prestador | data_emissao | numero_nota | valor_total |
-| :--- | :--- | :--- | :--- | :--- |
-| nota_sp_01.pdf | 12.345.678/0001-90 | 2023-10-15 | 98765 | 1500.00 |
-| nota_rj_scan.pdf | 98.765.432/0001-10 | 2023-10-16 | 452 | 350.50 |
+```bash
+python scripts/debug_pdf.py "caminho/para/arquivo.pdf" --full-text
+```
+
+### 3) Validar regras / gerar CSVs de debug
+
+Executa a validação e escreve outputs em `data/debug_output/`:
+
+```bash
+python scripts/validate_extraction_rules.py
+```
+
+### Saídas
+
+Os CSVs de debug/saída ficam em:
+
+- `data/output/` (relatórios finais)
+- `data/debug_output/` (sucesso/falha com texto bruto reduzido e colunas auxiliares)
 
 ## Solução de Problemas Comuns
 

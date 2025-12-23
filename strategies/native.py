@@ -25,34 +25,33 @@ class NativePdfStrategy(TextExtractionStrategy):
             with pdfplumber.open(file_path) as pdf:
                 if not pdf.pages:
                     return ""
-                
-                # Tentativa 1: Extração com layout preservado
-                # Útil para documentos onde rótulos e valores estão separados espacialmente
-                text_layout = ""
-                for page in pdf.pages:
-                    page_text = page.extract_text(
-                        layout=True,
-                        x_tolerance=3,
-                        y_tolerance=3
-                    ) or ""
-                    text_layout += page_text + "\n"
-                
-                # Se layout preservado deu bom resultado, usa ele
-                if len(text_layout.strip()) > 100:
-                    return text_layout
-                
-                # Fallback: Extração simples (original)
+
+                # Tentativa 1 (rápida): extração simples
                 text_simple = ""
                 for page in pdf.pages:
                     page_text = page.extract_text() or ""
                     text_simple += page_text + "\n"
-                
-                # Regra de Ouro: Se extraiu pouco texto, considere falha!
-                if len(text_simple.strip()) < 50: 
-                    return ""  # Força o fallback para OCR
-                
+
+                # Regra de Ouro: se extraiu pouco texto, considere falha e deixe o fallback decidir.
+                if len(text_simple.strip()) < 50:
+                    return ""
+
+                # Se a extração simples já é "boa o bastante", evita layout=True (pode ser bem lento).
+                # Em muitos PDFs híbridos/gerados, o layout preservado degrada performance.
+                if len(text_simple.strip()) >= 300:
+                    return text_simple
+
+                # Tentativa 2: layout preservado (melhor para documentos tabulares, porém mais lenta)
+                text_layout = ""
+                for page in pdf.pages:
+                    page_text = page.extract_text(layout=True, x_tolerance=3, y_tolerance=3) or ""
+                    text_layout += page_text + "\n"
+
+                # Usa o layout se ele trouxe significativamente mais conteúdo, senão fica no simples.
+                if len(text_layout.strip()) > len(text_simple.strip()) + 100:
+                    return text_layout
+
                 return text_simple
-                
-        except Exception as e:
-            # Logar o erro se necessário
+
+        except Exception:
             return ""

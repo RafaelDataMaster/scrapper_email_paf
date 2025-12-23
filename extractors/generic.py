@@ -191,10 +191,15 @@ class GenericExtractor(BaseExtractor):
             str: Razão Social ou None se não encontrado
         """
         patterns = [
-            r'(?i)Prestador[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
-            r'(?i)Raz[ãa]o\s+Social[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
-            r'(?i)Tomador[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
-            r'(?i)Nome[^\n]*?[:\s]+([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            # Prioriza o rótulo explícito (mais confiável)
+            r'(?im)^\s*Raz[ãa]o\s+Social\s*[:\-]\s*([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})\s*$',
+            r'(?i)Raz[ãa]o\s+Social[^\n]*?[:\-\s]+([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+
+            r'(?i)Tomador[^\n]*?[:\-\s]+([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+            r'(?i)Nome[^\n]*?[:\-\s]+([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
+
+            # Prestador: só considera se houver ':' para evitar capturar "PRESTADOR DE SERVIÇOS\nRazão Social"
+            r'(?i)Prestador[^\n]*?:\s*([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})',
         ]
         
         for pattern in patterns:

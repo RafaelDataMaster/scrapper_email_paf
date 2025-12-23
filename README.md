@@ -1,114 +1,45 @@
-# Sistema de Extração Inteligente de Documentos Fiscais
+# Sistema de Extração (MVP PAF)
 
-Sistema automatizado para extração e processamento de **NFSe** e **Boletos Bancários** a partir de PDFs recebidos por e-mail. Utiliza estratégias de extração adaptativas (PDFPlumber + OCR) e segue princípios SOLID para garantir manutenibilidade e extensibilidade.
+Sistema para extração e processamento de documentos fiscais (NFSe e Boletos) a partir de PDFs.
+
+O **MVP atual** está focado em gerar as colunas essenciais da planilha PAF:
+
+- DATA (processamento)
+- SETOR (**vazio no MVP**, será preenchida via ingestão/metadata do e-mail)
+- EMPRESA
+- FORNECEDOR
+- NF (**vazio no MVP**, será preenchida via API da openAI)
+- EMISSÃO (quando aplicável)
+- VALOR
+- VENCIMENTO
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-43%20passing-brightgreen.svg)](./tests/)
 [![Documentation](https://img.shields.io/badge/docs-MkDocs-blue.svg)](./docs/)
-
-## 🎯 Características Principais
-
-- **Extração Dual**: Processa NFSe e Boletos automaticamente
-- **Estratégias Adaptativas**: Fallback automático para OCR quando necessário
-- **Ingestão IMAP**: Baixa anexos diretamente do e-mail
-- **Arquitetura SOLID**: 4 princípios implementados (SRP, OCP, LSP, DIP)
-- **43 Testes Passando**: Cobertura completa de extratores e estratégias
-- **Vinculação Inteligente**: Associa boletos às suas NFSe automaticamente
-- **Sistema de Qualidade**: Análise de taxa de sucesso e diagnóstico de falhas
-
-## 📦 Instalação Rápida
-
-```bash
-# Clone e configure o ambiente
-git clone <repository-url>
-cd scrapper
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# Instale dependências
-pip install -r requirements.txt
-
-# Configure credenciais (copie .env.example para .env)
-cp .env.example .env
-# Edite .env com suas credenciais IMAP
-```
-
-## 🚀 Uso Básico
-
-### Processar PDFs Locais
-
-```bash
-python main.py
-```
-
-### Ingestão via E-mail
-
-```bash
-python run_ingestion.py
-```
-
-### Executar Testes
-
-```bash
-pytest tests/ -v
-```
-
-## 📊 Dados Extraídos
-
-### NFSe
-
-- CNPJ Prestador, Número da Nota, Data de Emissão, Valor Total
-
-### Boletos
-
-- CNPJ Beneficiário, Valor, Vencimento, Linha Digitável, Nosso Número, Referência NFSe
-
-📖 Consulte a [documentação completa](./docs/) para detalhes.
-
-## 🐳 Docker
-
-```bash
-# Build e execução
-docker-compose up --build
-
-# Ou use o Makefile
-make docker-build
-make docker-run
-```
 
 ## To Do - Notas mentais
 
-- [ ] Focar em um primeiro momento a extração das seguintes colunas [(Data de emissão?),(setor que fez o pedido),EMPRESA,FORNECEDOR,NF,EMISSÃO,VALOR,VENCIMENTO,]
+- [ ] Focar em um primeiro momento a extração das seguintes colunas [(Data inicio/recebimento do pedido),(setor que fez o pedido aparentemente pode deixar pra la mas se tiver bom),EMPRESA(nós),FORNECEDOR(eles),NF,EMISSÃO,VALOR,VENCIMENTO,]
 - [ ] Procurar APIs da openAI para OCR e validadção dos dados no documento no caso para a coluna NF num primeiro momento
 - [ ] Concertar/adicionar a logica de extração das NSFE pra funcionar com os casos falhos.
-- [ ] Conseguir o acesso ao maior número de pdfs e a tabela de verdades já catalogada dos dados pra conferir se a extração do PDF está de fato funcionando.
 - [ ] Verificar cada caso a fundo dos pdfs e avaliar possíveis estratégias para os casos onde o pdf em si não esta anexado no email (link de prefeitura ou redirecionador de terceiros).
 - [ ] Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows.
 - [ ] Quando o projeto estiver no estágio real pra primeira release ler git-futuro.md e pesquisar ferramentas/plugins/qualquer coisa que ajude a melhorar a maluquice que é os commits e tudo mais.
 
-### 🔧 Refatorações Técnicas Necessárias
+# Estudar por agora
 
-#### 1. Modelo de Dados
-
-- [ ] Criar classe `FiscalData` com campos adicionais:
-
-  ```python
-  @dataclass
-  class FiscalData(DocumentData):
-      serie_nf: Optional[str]
-      tipo_documento: str  # fatura/boleto/taxa/imposto
-      forma_pagamento: Optional[str]
-      base_calculo_icms: Optional[Decimal]
-      valor_icms: Optional[Decimal]
-      valor_iss: Optional[Decimal]
-      cfop: Optional[str]
-      cst: Optional[str]
-      numero_pedido_compra: Optional[str]
-      razao_social_fornecedor: Optional[str]
-      link_drive: Optional[str]
-  ```
+Quebrar os dados em pontos principais. A primeira coluna era a data que o pedido chegou/foi feito
 
 ## Done
+
+### 23/12/2025 - Dia 8
+
+- [X] Boletos: FORNECEDOR robusto (não captura linha digitável e não fica vazio por falso positivo de "empresa nossa")
+- [X] Classificação de boleto mais resiliente a OCR/quebras (keywords corrompidas)
+
+### 22/12/2025 - Dia 7
+
+- [X] Alinhamento dos modelos de extração com o requisitado pra um primeiro momento com PAF
+- [X] Refatoração do script de debug_pdf pra ficar condizente com o MVP
 
 ### 19/12/2025 - Dia 6
 
@@ -172,55 +103,95 @@ make docker-run
 - [x] Debugar PDFs para entender cada caso
 - [x] Extração de dados para CSV baseados em PDFs de diferentes casos
 
-## 🔍 Foco Atual de Desenvolvimento
+## Instalação
 
-- ✅ Validação de extração com 100% de taxa de sucesso em boletos
-- 🔄 Extração de XML (próxima iteração)
-- ✅ IMAP configurado e testado em ambiente real
-- 🔄 Otimização de fila de processamento OCR
+```bash
+python -m venv .venv
 
-## 📈 Métricas de Qualidade
+# Windows (PowerShell)
+.\.venv\Scripts\Activate.ps1
 
-- **Taxa de Sucesso Boletos**: 100% (10/10 validados)
-- **Taxa de Sucesso NFSe**: ~85% (em monitoramento)
-- **Cobertura de Testes**: 43 testes unitários
-- **Tempo de Processamento**:
-  - Extração Nativa: ~2s/documento
-  - Extração OCR: ~30s/documento
+# Linux/macOS
+source .venv/bin/activate
 
-## ⚠️ Desafios e Soluções
+pip install -r requirements.txt
+```
 
-### Regex Complexo
+## Configuração (.env)
 
-- **Problema**: Variações de layout entre municípios
-- **Solução**: Biblioteca de padrões testados + `re.DOTALL` para layouts multi-linha
-- **Ferramenta**: `scripts/debug_pdf.py` para validação rápida
+Copie o modelo e preencha com suas credenciais IMAP:
 
-### Performance OCR
+```bash
+copy .env.example .env  # Windows
+# ou
+cp .env.example .env    # Linux/macOS
+```
 
-- **Problema**: PDFs com imagem demoram ~30s
-- **Planejamento**: Fila assíncrona para processamento paralelo (próxima fase)
+Variáveis (ver [.env.example](.env.example)):
 
-### Vinculação NFSe-Boleto
+- `EMAIL_HOST`
+- `EMAIL_USER`
+- `EMAIL_PASS`
+- `EMAIL_FOLDER`
 
-- **Solução**: 3 estratégias (referência explícita, nº documento, cruzamento de dados)
-- **Taxa de Sucesso**: ~90% de vinculação automática
+## Uso (MVP)
 
-## 📋 Arquitetura e Tecnologias
+### 1) Processar PDFs locais (colunas MVP)
 
-### Stack Tecnológico
+Use o script de debug do MVP para ver as colunas PAF prioritárias:
 
-- **Python 3.8+** - Linguagem principal
-- **PDFPlumber** - Extração nativa de texto
-- **Tesseract OCR** - Fallback para PDFs com imagem
-- **IMAPClient** - Ingestão de e-mails
-- **Pandas** - Manipulação de dados e exportação CSV
-- **pytest** - Framework de testes
-- **MkDocs** - Documentação técnica
+```bash
+python scripts/debug_pdf.py "caminho/para/arquivo.pdf"
+```
 
-### Princípios SOLID Implementados
+Para inspecionar o texto bruto extraído:
 
-- **SRP** - Separação de responsabilidades (FileSystemManager, AttachmentDownloader, DataExporter)
-- **OCP** - Extensível sem modificação (classe base DocumentData)
-- **LSP** - Estratégias intercambiáveis com comportamento consistente
-- **DIP** - Injeção de dependências no processador principal
+```bash
+python scripts/debug_pdf.py "caminho/para/arquivo.pdf" --full-text
+```
+
+### 2) Validar regras em lote (pasta `failed_cases_pdf/`)
+
+Processa todos os PDFs em `failed_cases_pdf/` e gera relatórios em `data/debug_output/`:
+
+```bash
+python scripts/validate_extraction_rules.py
+```
+
+### 3) Ingestão via e-mail (gera CSVs)
+
+Baixa anexos e processa o pipeline:
+
+```bash
+python run_ingestion.py
+```
+
+Saída em `data/output/`:
+
+- `relatorio_nfse.csv`
+- `relatorio_boletos.csv`
+
+Obs.: o filtro de assunto está **hardcoded** em `run_ingestion.py` (variável `assunto_teste`, atualmente `"ENC"`).
+
+## Dependências externas (OCR)
+
+Quando o PDF não tem texto selecionável, o pipeline pode cair para OCR.
+No Windows, os caminhos padrão são configurados em `config/settings.py` (`TESSERACT_CMD` e `POPPLER_PATH`).
+
+## Estrutura do projeto (resumo)
+
+```
+config/          # settings (.env), parâmetros e caminhos
+core/            # modelos (PAF), processor e diagnósticos
+extractors/      # extratores por tipo (NFSe/Boleto)
+strategies/      # estratégias (nativa/ocr/fallback)
+ingestors/       # IMAP e utilitários de download
+scripts/         # ferramentas (debug_pdf, validate_extraction_rules, etc.)
+failed_cases_pdf/# PDFs para testes/validação de regras
+data/
+  output/        # CSVs gerados pela ingestão
+  debug_output/  # relatórios de validação (sucesso/falha)
+tests/           # suíte de testes
+```
+
+📖 Documentação técnica em [docs/](./docs/).

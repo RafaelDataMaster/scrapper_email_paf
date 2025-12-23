@@ -22,7 +22,7 @@ class DocumentData(ABC):
         doc_type (str): Tipo do documento ('NFSE', 'BOLETO', etc.).
     """
     arquivo_origem: str
-    texto_bruto: str
+    texto_bruto: str = ""
     data_processamento: Optional[str] = None
     setor: Optional[str] = None
     empresa: Optional[str] = None
@@ -310,6 +310,9 @@ class BoletoData(DocumentData):
     fornecedor_nome: Optional[str] = None
     valor_documento: float = 0.0
     vencimento: Optional[str] = None
+    data_emissao: Optional[str] = None
+    # Compatibilidade com testes/scripts antigos
+    data_vencimento: Optional[str] = None
     forma_pagamento: Optional[str] = None
     numero_documento: Optional[str] = None
     linha_digitavel: Optional[str] = None
@@ -327,6 +330,11 @@ class BoletoData(DocumentData):
     dt_classificacao: Optional[str] = None
     trat_paf: Optional[str] = None
     lanc_sistema: str = "PENDENTE"
+
+    def __post_init__(self) -> None:
+        # Mantém compatibilidade: alguns chamadores usam data_vencimento.
+        if not self.vencimento and self.data_vencimento:
+            self.vencimento = self.data_vencimento
     
     @property
     def doc_type(self) -> str:
@@ -350,6 +358,7 @@ class BoletoData(DocumentData):
             'fornecedor_nome': self.fornecedor_nome,
             'valor_documento': self.valor_documento,
             'vencimento': self.vencimento,
+            'data_emissao': self.data_emissao,
             'forma_pagamento': self.forma_pagamento,
             'numero_documento': self.numero_documento,
             'linha_digitavel': self.linha_digitavel,
@@ -421,7 +430,7 @@ class BoletoData(DocumentData):
             fmt_str(self.empresa),               # 3. EMPRESA
             fmt_str(self.fornecedor_nome),       # 4. FORNECEDOR
             nf_value,                             # 5. NF (MVP: vazio)
-            "",                                  # 6. EMISSÃO (boleto não tem emissão, apenas vencimento)
+            fmt_date(self.data_emissao),          # 6. EMISSÃO
             fmt_num(self.valor_documento),       # 7. VALOR
             fmt_str(self.numero_pedido),         # 8. Nº PEDIDO
             fmt_date(self.vencimento),           # 9. VENCIMENTO

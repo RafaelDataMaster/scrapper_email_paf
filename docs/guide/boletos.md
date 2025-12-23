@@ -23,6 +23,24 @@ O sistema agora processa **Notas Fiscais (NFSe)** e **Boletos Bancários** autom
 - Nosso Número
 - Referência à NFSe (quando disponível)
 
+## Regra EMPRESA vs FORNECEDOR (MVP PAF)
+
+Para reduzir ambiguidades nos boletos, usamos uma regra determinística baseada no cadastro interno:
+
+- **EMPRESA**: se algum CNPJ do nosso cadastro (`config/empresas.py`) aparece no documento, ele define a coluna EMPRESA.
+- **FORNECEDOR**: a entidade que recebe (beneficiário/cedente) ou qualquer CNPJ/nome que não seja do nosso cadastro.
+
+Isso evita que a própria empresa (nós) apareça como fornecedor por erro de layout.
+
+## Robustez de classificação (OCR / texto “quebrado”)
+
+Alguns PDFs (principalmente híbridos) podem corromper palavras-chave como “Beneficiário”/“Número” e quebrar linhas no meio das palavras.
+O classificador de boleto foi ajustado para ser tolerante a:
+
+- acentos
+- quebras de linha no meio de palavras
+- caracteres perdidos (ex: “NÚMERO” → “NMERO”)
+
 ## Como Usar
 
 ### 1. Processamento Automático

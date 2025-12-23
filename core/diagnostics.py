@@ -260,110 +260,122 @@ class ExtractionDiagnostics:
         linhas.append("📊 RELATÓRIO DE QUALIDADE DA EXTRAÇÃO")
         linhas.append("=" * 80)
         linhas.append("")
-        
         linhas.append(f"📅 Data: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-        linhas.append(f"📦 Total de arquivos: {dados['total']}")
+        linhas.append(f"📦 Total de arquivos: {dados.get('total', 0)}")
         linhas.append("")
-        
+
         # NFSe
         linhas.append("--- NFSe ---")
-        linhas.append(f"✅ Completas: {dados['nfse_ok']}")
-        linhas.append(f"⚠️ Com falhas: {dados['nfse_falha']}")
-        total_nfse = dados['nfse_ok'] + dados['nfse_falha']
+        linhas.append(f"✅ Completas: {dados.get('nfse_ok', 0)}")
+        linhas.append(f"⚠️ Com falhas: {dados.get('nfse_falha', 0)}")
+        total_nfse = dados.get('nfse_ok', 0) + dados.get('nfse_falha', 0)
         if total_nfse > 0:
-            taxa = (dados['nfse_ok'] / total_nfse) * 100
+            taxa = (dados.get('nfse_ok', 0) / total_nfse) * 100
             linhas.append(f"📈 Taxa de sucesso: {taxa:.1f}%")
-        
+
         # Boletos
         linhas.append("")
         linhas.append("--- Boletos ---")
-        linhas.append(f"✅ Completos: {dados['boleto_ok']}")
-        linhas.append(f"⚠️ Com falhas: {dados['boleto_falha']}")
-        total_boleto = dados['boleto_ok'] + dados['boleto_falha']
+        linhas.append(f"✅ Completos: {dados.get('boleto_ok', 0)}")
+        linhas.append(f"⚠️ Com falhas: {dados.get('boleto_falha', 0)}")
+        total_boleto = dados.get('boleto_ok', 0) + dados.get('boleto_falha', 0)
         if total_boleto > 0:
-            taxa = (dados['boleto_ok'] / total_boleto) * 100
+            taxa = (dados.get('boleto_ok', 0) / total_boleto) * 100
             linhas.append(f"📈 Taxa de sucesso: {taxa:.1f}%")
-        
+
         linhas.append("")
-        linhas.append(f"❌ Erros: {dados['erros']}")
-        
+        linhas.append(f"❌ Erros: {dados.get('erros', 0)}")
+
         # Detalhes das falhas NFSe
-        if dados.get('nfse_falhas_detalhe'):
+        nfse_falhas = dados.get('nfse_falhas_detalhe') or []
+        if nfse_falhas:
             linhas.append("")
             linhas.append("=" * 80)
             linhas.append("🔍 FALHAS - NFSe")
             linhas.append("=" * 80)
-            for item in dados['nfse_falhas_detalhe']:
+            for item in nfse_falhas:
                 linhas.append("")
-                linhas.append(f"📄 {item['arquivo_origem']}")
+                linhas.append(f"📄 {item.get('arquivo_origem', 'N/A')}")
                 linhas.append(f"   Motivo: {item.get('motivo_falha', 'N/A')}")
                 linhas.append(f"   Número: {item.get('numero_nota', 'N/A')}")
-                linhas.append(f"   Valor: R$ {item.get('valor_total', 0):,.2f}")
-        
+                try:
+                    valor = float(item.get('valor_total', 0) or 0)
+                except Exception:
+                    valor = 0.0
+                linhas.append(f"   Valor: R$ {valor:,.2f}")
+
         # Detalhes das falhas Boletos
-        if dados.get('boleto_falhas_detalhe'):
+        boleto_falhas = dados.get('boleto_falhas_detalhe') or []
+        if boleto_falhas:
             linhas.append("")
             linhas.append("=" * 80)
             linhas.append("🔍 FALHAS - BOLETOS")
             linhas.append("=" * 80)
-            for item in dados['boleto_falhas_detalhe']:
+            for item in boleto_falhas:
                 linhas.append("")
-                linhas.append(f"📄 {item['arquivo_origem']}")
+                linhas.append(f"📄 {item.get('arquivo_origem', 'N/A')}")
                 linhas.append(f"   Motivo: {item.get('motivo_falha', 'N/A')}")
-                linhas.append(f"   Valor: R$ {item.get('valor_documento', 0):,.2f}")
-        
+                try:
+                    valor = float(item.get('valor_documento', 0) or 0)
+                except Exception:
+                    valor = 0.0
+                linhas.append(f"   Valor: R$ {valor:,.2f}")
+
         return "\n".join(linhas)
-    
+
     @staticmethod
     def salvar_relatorio(dados: Dict, caminho_arquivo) -> None:
-        """
-        Gera e salva o relatório em arquivo de texto.
-        
-        Args:
-            dados: Dicionário com estatísticas de extração
-            caminho_arquivo: Path ou string com caminho do arquivo de saída
-        """
+        """Gera e salva o relatório em arquivo de texto."""
         relatorio = ExtractionDiagnostics.gerar_relatorio_texto(dados)
-        
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
             f.write(relatorio)
-    
+
     @staticmethod
     def diagnosticar_tipo_falha(arquivo: str, texto_snippet: str, numero_nota: str, valor: float) -> str:
-        """
-        Tenta classificar automaticamente o tipo de falha de extração.
-        
-        Args:
-            arquivo: Nome do arquivo origem
-            texto_snippet: Trecho do texto extraído
-            numero_nota: Número da nota extraído (pode ser vazio)
-            valor: Valor extraído
-            
-        Returns:
-            String com diagnóstico sugerido
-            
-        Examples:
-            >>> diag = ExtractionDiagnostics.diagnosticar_tipo_falha(
-            ...     "boleto123.pdf", "BOLETO BANCÁRIO", "", 0.0
-            ... )
-            >>> assert "BOLETO/RECIBO" in diag
-        """
-        texto_lower = texto_snippet.lower()
-        arquivo_lower = arquivo.lower()
-        
+        """Tenta classificar automaticamente o tipo de falha de extração."""
+        texto_lower = (texto_snippet or "").lower()
+        arquivo_lower = (arquivo or "").lower()
+
         # Verifica se é boleto/recibo (não deveria ser processado como NFSe)
         if "boleto" in arquivo_lower or "recibo" in arquivo_lower:
             return "BOLETO/RECIBO (Ignorar se não for NF)."
-        
+
         # Verifica se é locação (layout atípico)
         if "locação" in texto_lower or "locacao" in texto_lower:
             return "LOCAÇÃO (Layout atípico)."
-        
+
         # Diagnóstico específico por campo
-        if valor == 0.0 or not valor:
+        try:
+            valor_num = float(valor or 0)
+        except Exception:
+            valor_num = 0.0
+
+        if valor_num == 0.0:
             return "Regex de VALOR falhou."
-        
+
         if not numero_nota or numero_nota == "VAZIO":
             return "Regex de NÚMERO DA NOTA falhou."
-        
+
         return "Falha genérica de extração."
+
+
+class DiagnosticoPAF:
+    """Compatibilidade para scripts legados.
+
+    Alguns scripts antigos (ex.: `scripts/test_paf_system.py`) importam `DiagnosticoPAF`.
+    A API atual foi consolidada em `ExtractionDiagnostics`, mas mantemos este wrapper
+    para não quebrar execução manual desses scripts.
+    """
+
+    def __init__(self):
+        self._calendario = SPBusinessCalendar()
+
+    def validar_prazo_vencimento(self, dt_classificacao: datetime, vencimento: datetime) -> Tuple[bool, int]:
+        """Valida se há no mínimo 04 dias úteis entre classificação e vencimento."""
+        if not dt_classificacao or not vencimento:
+            return (False, 0)
+        try:
+            dias_uteis = self._calendario.get_working_days_delta(dt_classificacao, vencimento)
+            return (dias_uteis >= 4, dias_uteis)
+        except Exception:
+            return (False, 0)

@@ -42,9 +42,10 @@ class TestSPBusinessCalendar:
         """Testa cálculo de dias úteis entre datas"""
         calendario = SPBusinessCalendar()
         
-        # De segunda a sexta (5 dias úteis)
-        inicio = datetime(2025, 12, 22)  # Segunda
-        fim = datetime(2025, 12, 29)     # Segunda seguinte
+        # Semana cheia sem feriados no meio (5 dias úteis)
+        # Obs: Usamos uma janela que não cruza 25/12 para evitar ambiguidade.
+        inicio = datetime(2025, 12, 1)   # Segunda
+        fim = datetime(2025, 12, 8)      # Segunda seguinte
         dias = calendario.get_working_days_delta(inicio, fim)
         assert dias == 5
         
@@ -301,9 +302,9 @@ class TestDiagnostics:
         """Testa validação com prazo >= 4 dias úteis"""
         diagnostico = ExtractionDiagnostics()
         
-        # Segunda 22/12 para sexta 27/12 (4 dias úteis: 23, 24, 26, 27 - 25 é Natal)
+        # Segunda 22/12 para segunda 29/12 (4 dias úteis: 23, 24, 26, 29 - 25 é Natal)
         dt_classificacao = datetime(2025, 12, 22)
-        vencimento = datetime(2025, 12, 27)
+        vencimento = datetime(2025, 12, 29)
         
         prazo_ok, dias_uteis = diagnostico.validar_prazo_vencimento(
             dt_classificacao.strftime('%Y-%m-%d'),

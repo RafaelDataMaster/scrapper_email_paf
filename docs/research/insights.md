@@ -105,3 +105,32 @@ O extrator genérico (`GenericExtractor`) funciona bem para layouts padrão (ABR
 Alguns documentos são híbridos (Recibos de Locação) que juridicamente funcionam como comprovante, mas não têm a estrutura de uma NFSe.
 
 * **Insight:** Tentar forçar a extração de "Número de Nota" nesses documentos é um erro conceitual. Eles devem ser tratados como uma categoria à parte ou ignorados se o escopo for estritamente NFSe.
+
+---
+
+## 7. Boletos: FORNECEDOR vazio (falso positivo) e texto corrompido
+
+Durante a validação com boletos reais (Dez/2025) apareceu um padrão onde o processamento mostrava **EMPRESA correta**, mas **FORNECEDOR vazio**, mesmo quando o texto bruto continha claramente “MAIS CONSULTORIA… <CNPJ>”.
+
+### Causas-raiz
+
+1) **Heurística permissiva demais para “nome nosso”**
+
+- Existia um pós-processamento para limpar `fornecedor_nome` quando ele parecesse ser “uma empresa nossa”.
+- A heurística anterior marcava como “nosso” se o nome contivesse um token do cadastro que podia ser genérico.
+- Resultado: nomes de fornecedor como “... SERVICOS LTDA” eram apagados por falso positivo.
+
+2) **Classificação de boleto frágil com OCR/híbrido**
+
+- PDFs híbridos podem corromper palavras-chave (“NÚMERO” → “NMERO”, “BENEFICIÁRIO” → variações) e quebrar palavras no meio.
+- Se a classificação falha, o `GenericExtractor` pode ser escolhido e deixar campos de boleto incompletos.
+
+### Solução implementada
+
+- `is_nome_nosso()` ficou mais conservador: só considera códigos curtos/distintivos e ignora stopwords comuns para reduzir falso positivo.
+- `BoletoExtractor.can_handle()` ficou mais resiliente a texto corrompido (normalização + detecção com stems) e passou a retornar booleano de forma consistente.
+
+### Lição
+
+- Para definir “empresa nossa”, priorize **CNPJ do cadastro** (determinístico) e seja conservador em heurísticas por nome.
+- Quando um campo “sumiu”, use `scripts/debug_pdf.py --full-text` para confirmar como o PDF está quebrando palavras e se o extrator correto está sendo selecionado.

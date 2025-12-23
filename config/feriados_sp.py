@@ -26,6 +26,7 @@ class SPBusinessCalendar(Brazil):
     Cache maxsize=12 cobre uma década completa + folga para auditorias.
     """
     
+    @lru_cache(maxsize=12)
     def get_variable_days(self, year: int):
         """
         Retorna feriados móveis de São Paulo (baseados na Páscoa).
@@ -42,12 +43,20 @@ class SPBusinessCalendar(Brazil):
         # Calcula Páscoa para o ano
         easter_date = easter(year)
         
+        # Carnaval (segunda e terça) - usado na operação SP/PAF (testes assumem)
+        carnaval_segunda = easter_date - timedelta(days=48)
+        carnaval_terca = easter_date - timedelta(days=47)
+        days.append((carnaval_segunda, "Carnaval (Segunda-feira)"))
+        days.append((carnaval_terca, "Carnaval (Terça-feira)"))
+
         # Corpus Christi (Páscoa + 60 dias) - Feriado municipal de SP
         corpus_christi = easter_date + timedelta(days=60)
         days.append((corpus_christi, "Corpus Christi (SP)"))
-        
-        return days
+
+        # Retorna como tupla para evitar mutações acidentais no cache
+        return tuple(days)
     
+    @lru_cache(maxsize=12)
     def get_fixed_holidays(self, year: int):
         """
         Retorna feriados fixos incluindo os municipais de São Paulo.
@@ -68,7 +77,25 @@ class SPBusinessCalendar(Brazil):
             (date(year, 11, 20), "Dia da Consciência Negra (SP)"),
         ])
         
-        return holidays
+        return tuple(holidays)
+
+    def is_working_day(self, day) -> bool:
+        """Retorna True se for dia útil.
+
+        Considera finais de semana (sábado/domingo) como não úteis e feriados como não úteis.
+        """
+        from datetime import datetime as _dt
+
+        if isinstance(day, _dt):
+            day = day.date()
+
+        # Finais de semana não são dias úteis
+        # weekday(): 5=sábado, 6=domingo
+        if day.weekday() >= 5:
+            return False
+
+        # Dias úteis: não feriado
+        return not self.is_holiday(day)
     
     def get_working_days_delta(self, start_date: datetime, end_date: datetime) -> int:
         """

@@ -7,12 +7,13 @@ detalhados separando sucessos e falhas, auxiliando no ajuste fino das regex.
 ⚠️ MODOS IMPORTANTES (MVP):
 - Por padrão, IGNORA a validação de prazo de 4 dias úteis (útil para documentos antigos)
     Para validar prazo: python scripts/validate_extraction_rules.py --validar-prazo
-- Por padrão, NÃO exige o número da NF (coluna NF fica vazia e será preenchida via ingestão)
+- Por padrão, NÃO exige o número da NF (coluna NF fica vazia e será preenchida via API da OpenAI)
     Para exigir NF: python scripts/validate_extraction_rules.py --exigir-nf
 """
 import os
 import argparse
 import pandas as pd
+import re
 from _init_env import setup_project_path
 
 # Inicializa o ambiente do projeto
@@ -30,6 +31,27 @@ from config.settings import (
     DEBUG_CSV_BOLETO_FALHA,
     DEBUG_RELATORIO_QUALIDADE
 )
+
+
+def _nf_candidate_fields_from_obs(obs_interna: str) -> dict:
+    """Extrai NF candidata do campo obs_interna (se existir).
+
+    Formato esperado (gerado no pipeline):
+        NF_CANDIDATE=12345 (conf=0.82, label=nfse)
+    """
+    obs = obs_interna or ""
+    m = re.search(r"\bNF_CANDIDATE=([0-9]{3,12})\b\s*\(conf=([0-9.]+),\s*([^\)]+)\)", obs)
+    if not m:
+        return {
+            'nf_candidate': "",
+            'nf_candidate_confidence': "",
+            'nf_candidate_reason': "",
+        }
+    return {
+        'nf_candidate': m.group(1),
+        'nf_candidate_confidence': m.group(2),
+        'nf_candidate_reason': m.group(3),
+    }
 
 def main() -> None:
     """
@@ -66,7 +88,7 @@ def main() -> None:
     if exigir_nf:
         print("🧾 NF (numero_nota): EXIGIDA")
     else:
-        print("🧾 NF (numero_nota): NÃO exigida (será preenchida via ingestão)")
+        print("🧾 NF (numero_nota): NÃO exigida (será preenchida via API da OpenAI)")
     print("=" * 80)
 
     processor = BaseInvoiceProcessor()
@@ -111,7 +133,7 @@ def main() -> None:
                 if eh_sucesso:
                     count_boleto_ok += 1
                     # Armazena objeto e dados para uso posterior
-                    boletos_sucesso.append({'object': result, **result.__dict__})
+                    boletos_sucesso.append({'object': result, **result.__dict__, **_nf_candidate_fields_from_obs(result.obs_interna)})
                     print(f"✅ BOLETO COMPLETO")
                     print(f"   • Valor: R$ {result.valor_documento:,.2f}")
                     print(f"   • Vencimento: {result.vencimento or 'N/A'}")
@@ -120,6 +142,7 @@ def main() -> None:
                     count_boleto_falha += 1
                     result_dict = result.__dict__
                     result_dict['motivo_falha'] = '|'.join(motivos)
+                    result_dict.update(_nf_candidate_fields_from_obs(result_dict.get('obs_interna')))
                     boletos_falha.append(result_dict)
                     print(f"⚠️ BOLETO INCOMPLETO: {result_dict['motivo_falha']}")
             
@@ -134,7 +157,7 @@ def main() -> None:
                 if eh_sucesso:
                     count_nfse_ok += 1
                     # Armazena objeto e dados para uso posterior
-                    nfse_sucesso.append({'object': result, **result.__dict__})
+                    nfse_sucesso.append({'object': result, **result.__dict__, **_nf_candidate_fields_from_obs(result.obs_interna)})
                     print(f"✅ NFSe COMPLETA")
                     print(f"   • Número: {result.numero_nota}")
                     print(f"   • Valor: R$ {result.valor_total:,.2f}")
@@ -143,6 +166,7 @@ def main() -> None:
                     count_nfse_falha += 1
                     result_dict = result.__dict__
                     result_dict['motivo_falha'] = '|'.join(motivos)
+                    result_dict.update(_nf_candidate_fields_from_obs(result_dict.get('obs_interna')))
                     nfse_falha.append(result_dict)
                     print(f"⚠️ NFSe INCOMPLETA: {result_dict['motivo_falha']}")
             
@@ -173,6 +197,12 @@ def main() -> None:
         df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
         df_paf.to_csv(DEBUG_CSV_NFSE_SUCESSO, index=False, encoding='utf-8-sig')
         print(f"✅ {DEBUG_CSV_NFSE_SUCESSO.name} ({len(nfse_sucesso)} registros) - Formato PAF")
+
+        # Export adicional (debug completo, inclui NF candidata)
+        df_ok_debug = pd.DataFrame([{k: v for k, v in item.items() if k != 'object'} for item in nfse_sucesso])
+        debug_ok_path = DIR_DEBUG_OUTPUT / "nfse_sucesso_debug.csv"
+        df_ok_debug.to_csv(debug_ok_path, index=False, encoding='utf-8-sig')
+        print(f"ℹ️ {debug_ok_path.name} ({len(nfse_sucesso)} registros) - Debug completo (inclui nf_candidate)")
     
     if nfse_falha:
         # Para falhas, mantém dados completos + motivo_falha para debug
@@ -186,6 +216,12 @@ def main() -> None:
         df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
         df_paf.to_csv(DEBUG_CSV_BOLETO_SUCESSO, index=False, encoding='utf-8-sig')
         print(f"✅ {DEBUG_CSV_BOLETO_SUCESSO.name} ({len(boletos_sucesso)} registros) - Formato PAF")
+
+        # Export adicional (debug completo, inclui NF candidata)
+        df_ok_debug = pd.DataFrame([{k: v for k, v in item.items() if k != 'object'} for item in boletos_sucesso])
+        debug_ok_path = DIR_DEBUG_OUTPUT / "boletos_sucesso_debug.csv"
+        df_ok_debug.to_csv(debug_ok_path, index=False, encoding='utf-8-sig')
+        print(f"ℹ️ {debug_ok_path.name} ({len(boletos_sucesso)} registros) - Debug completo (inclui nf_candidate)")
     
     if boletos_falha:
         # Para falhas, mantém dados completos + motivo_falha para debug

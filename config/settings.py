@@ -40,6 +40,11 @@ else:
 OCR_CONFIG = r'--psm 6'
 OCR_LANG = 'por'
 
+# --- Modo híbrido (PDF com texto + partes em imagem) ---
+# Alguns PDFs possuem camada de texto parcial e campos importantes como imagem.
+# Quando habilitado, o leitor pode complementar o texto nativo com OCR.
+HYBRID_OCR_COMPLEMENT = os.getenv('HYBRID_OCR_COMPLEMENT', '1') == '1'
+
 # --- Parâmetros de Diretórios (Legado/Compatibilidade) ---
 ARQUIVO_SAIDA = 'carga_notas_fiscais.csv'
 

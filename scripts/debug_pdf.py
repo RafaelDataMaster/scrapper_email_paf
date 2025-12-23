@@ -6,7 +6,7 @@ Foco atual (MVP):
 - DATA (processamento), SETOR, EMPRESA, FORNECEDOR, NF (vazio), EMISSÃO, VALOR, VENCIMENTO
 
 Observação:
-- A coluna NF fica vazia por enquanto (preenchimento virá da ingestão do e-mail).
+- A coluna NF fica vazia por enquanto (preenchimento virá da etapa de validação via API da OpenAI).
 
 Uso:
     python scripts/debug_pdf.py <arquivo.pdf> [--full-text]
@@ -74,7 +74,7 @@ def print_mvp_row(doc, filename: str) -> None:
         emissao = _fmt_iso_date(getattr(doc, 'data_emissao', None))
         valor = float(getattr(doc, 'valor_total', 0.0) or 0.0)
     elif isinstance(doc, BoletoData):
-        emissao = ""  # boleto não tem emissão na PAF
+        emissao = _fmt_iso_date(getattr(doc, 'data_emissao', None))
         valor = float(getattr(doc, 'valor_documento', 0.0) or 0.0)
 
     # NF (MVP): sempre vazio
@@ -102,7 +102,22 @@ def print_mvp_row(doc, filename: str) -> None:
         else:
             print(f"{col:<12} | {Colors.GREEN}{val_str}{Colors.END}")
     print("-" * 60)
-    print(f"{Colors.CYAN}NF está vazio no MVP (preenchimento via ingestão do e-mail).{Colors.END}")
+
+    # Sugestão (opcional): vem em obs_interna via pipeline (não altera o MVP)
+    obs_interna = getattr(doc, 'obs_interna', None) or ""
+    m = None
+    try:
+        import re
+        m = re.search(r"\bNF_CANDIDATE=([0-9]{3,12})\b.*?\(conf=([0-9.]+)", obs_interna)
+    except Exception:
+        m = None
+
+    if m:
+        nf_candidate = m.group(1)
+        nf_conf = m.group(2)
+        print(f"{Colors.CYAN}NF (MVP): vazio | NF (sugestão): {nf_candidate} (conf={nf_conf}){Colors.END}")
+    else:
+        print(f"{Colors.CYAN}NF está vazio no MVP (preenchimento virá de etapa futura).{Colors.END}")
 
 
 def debug_file(pdf_path: str, show_full_text: bool = False) -> None:
