@@ -2,27 +2,16 @@
 📊 RELATÓRIO DE QUALIDADE DA EXTRAÇÃO
 ================================================================================
 
-📅 Data: 24/12/2025 09:26:51
-📦 Total de arquivos: 20
+📅 Data: 29/12/2025 13:34:19
+📦 Total de arquivos: 28
 
 --- NFSe ---
-✅ Completas: 1
+✅ Completas: 0
 ⚠️ Com falhas: 0
-📈 Taxa de sucesso: 100.0%
 
 --- Boletos ---
-✅ Completos: 10
+✅ Completos: 28
 ⚠️ Com falhas: 0
 📈 Taxa de sucesso: 100.0%
 
 ❌ Erros: 0
-
---- DANFE ---
-✅ Completos: 4
-⚠️ Com falhas: 0
-📈 Taxa de sucesso: 100.0%
-
---- Outros ---
-✅ Completos: 5
-⚠️ Com falhas: 0
-📈 Taxa de sucesso: 100.0%

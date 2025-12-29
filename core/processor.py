@@ -9,6 +9,8 @@ from strategies.fallback import SmartExtractionStrategy
 from core.extractors import EXTRACTOR_REGISTRY
 from config.settings import TRAT_PAF_RESPONSAVEL
 import extractors.nfse_generic
+import extractors.net_center
+import extractors.sicoob
 import extractors.boleto
 import extractors.danfe
 import extractors.outros
@@ -44,6 +46,8 @@ class BaseInvoiceProcessor(ABC):
         """Factory Method: Escolhe o extrator certo para o texto."""
         for extractor_cls in EXTRACTOR_REGISTRY:
             if extractor_cls.can_handle(text):
+                # útil para debug/auditoria (não altera a lógica)
+                self.last_extractor = extractor_cls.__name__
                 return extractor_cls()
         raise ValueError("Nenhum extrator compatível encontrado para este documento.")
 
@@ -101,7 +105,16 @@ class BaseInvoiceProcessor(ABC):
                 # Se o extrator colocou uma empresa nossa como fornecedor, limpa.
                 fn = extracted_data.get('fornecedor_nome')
                 if fn and is_nome_nosso(fn):
-                    extracted_data['fornecedor_nome'] = None
+                    # Só limpamos o fornecedor se houver evidência de que ele é realmente nosso.
+                    # Caso contrário, evitamos falso positivo (ex: fornecedor contém token curto como "NET").
+                    if extracted_data.get('tipo_documento') == 'BOLETO':
+                        cnpj_ben = extracted_data.get('cnpj_beneficiario')
+                        if not cnpj_ben or is_cnpj_nosso(cnpj_ben):
+                            extracted_data['fornecedor_nome'] = None
+                    else:
+                        cnpj_prest = extracted_data.get('cnpj_prestador')
+                        if not cnpj_prest or is_cnpj_nosso(cnpj_prest):
+                            extracted_data['fornecedor_nome'] = None
 
                 # Se o extrator capturou CNPJ nosso como "prestador/beneficiário" por engano,
                 # tenta trocar para o primeiro CNPJ não-nosso presente no texto.

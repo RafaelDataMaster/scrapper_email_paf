@@ -392,6 +392,8 @@ class BoletoExtractor(BaseExtractor):
         # Padrão: Procura "Valor do Documento" ou valores monetários
         # Aceita formatos com ou sem R$
         patterns = [
+            # Procura uma data (DD/MM/AAAA) seguida de um valor monetário no final da linha/bloco
+            r'\d{2}/\d{2}/\d{4}\s+.*?(\d{1,3}(?:\.\d{3})*,\d{2})',
             # Com R$ explícito
             r'(?i)Valor\s+do\s+Documento\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
             r'(?i)Valor\s+Nominal\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
@@ -460,6 +462,22 @@ class BoletoExtractor(BaseExtractor):
         """
         if not text:
             return None
+
+        # 0) Layout de fatura/boleto (ex: CLICK/telecom):
+        # "Emissão Vencimento ... <DD/MM/AAAA> <DD/MM/AAAA>".
+        # Nesse caso, a 1ª data costuma ser a emissão e a 2ª o vencimento.
+        m = re.search(
+            r'(?is)\bEmiss[aã]o\b\s+\bVencim\s*ento\b[\s\S]{0,220}?(\d{2}/\d{2}/\d{4})\s+(\d{2}/\d{2}/\d{4})',
+            text,
+        )
+        if m:
+            try:
+                dt_emissao = datetime.strptime(m.group(1), '%d/%m/%Y')
+                dt_venc = datetime.strptime(m.group(2), '%d/%m/%Y')
+                if 2020 <= dt_venc.year <= 2035 and dt_venc >= dt_emissao:
+                    return dt_venc.strftime('%Y-%m-%d')
+            except ValueError:
+                pass
 
         def parse_br_date(s: str) -> Optional[datetime]:
             try:

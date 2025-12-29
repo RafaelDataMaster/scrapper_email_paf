@@ -9,12 +9,15 @@ detalhados separando sucessos e falhas, auxiliando no ajuste fino das regex.
     Para validar prazo: python scripts/validate_extraction_rules.py --validar-prazo
 - Por padrão, NÃO exige o número da NF (coluna NF fica vazia e será preenchida via API da OpenAI)
     Para exigir NF: python scripts/validate_extraction_rules.py --exigir-nf
+- Revalidar só o que já foi registrado:
+    python scripts/validate_extraction_rules.py --revalidar-processados
 """
 import os
 import argparse
 import pandas as pd
 import re
 import sys
+from typing import Iterable, Set
 from _init_env import setup_project_path
 
 # Inicializa o ambiente do projeto
@@ -36,6 +39,40 @@ from config.settings import (
     DEBUG_CSV_OUTROS_FALHA,
     DEBUG_RELATORIO_QUALIDADE
 )
+
+
+# Manifest simples para permitir reprocessar/revalidar exatamente os mesmos PDFs
+# (inclui subpastas via caminho relativo a DIR_DEBUG_INPUT)
+MANIFEST_PROCESSADOS = DIR_DEBUG_OUTPUT / "processed_files.txt"
+
+
+def _relpath_str(path) -> str:
+    try:
+        return path.relative_to(DIR_DEBUG_INPUT).as_posix()
+    except Exception:
+        return getattr(path, "name", str(path))
+
+
+def _load_manifest_processados() -> Set[str]:
+    if not MANIFEST_PROCESSADOS.exists():
+        return set()
+    try:
+        content = MANIFEST_PROCESSADOS.read_text(encoding="utf-8")
+    except Exception:
+        return set()
+    items: Set[str] = set()
+    for line in content.splitlines():
+        s = (line or "").strip()
+        if not s or s.startswith("#"):
+            continue
+        items.add(s)
+    return items
+
+
+def _save_manifest_processados(processados: Iterable[str]) -> None:
+    unique = sorted({(p or "").strip() for p in processados if (p or "").strip()}, key=lambda x: x.lower())
+    DIR_DEBUG_OUTPUT.mkdir(parents=True, exist_ok=True)
+    MANIFEST_PROCESSADOS.write_text("\n".join(unique) + ("\n" if unique else ""), encoding="utf-8")
 
 
 def _nf_candidate_fields_from_obs(obs_interna: str) -> dict:
@@ -81,10 +118,16 @@ def main() -> None:
                        help='Valida prazo de 4 dias úteis (ignora por padrão para docs antigos)')
     parser.add_argument('--exigir-nf', action='store_true',
                         help='Exige numero_nota na NFSe (por padrão não exige no MVP)')
+    parser.add_argument(
+        '--revalidar-processados',
+        action='store_true',
+        help='Reprocessa apenas PDFs já registrados em data/debug_output/processed_files.txt'
+    )
     args = parser.parse_args()
     
     validar_prazo = args.validar_prazo
     exigir_nf = args.exigir_nf
+    revalidar_processados = args.revalidar_processados
     
     # Cria pasta de saída se não existir
     DIR_DEBUG_OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -131,7 +174,20 @@ def main() -> None:
         print(f"❌ Pasta não existe: {DIR_DEBUG_INPUT}")
         return
 
-    arquivos = [f for f in os.listdir(DIR_DEBUG_INPUT) if f.lower().endswith('.pdf')]
+    if revalidar_processados:
+        manifest = _load_manifest_processados()
+        arquivos = []
+        for rel in sorted(manifest, key=lambda x: x.lower()):
+            p = DIR_DEBUG_INPUT / rel
+            if p.exists() and p.is_file() and p.suffix.lower() == '.pdf':
+                arquivos.append(p)
+        print(f"🔁 Revalidação ativa: {len(arquivos)} arquivo(s) do manifest")
+    else:
+        # Busca recursiva (inclui PDFs em subpastas dentro de failed_cases_pdf)
+        arquivos = sorted(
+            [p for p in DIR_DEBUG_INPUT.rglob("*") if p.is_file() and p.suffix.lower() == ".pdf"],
+            key=lambda p: str(p).lower(),
+        )
     
     if not arquivos:
         print("⚠️ Nenhum PDF encontrado.")
@@ -139,116 +195,164 @@ def main() -> None:
 
     print(f"\n📦 {len(arquivos)} arquivo(s) encontrado(s)\n")
 
-    for file in arquivos:
-        caminho = DIR_DEBUG_INPUT / file
-        print(f"{'=' * 80}")
-        print(f"⚙️ Processando: {file}")
-        
-        try:
-            result = processor.process(str(caminho))
-            
-            # === BOLETOS ===
-            if isinstance(result, BoletoData):
-                eh_sucesso, motivos = ExtractionDiagnostics.classificar_boleto(result, validar_prazo=validar_prazo)
-                
-                if eh_sucesso:
-                    count_boleto_ok += 1
-                    # Armazena objeto e dados para uso posterior
-                    boletos_sucesso.append({'object': result, **result.__dict__, **_nf_candidate_fields_from_obs(result.obs_interna)})
-                    print(f"✅ BOLETO COMPLETO")
-                    print(f"   • Valor: R$ {result.valor_documento:,.2f}")
-                    print(f"   • Vencimento: {result.vencimento or 'N/A'}")
-                    
+    total = len(arquivos)
+    processados = 0
+    interrompido = False
+    processed_prev = _load_manifest_processados()
+    processed_this_run = set()
+
+    try:
+        for i, caminho in enumerate(arquivos, start=1):
+            processados = i
+            # Progresso: mostra apenas quantos PDFs já foram processados
+            sys.stdout.write(f"\r📄 Processados: {i}/{total}")
+            sys.stdout.flush()
+
+            relpath = _relpath_str(caminho)
+            processed_this_run.add(relpath)
+
+            try:
+                result = processor.process(str(caminho))
+
+                # === BOLETOS ===
+                if isinstance(result, BoletoData):
+                    eh_sucesso, motivos = ExtractionDiagnostics.classificar_boleto(
+                        result, validar_prazo=validar_prazo
+                    )
+
+                    if eh_sucesso:
+                        count_boleto_ok += 1
+                        boletos_sucesso.append(
+                            {
+                                'object': result,
+                                'arquivo_relativo': relpath,
+                                **result.__dict__,
+                                **_nf_candidate_fields_from_obs(result.obs_interna),
+                            }
+                        )
+                    else:
+                        count_boleto_falha += 1
+                        result_dict = result.__dict__
+                        result_dict['arquivo_relativo'] = relpath
+                        result_dict['motivo_falha'] = '|'.join(motivos)
+                        result_dict.update(
+                            _nf_candidate_fields_from_obs(result_dict.get('obs_interna'))
+                        )
+                        boletos_falha.append(result_dict)
+
+                # === NFSe ===
+                elif isinstance(result, InvoiceData):
+                    eh_sucesso, motivos = ExtractionDiagnostics.classificar_nfse(
+                        result,
+                        validar_prazo=validar_prazo,
+                        exigir_numero_nf=exigir_nf,
+                    )
+
+                    if eh_sucesso:
+                        count_nfse_ok += 1
+                        nfse_sucesso.append(
+                            {
+                                'object': result,
+                                'arquivo_relativo': relpath,
+                                **result.__dict__,
+                                **_nf_candidate_fields_from_obs(result.obs_interna),
+                            }
+                        )
+                    else:
+                        count_nfse_falha += 1
+                        result_dict = result.__dict__
+                        result_dict['arquivo_relativo'] = relpath
+                        result_dict['motivo_falha'] = '|'.join(motivos)
+                        result_dict.update(
+                            _nf_candidate_fields_from_obs(result_dict.get('obs_interna'))
+                        )
+                        nfse_falha.append(result_dict)
+
+                # === DANFE ===
+                elif isinstance(result, DanfeData):
+                    motivos = []
+                    if (result.valor_total or 0) <= 0:
+                        motivos.append('VALOR_ZERO')
+                    if not (result.fornecedor_nome and result.fornecedor_nome.strip()):
+                        motivos.append('SEM_RAZAO_SOCIAL')
+                    if not result.cnpj_emitente:
+                        motivos.append('SEM_CNPJ')
+
+                    eh_sucesso = len(motivos) == 0
+
+                    if eh_sucesso:
+                        count_danfe_ok += 1
+                        danfe_sucesso.append(
+                            {
+                                'object': result,
+                                'arquivo_relativo': relpath,
+                                **result.__dict__,
+                                **_nf_candidate_fields_from_obs(result.obs_interna),
+                            }
+                        )
+                    else:
+                        count_danfe_falha += 1
+                        result_dict = result.__dict__
+                        result_dict['arquivo_relativo'] = relpath
+                        result_dict['motivo_falha'] = '|'.join(motivos)
+                        result_dict.update(
+                            _nf_candidate_fields_from_obs(result_dict.get('obs_interna'))
+                        )
+                        danfe_falha.append(result_dict)
+
+                # === OUTROS ===
+                elif isinstance(result, OtherDocumentData):
+                    motivos = []
+                    if (result.valor_total or 0) <= 0:
+                        motivos.append('VALOR_ZERO')
+                    if not (result.fornecedor_nome and result.fornecedor_nome.strip()):
+                        motivos.append('SEM_RAZAO_SOCIAL')
+
+                    eh_sucesso = len(motivos) == 0
+
+                    if eh_sucesso:
+                        count_outros_ok += 1
+                        outros_sucesso.append(
+                            {
+                                'object': result,
+                                'arquivo_relativo': relpath,
+                                **result.__dict__,
+                                **_nf_candidate_fields_from_obs(result.obs_interna),
+                            }
+                        )
+                    else:
+                        count_outros_falha += 1
+                        result_dict = result.__dict__
+                        result_dict['arquivo_relativo'] = relpath
+                        result_dict['motivo_falha'] = '|'.join(motivos)
+                        result_dict.update(
+                            _nf_candidate_fields_from_obs(result_dict.get('obs_interna'))
+                        )
+                        outros_falha.append(result_dict)
+
                 else:
-                    count_boleto_falha += 1
-                    result_dict = result.__dict__
-                    result_dict['motivo_falha'] = '|'.join(motivos)
-                    result_dict.update(_nf_candidate_fields_from_obs(result_dict.get('obs_interna')))
-                    boletos_falha.append(result_dict)
-                    print(f"⚠️ BOLETO INCOMPLETO: {result_dict['motivo_falha']}")
-            
-            # === NFSe ===
-            elif isinstance(result, InvoiceData):
-                eh_sucesso, motivos = ExtractionDiagnostics.classificar_nfse(
-                    result,
-                    validar_prazo=validar_prazo,
-                    exigir_numero_nf=exigir_nf,
-                )
-                
-                if eh_sucesso:
-                    count_nfse_ok += 1
-                    # Armazena objeto e dados para uso posterior
-                    nfse_sucesso.append({'object': result, **result.__dict__, **_nf_candidate_fields_from_obs(result.obs_interna)})
-                    print(f"✅ NFSe COMPLETA")
-                    print(f"   • Número: {result.numero_nota}")
-                    print(f"   • Valor: R$ {result.valor_total:,.2f}")
-                    
-                else:
-                    count_nfse_falha += 1
-                    result_dict = result.__dict__
-                    result_dict['motivo_falha'] = '|'.join(motivos)
-                    result_dict.update(_nf_candidate_fields_from_obs(result_dict.get('obs_interna')))
-                    nfse_falha.append(result_dict)
-                    print(f"⚠️ NFSe INCOMPLETA: {result_dict['motivo_falha']}")
+                    count_erro += 1
 
-            # === DANFE ===
-            elif isinstance(result, DanfeData):
-                # Critério mínimo (sem criar uma regra PAF rígida ainda): valor>0 e fornecedor
-                motivos = []
-                if (result.valor_total or 0) <= 0:
-                    motivos.append('VALOR_ZERO')
-                if not (result.fornecedor_nome and result.fornecedor_nome.strip()):
-                    motivos.append('SEM_RAZAO_SOCIAL')
-                if not result.cnpj_emitente:
-                    motivos.append('SEM_CNPJ')
-
-                eh_sucesso = len(motivos) == 0
-
-                if eh_sucesso:
-                    count_danfe_ok += 1
-                    danfe_sucesso.append({'object': result, **result.__dict__, **_nf_candidate_fields_from_obs(result.obs_interna)})
-                    print(f"✅ DANFE COMPLETO")
-                    print(f"   • Número: {result.numero_nota}")
-                    print(f"   • Valor: R$ {result.valor_total:,.2f}")
-                else:
-                    count_danfe_falha += 1
-                    result_dict = result.__dict__
-                    result_dict['motivo_falha'] = '|'.join(motivos)
-                    result_dict.update(_nf_candidate_fields_from_obs(result_dict.get('obs_interna')))
-                    danfe_falha.append(result_dict)
-                    print(f"⚠️ DANFE INCOMPLETO: {result_dict['motivo_falha']}")
-
-            # === OUTROS ===
-            elif isinstance(result, OtherDocumentData):
-                motivos = []
-                if (result.valor_total or 0) <= 0:
-                    motivos.append('VALOR_ZERO')
-                if not (result.fornecedor_nome and result.fornecedor_nome.strip()):
-                    motivos.append('SEM_RAZAO_SOCIAL')
-
-                eh_sucesso = len(motivos) == 0
-
-                if eh_sucesso:
-                    count_outros_ok += 1
-                    outros_sucesso.append({'object': result, **result.__dict__, **_nf_candidate_fields_from_obs(result.obs_interna)})
-                    print(f"✅ OUTRO COMPLETO")
-                    print(f"   • Subtipo: {result.subtipo or 'N/A'}")
-                    print(f"   • Valor: R$ {result.valor_total:,.2f}")
-                else:
-                    count_outros_falha += 1
-                    result_dict = result.__dict__
-                    result_dict['motivo_falha'] = '|'.join(motivos)
-                    result_dict.update(_nf_candidate_fields_from_obs(result_dict.get('obs_interna')))
-                    outros_falha.append(result_dict)
-                    print(f"⚠️ OUTRO INCOMPLETO: {result_dict['motivo_falha']}")
-            
-            else:
+            except Exception:
                 count_erro += 1
-                print(f"❓ TIPO DESCONHECIDO")
 
-        except Exception as e:
-            count_erro += 1
-            print(f"❌ ERRO: {e}")
+    except KeyboardInterrupt:
+        interrompido = True
+    finally:
+        # Quebra linha do contador (pra não grudar no próximo print)
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+
+    if interrompido:
+        print(f"🛑 Interrompido com Ctrl+C. Salvando resultados parciais ({processados}/{total}).")
+
+    # Atualiza manifest (mesmo em execução parcial)
+    merged = processed_prev | processed_this_run
+    try:
+        _save_manifest_processados(merged)
+        print(f"🧾 Manifest atualizado: {MANIFEST_PROCESSADOS.name} ({len(merged)} itens)")
+    except Exception as e:
+        print(f"⚠️ Falha ao salvar manifest de processados: {e}")
 
     # === GERAR CSVs NO FORMATO PAF (18 colunas) ===
     print("\n" + "=" * 80)
@@ -336,6 +440,8 @@ def main() -> None:
     # === RELATÓRIO ===
     dados_relatorio = {
         'total': len(arquivos),
+        'processados': processados,
+        'interrompido': interrompido,
         'nfse_ok': count_nfse_ok,
         'nfse_falha': count_nfse_falha,
         'boleto_ok': count_boleto_ok,
@@ -364,6 +470,8 @@ def main() -> None:
     print(f"📈 DANFE: {count_danfe_ok} OK / {count_danfe_falha} Falhas")
     print(f"📈 Outros: {count_outros_ok} OK / {count_outros_falha} Falhas")
     print(f"❌ Erros: {count_erro}")
+    if interrompido:
+        print(f"🟡 Execução parcial: {processados}/{total} processados")
     print("\n" + "=" * 80)
 
 if __name__ == "__main__":
