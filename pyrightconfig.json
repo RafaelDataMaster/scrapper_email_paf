@@ -1,0 +1,19 @@
+{
+    "include": ["."],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/.*",
+        ".git",
+        ".venv",
+        "venv",
+        "env",
+        "site",
+        "data",
+        "docs",
+        "failed_cases_pdf",
+        "tests/fixtures",
+    ],
+    "venvPath": ".",
+    "venv": ".venv",
+}

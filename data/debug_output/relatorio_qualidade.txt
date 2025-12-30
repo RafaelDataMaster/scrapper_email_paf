@@ -2,16 +2,41 @@
 📊 RELATÓRIO DE QUALIDADE DA EXTRAÇÃO
 ================================================================================
 
-📅 Data: 29/12/2025 13:34:19
-📦 Total de arquivos: 28
+📅 Data: 30/12/2025 13:03:34
+📦 Total de arquivos: 8342
 
 --- NFSe ---
 ✅ Completas: 0
 ⚠️ Com falhas: 0
 
 --- Boletos ---
-✅ Completos: 28
+✅ Completos: 133
+⚠️ Com falhas: 4
+📈 Taxa de sucesso: 97.1%
+
+❌ Erros: 0
+
+--- DANFE ---
+✅ Completos: 65
 ⚠️ Com falhas: 0
 📈 Taxa de sucesso: 100.0%
 
-❌ Erros: 0
+================================================================================
+🔍 FALHAS - BOLETOS
+================================================================================
+
+📄 01-28 NF 127090 AZUL (CARRIER).pdf
+   Motivo: VALOR_ZERO
+   Valor: R$ 0.00
+
+📄 04-09 NF128458 AZUL DISTRIBUIDORA.pdf
+   Motivo: VALOR_ZERO
+   Valor: R$ 0.00
+
+📄 04-18 RBC NF114906 AZUL DISTRIBUIDORA.pdf
+   Motivo: VALOR_ZERO
+   Valor: R$ 0.00
+
+📄 01-21 NF 43802 AZUL DISTRIBUIDORA (EXATA).pdf
+   Motivo: VALOR_ZERO
+   Valor: R$ 0.00

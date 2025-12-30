@@ -24,74 +24,83 @@ O **MVP atual** está focado em gerar as colunas essenciais da planilha PAF:
 - [ ] **Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows**
 - [ ] Quando o projeto estiver no estágio real pra primeira release ler git-futuro.md e pesquisar ferramentas/plugins/qualquer coisa que ajude a melhorar a maluquice que é os commits e tudo mais.
 - [ ] Analisar lógica de validação de dados utilizando o e-mail como base e os pdfs anexados ao mesmo para garantia dos dados.
+- [ ] Lembrar de atualizar os dados do imap pro email da empresa
 
 # Estudar por agora
 
-Reavaliar a logica de extração de dados do processo para os dados prioritários.
+### Verificar esses pdfs
+
+    - 10-19 RBC NF20762 ETK INDUSTRIA.pdf
+    - 01-28 NF 127090 AZUL (CARRIER).pdf
+    - 04-09 NF128458 AZUL DISTRIBUIDORA.pdf
+    - 04-18 RBC NF114906 AZUL DISTRIBUIDORA.pdf
+    - 01-21 NF 43802 AZUL DISTRIBUIDORA (EXATA).pdf
 
 ## Done
 
 ### 29/12/2025
-- [X] Separação de amostras de pdfs para validação de extração de dados
-- [X] Criação do primeiro extrator específico, observar os efeitos nos outros pdfs
-- [X] Adicionado a flag de reavaliação no script de validação de extração
+
+- [x] Separação de amostras de pdfs para validação de extração de dados.
+- [x] Criação do primeiro extrator específico.
+- [x] Adicionado a flag de reavaliação no script de validação de extração.
 
 ### 26/12/2025 - Dia 10
-- [X] **Fazer a limpeza e catalogação dos pdfs na pasta de C:Dados**
+
+- [x] **Fazer a limpeza e catalogação dos pdfs na pasta de C:Dados**
 
 ### 24/12/2025 - Dia 9
 
-- [X] **Concertar/adicionar a logica de extração das NSFE, DANFES, etc, pra funcionar com os casos falhos.**
-  - Suporte completo a múltiplos tipos além de NFSe: **DANFE** e **OUTROS** (faturas/demonstrativos)
-  - Roteamento por extrator via `can_handle()` (plugins) para evitar DANFE/OUTROS caindo como NFSe
-  - Novos extratores especializados: `DanfeExtractor` e `OutrosExtractor`
-  - Novos modelos de dados: `DanfeData` e `OtherDocumentData` (padronizando `DocumentData`)
-  - Relatórios/CSVs de validação separados e debug por tipo (incluindo `danfe_sucesso_debug.csv` e `outros_sucesso_debug.csv`)
-  - Renomeação do fallback de NFSe: `GenericExtractor` → `NfseGenericExtractor` (módulo legado removido)
-  - Correção do script de validação no Windows: stdout/stderr em UTF-8 (evita `UnicodeEncodeError`)
-  - OUTROS/Locaweb: preenchimento de `empresa` via fallback por domínio/e-mail quando não existe CNPJ nosso no texto
-  - OUTROS/Locação: correção de extração de valor quando aparece como “Total a Pagar no Mês … 2.855,00” (sem “R$”) + teste unitário
+- [x] **Concertar/adicionar a logica de extração das NSFE, DANFES, etc, pra funcionar com os casos falhos.**
+    - Suporte completo a múltiplos tipos além de NFSe: **DANFE** e **OUTROS** (faturas/demonstrativos)
+    - Roteamento por extrator via `can_handle()` (plugins) para evitar DANFE/OUTROS caindo como NFSe
+    - Novos extratores especializados: `DanfeExtractor` e `OutrosExtractor`
+    - Novos modelos de dados: `DanfeData` e `OtherDocumentData` (padronizando `DocumentData`)
+    - Relatórios/CSVs de validação separados e debug por tipo (incluindo `danfe_sucesso_debug.csv` e `outros_sucesso_debug.csv`)
+    - Renomeação do fallback de NFSe: `GenericExtractor` → `NfseGenericExtractor` (módulo legado removido)
+    - Correção do script de validação no Windows: stdout/stderr em UTF-8 (evita `UnicodeEncodeError`)
+    - OUTROS/Locaweb: preenchimento de `empresa` via fallback por domínio/e-mail quando não existe CNPJ nosso no texto
+    - OUTROS/Locação: correção de extração de valor quando aparece como “Total a Pagar no Mês … 2.855,00” (sem “R$”) + teste unitário
 
 ### 23/12/2025 - Dia 8
 
-- [X] Focar em um primeiro momento a extração das seguintes colunas [(Data inicio/recebimento do pedido),(setor que fez o pedido aparentemente pode deixar pra la mas se tiver bom),EMPRESA(nós),FORNECEDOR(eles),NF,EMISSÃO,VALOR,VENCIMENTO,]
-- [X] Boletos: FORNECEDOR robusto (não captura linha digitável e não fica vazio por falso positivo de "empresa nossa")
-- [X] Classificação de boleto mais resiliente a OCR/quebras (keywords corrompidas)
+- [x] Focar em um primeiro momento a extração das seguintes colunas [(Data inicio/recebimento do pedido),(setor que fez o pedido aparentemente pode deixar pra la mas se tiver bom),EMPRESA(nós),FORNECEDOR(eles),NF,EMISSÃO,VALOR,VENCIMENTO,]
+- [x] Boletos: FORNECEDOR robusto (não captura linha digitável e não fica vazio por falso positivo de "empresa nossa")
+- [x] Classificação de boleto mais resiliente a OCR/quebras (keywords corrompidas)
 
 ### 22/12/2025 - Dia 7
 
-- [X] Alinhamento dos modelos de extração com o requisitado pra um primeiro momento com PAF
-- [X] Refatoração do script de debug_pdf pra ficar condizente com o MVP
+- [x] Alinhamento dos modelos de extração com o requisitado pra um primeiro momento com PAF
+- [x] Refatoração do script de debug_pdf pra ficar condizente com o MVP
 
 ### 19/12/2025 - Dia 6
 
-- [X] **Refatoração SOLID completa (production-ready):**
-  - Implementados 4 princípios SOLID: LSP, OCP, SRP, DIP
-  - Criado módulo `core/exporters.py` com classes separadas (FileSystemManager, AttachmentDownloader, DataExporter)
-  - Adicionada classe base `DocumentData` com `doc_type` para extensibilidade (OCP)
-  - Implementada injeção de dependências no `BaseInvoiceProcessor` e `run_ingestion.py` (DIP)
-  - Padronizado tratamento de erros nas estratégias (LSP)
-  - Criado esqueleto de `GoogleSheetsExporter` para futura integração
-  - **43/43 testes passando** (14 novos testes SOLID + 23 existentes + 6 estratégias)
-  - Documentação completa: `solid_refactoring_report.md` e `solid_usage_guide.md`
-  - Projeto agora permite adicionar novos tipos de documento sem modificar código existente
-- [X] Validação completa dos 10 boletos extraídos (100% de taxa de sucesso)
-- [X] Corrigidos 3 casos críticos de extração:
-  - `numero_documento` capturando data em vez do valor correto (layout tabular)
-  - `nosso_numero` em layouts multi-linha (label e valor separados por \n)
-  - `nosso_numero` quando label está como imagem (fallback genérico)
-- [X] Implementados padrões regex robustos com `re.DOTALL` e diferenciação de formatos
-- [X] Documentação atualizada: `refactoring_history.md` (Fase 3 e 4 completas) e `extractors.md`
-- [X] Criado guia completo de debug de PDFs em `docs/development/debugging_guide.md`
-- [X] Criado script avançado de debug `scripts/debug_pdf.py` com:
-  - Output colorido, análise de campos, comparação de PDFs
-  - Biblioteca de padrões pré-testados, suporte a padrões customizados
-  - Detecção automática de quando `re.DOTALL` é necessário
+- [x] **Refatoração SOLID completa (production-ready):**
+    - Implementados 4 princípios SOLID: LSP, OCP, SRP, DIP
+    - Criado módulo `core/exporters.py` com classes separadas (FileSystemManager, AttachmentDownloader, DataExporter)
+    - Adicionada classe base `DocumentData` com `doc_type` para extensibilidade (OCP)
+    - Implementada injeção de dependências no `BaseInvoiceProcessor` e `run_ingestion.py` (DIP)
+    - Padronizado tratamento de erros nas estratégias (LSP)
+    - Criado esqueleto de `GoogleSheetsExporter` para futura integração
+    - **43/43 testes passando** (14 novos testes SOLID + 23 existentes + 6 estratégias)
+    - Documentação completa: `solid_refactoring_report.md` e `solid_usage_guide.md`
+    - Projeto agora permite adicionar novos tipos de documento sem modificar código existente
+- [x] Validação completa dos 10 boletos extraídos (100% de taxa de sucesso)
+- [x] Corrigidos 3 casos críticos de extração:
+    - `numero_documento` capturando data em vez do valor correto (layout tabular)
+    - `nosso_numero` em layouts multi-linha (label e valor separados por \n)
+    - `nosso_numero` quando label está como imagem (fallback genérico)
+- [x] Implementados padrões regex robustos com `re.DOTALL` e diferenciação de formatos
+- [x] Documentação atualizada: `refactoring_history.md` (Fase 3 e 4 completas) e `extractors.md`
+- [x] Criado guia completo de debug de PDFs em `docs/development/debugging_guide.md`
+- [x] Criado script avançado de debug `scripts/debug_pdf.py` com:
+    - Output colorido, análise de campos, comparação de PDFs
+    - Biblioteca de padrões pré-testados, suporte a padrões customizados
+    - Detecção automática de quando `re.DOTALL` é necessário
 
 ### 18/12/2025 - Dia 5
 
-- [X] Conversar direito com a Melyssa, ou mesmo direto com o Paulo ou o Gustavo a respeito do redirecionamento de emails. Avaliar possíveis soluções e planejar como realmente as NFSE vai estar e em qual email.
-- [X] Criado configuração do projeto pra rodar em container.
+- [x] Conversar direito com a Melyssa, ou mesmo direto com o Paulo ou o Gustavo a respeito do redirecionamento de emails. Avaliar possíveis soluções e planejar como realmente as NFSE vai estar e em qual email.
+- [x] Criado configuração do projeto pra rodar em container.
 - [x] Criado módulo centralizado `core/diagnostics.py` para análise de qualidade
 - [x] Criado `scripts/_init_env.py` para path resolution centralizado
 - [x] Renomeado `test_rules_extractors.py` → `validate_extraction_rules.py` (clareza semântica)

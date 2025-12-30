@@ -1,20 +1,16 @@
-import re
 import os
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Union, Optional
-from core.models import InvoiceData, BoletoData, DanfeData, OtherDocumentData, DocumentData
-from core.interfaces import TextExtractionStrategy
-from strategies.fallback import SmartExtractionStrategy
-from core.extractors import EXTRACTOR_REGISTRY
-from config.settings import TRAT_PAF_RESPONSAVEL
-import extractors.nfse_generic
-import extractors.net_center
-import extractors.sicoob
+from typing import Optional, Union
+
 import extractors.boleto
 import extractors.danfe
+import extractors.net_center
+import extractors.nfse_generic
 import extractors.outros
-from core.nf_candidate import extract_nf_candidate
+import extractors.sicoob
+from config.settings import TRAT_PAF_RESPONSAVEL
 from core.empresa_matcher import (
     find_empresa_no_texto,
     format_cnpj,
@@ -23,6 +19,18 @@ from core.empresa_matcher import (
     is_nome_nosso,
     pick_first_non_our_cnpj,
 )
+from core.extractors import EXTRACTOR_REGISTRY
+from core.interfaces import TextExtractionStrategy
+from core.models import (
+    BoletoData,
+    DanfeData,
+    DocumentData,
+    InvoiceData,
+    OtherDocumentData,
+)
+from core.nf_candidate import extract_nf_candidate
+from strategies.fallback import SmartExtractionStrategy
+
 
 class BaseInvoiceProcessor(ABC):
     """
@@ -34,7 +42,7 @@ class BaseInvoiceProcessor(ABC):
     3.  **Seleção**: Escolhe o extrator adequado para o texto.
     4.  **Extração**: Executa a mineração de dados.
     5.  **Normalização**: Retorna objeto `InvoiceData` ou `BoletoData`.
-    
+
     Args:
         reader: Estratégia de extração de texto. Se None, usa SmartExtractionStrategy.
                 Permite injeção de dependência para testes (DIP).
@@ -66,7 +74,7 @@ class BaseInvoiceProcessor(ABC):
 
         # Sugestão de NF (debug/auditoria): não altera o MVP
         nf_sugestao = extract_nf_candidate(raw_text or "")
-        
+
         if not raw_text or "Falha" in raw_text:
             # Retorna objeto vazio de NFSe por padrão
             return InvoiceData(
@@ -78,7 +86,7 @@ class BaseInvoiceProcessor(ABC):
         try:
             extractor = self._get_extractor(raw_text)
             extracted_data = extractor.extract(raw_text)
-            
+
             # Dados comuns PAF (aplicados a todos os documentos)
             now_iso = datetime.now().strftime('%Y-%m-%d')
             common_data = {
@@ -142,7 +150,7 @@ class BaseInvoiceProcessor(ABC):
                 obs_prev = extracted_data.get('obs_interna')
                 obs_nf = f"NF_CANDIDATE={nf_sugestao.value} (conf={nf_sugestao.confidence:.2f}, {nf_sugestao.reason})"
                 common_data['obs_interna'] = f"{obs_prev} | {obs_nf}" if obs_prev else obs_nf
-            
+
             # 3. Identifica o tipo e cria o modelo apropriado
             if extracted_data.get('tipo_documento') == 'BOLETO':
                 return BoletoData(
@@ -224,13 +232,10 @@ class BaseInvoiceProcessor(ABC):
                     valor_icms=extracted_data.get('valor_icms'),
                     base_calculo_icms=extracted_data.get('base_calculo_icms'),
                 )
-            
+
         except ValueError as e:
             print(f"Erro ao processar {file_path}: {e}")
             return InvoiceData(
                 arquivo_origem=os.path.basename(file_path),
                 texto_bruto=' '.join(raw_text.split())[:500]  # Remove whitespace, then take 500 chars
             )
-
-
-

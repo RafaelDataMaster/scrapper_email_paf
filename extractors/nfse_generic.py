@@ -1,8 +1,9 @@
 import re
 from datetime import datetime
+from socket import has_ipv6
 from typing import Any, Dict
 
-from core.extractors import BaseExtractor, register_extractor
+from core.extractors import BaseExtractor, find_linha_digitavel, register_extractor
 
 
 @register_extractor
@@ -52,13 +53,12 @@ class NfseGenericExtractor(BaseExtractor):
             "CODIGO DE BARRAS",
             "CEDENTE",
         ]
+        has_linha_digitavel = find_linha_digitavel(text)
+        if has_linha_digitavel:
+            return False
 
-        linha_digitavel = re.search(
-            r"\d{5}[\.\s]\d{5}\s+\d{5}[\.\s]\d{6}\s+\d{5}[\.\s]\d{6}",
-            text or "",
-        )
         boleto_score = sum(1 for kw in boleto_keywords if kw in text_upper)
-        if boleto_score >= 2 or linha_digitavel:
+        if boleto_score >= 2:
             return False
 
         return True

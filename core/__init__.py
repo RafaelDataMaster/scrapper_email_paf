@@ -1,10 +1,11 @@
-from .models import InvoiceData
+from .extractors import BaseExtractor, find_linha_digitavel, register_extractor
 from .interfaces import TextExtractionStrategy
-from .extractors import BaseExtractor, register_extractor
+from .models import InvoiceData
 
 __all__ = [
     "InvoiceData",
     "TextExtractionStrategy",
     "BaseExtractor",
     "register_extractor",
+    "find_linha_digitavel"
 ]
