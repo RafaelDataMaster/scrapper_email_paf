@@ -18,15 +18,36 @@ O **MVP atual** está focado em gerar as colunas essenciais da planilha PAF:
 
 ## To Do - Notas mentais
 
-- [ ] Atualizar a logica em dados prioritários como vencimento e valor do boleto uma confirmação de 2 etapas.
-- [ ] Procurar APIs da openAI para OCR e validadção dos dados no documento no caso para a coluna NF num primeiro momento
-- [ ] Verificar cada caso a fundo dos pdfs e avaliar possíveis estratégias para os casos onde o pdf em si não esta anexado no email (link de prefeitura ou redirecionador de terceiros) [LOW_PRIORITY].
-- [ ] **Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows**
+- [ ] **Implementar a refatoração descrito em refatora.md incluindo alteraçãos no models e process**.
+- [ ] **Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows**.
+- [ ] Lembrar de atualizar os dados do imap pro email da empresa.
+- [ ] Procurar APIs da openAI para OCR e validadção dos dados no documento no caso para a coluna NF num primeiro momento.
 - [ ] Quando o projeto estiver no estágio real pra primeira release ler git-futuro.md e pesquisar ferramentas/plugins/qualquer coisa que ajude a melhorar a maluquice que é os commits e tudo mais.
-- [ ] Analisar lógica de validação de dados utilizando o e-mail como base e os pdfs anexados ao mesmo para garantia dos dados.
-- [ ] Lembrar de atualizar os dados do imap pro email da empresa
+- [ ] Verificar cada caso a fundo dos pdfs e avaliar possíveis estratégias para os casos onde o pdf em si não esta anexado no email (link de prefeitura ou redirecionador de terceiros) [LOW_PRIORITY].
 
 # Estudar por agora
+
+### Nova estratégia camada Prata.
+
+Alterar o modelo de ingestão para guardar o contexto do email em json e utilizar os dados de diferentes pdfs para validarem entre si. Criar nova coluna identificando o email de origem.
+
+- Regra 1: Herança de Dados (Complementação)
+    - Se tem DANFE e Boleto na mesma pasta:
+        - O Boleto herda o numero_nota da DANFE (se não conseguiu ler).
+        - A DANFE herda o vencimento do Boleto (ou da primeira parcela, como vimos no caso da Azul).
+        - Ambos herdam o numero_pedido se estiver no Assunto/Corpo do e-mail.
+- Regra 2: Fallback de Identificação (OCR vs Metadados)
+    - Se o OCR do fornecedor falhou ou veio vazio:
+        - Usar email_sender_name do metadado.
+    - Se o CNPJ não foi achado no PDF:
+        - Procurar CNPJ no email_body_text.
+- Regra 3: Validação Cruzada (Auditoria)
+    - Somar o valor de todos os Boletos da pasta.
+    - Comparar com o valor_total da DANFE.
+    - Novo Campo: status_conciliacao
+        - "OK" (Valores batem)
+        - "DIVERGENTE" (Nota de 10k, Boleto de 5k -> Alerta de parcela faltante)
+        - "ORFAO" (Só veio boleto, sem nota)
 
 ### Verificar esses pdfs
 
@@ -37,6 +58,10 @@ O **MVP atual** está focado em gerar as colunas essenciais da planilha PAF:
     - 01-21 NF 43802 AZUL DISTRIBUIDORA (EXATA).pdf
 
 ## Done
+
+### 30/12/2025
+
+- [x] Correção na análise de linhas digitaveis, priorizando o uso do extractor de boleto.
 
 ### 29/12/2025
 

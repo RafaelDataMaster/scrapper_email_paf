@@ -67,7 +67,14 @@ class BoletoExtractor(BaseExtractor):
         ]
 
         # Indicadores negativos (se é NFSe, não é boleto puro)
-        nfse_keywords = ['NFS-E', 'NOTA FISCAL DE SERVIÇO ELETRÔNICA', 'NOTA FISCAL DE SERVICO ELETRONICA', 'PREFEITURA']
+        nfse_keywords = [
+            'NFS-E',
+            'NOTA FISCAL DE SERVIÇO ELETRÔNICA',
+            'NOTA FISCAL DE SERVICO ELETRONICA',
+            'PREFEITURA',
+            'DANFE',
+            'DOCUMENTO AUXILIAR DA NOTA FISCAL'
+        ]
 
         def _kw_compact(kw: str) -> str:
             return re.sub(r"[^A-Z0-9]+", "", _strip_accents((kw or "").upper()))

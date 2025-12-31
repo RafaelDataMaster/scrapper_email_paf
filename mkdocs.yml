@@ -1,79 +1,80 @@
-site_name: Extrator NFS-e
-site_url: https://rafaeldatamaster.github.io/scrapper_nfe/
-repo_url: https://github.com/rafaeldatamaster/scrapper_nfe
-repo_name: Scrapper NFe
+site_name: Extrator PAF (Email) # Atualize o nome visual do site
+site_url: https://rafaeldatamaster.github.io/scrapper_email_paf/ # A NOVA URL final
+repo_url: https://github.com/rafaeldatamaster/scrapper_email_paf # O NOVO link do repo
+repo_name: Scrapper Email PAF # O nome que aparece no canto direito
 
 # Configuração do Tema Sóbrio (Material Design)
 theme:
-  name: material
-  language: pt-BR
-  features:
-    - navigation.tabs          # Abas no topo (estilo moderno)
-    - navigation.sections      # Seções expansíveis no menu
-    - toc.integrate            # Índice integrado na lateral esquerda (limpo)
-    - content.code.copy        # Botão de copiar nos blocos de código
-  palette:
-    # Esquema Claro (Profissional/Corporativo)
-    - scheme: default
-      primary: white           # Barra superior branca (muito elegante)
-      accent: indigo           # Detalhes sutis em azul índigo
-      toggle:
-        icon: material/brightness-7
-        name: Mudar para modo escuro
+    name: material
+    language: pt-BR
+    features:
+        - navigation.tabs # Abas no topo (estilo moderno)
+        - navigation.sections # Seções expansíveis no menu
+        - toc.integrate # Índice integrado na lateral esquerda (limpo)
+        - content.code.copy # Botão de copiar nos blocos de código
+    palette:
+        # Esquema Claro (Profissional/Corporativo)
+        - scheme: default
+          primary: white # Barra superior branca (muito elegante)
+          accent: indigo # Detalhes sutis em azul índigo
+          toggle:
+              icon: material/brightness-7
+              name: Mudar para modo escuro
 
-    # Esquema Escuro (Opcional - bom deixar disponível)
-    - scheme: slate
-      primary: black
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Mudar para modo claro
+        # Esquema Escuro (Opcional - bom deixar disponível)
+        - scheme: slate
+          primary: black
+          accent: indigo
+          toggle:
+              icon: material/brightness-4
+              name: Mudar para modo claro
 
 # Plugins para funcionalidades extras
 plugins:
-  - search                     # Barra de busca
-  - mkdocstrings              # Documentação automática de código
-  - encryptcontent:           # Proteção de conteúdo sensível
-      global_password: "M4sterKey@0912"  # Senha para descriptografar o conteúdo
-      title_prefix: "(Bloqueado) "
-      search_index: "dynamically"
+    - search # Barra de busca
+    - mkdocstrings # Documentação automática de código
+    - encryptcontent: # Proteção de conteúdo sensível
+          global_password: "M4sterKey@0912" # Senha para descriptografar o conteúdo
+          title_prefix: "(Bloqueado) "
+          search_index: "dynamically"
 markdown_extensions:
-  - attr_list                  # Permite classes em elementos HTML/Markdown
-  - md_in_html                 # Permite Markdown dentro de tags HTML <div>
-  - admonition                 # Caixas de alerta (!!! warning)
-  - pymdownx.details           # Colapsar alertas
-  - pymdownx.superfences:      # Blocos de código avançados (Mermaid)
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.emoji:            # Ícones :material-icon:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+    - attr_list # Permite classes em elementos HTML/Markdown
+    - md_in_html # Permite Markdown dentro de tags HTML <div>
+    - admonition # Caixas de alerta (!!! warning)
+    - pymdownx.details # Colapsar alertas
+    - pymdownx.superfences: # Blocos de código avançados (Mermaid)
+          custom_fences:
+              - name: mermaid
+                class: mermaid
+                format: !!python/name:pymdownx.superfences.fence_code_format
+    - pymdownx.emoji: # Ícones :material-icon:
+          emoji_index: !!python/name:materialx.emoji.twemoji
+          emoji_generator:
+              !!python/name:materialx.emoji.to_svg # Estrutura do Menu (Navegação)
 
-# Estrutura do Menu (Navegação)
+
 nav:
-  - Home: index.md
-  - Guia de Uso:
-      - Instalação e Execução: guide/usage.md
-      - Processamento de Boletos: guide/boletos.md
-      - Quick Start Boletos: guide/quickstart_boletos.md
-      - Ingestão de E-mails: guide/ingestion.md
-      - Testes Automatizados: guide/testing.md
-      - Como Estender (Plugins): guide/extending.md
-      - Padrões de Documentação: guide/documentation_standards.md
-  - Referência Técnica:
-      - Visão Geral: api/overview.md
-      - Core (Núcleo): api/core.md
-      - Extractors (Mineração): api/extractors.md
-      - Strategies (Leitura): api/strategies.md
-      - Diagnostics (Qualidade): api/diagnostics.md
-  - Pesquisa & Evolução:
-      - Arquitetura - Extração de PDF: research/architecture_pdf_extraction.md
-      - Arquitetura - Ingestão de E-mails: research/architecture_email_ingestion.md
-      - Insights de Desenvolvimento: research/insights.md
-  - Desenvolvimento:
-      - Histórico de Refatorações: development/refactoring_history.md
-      - Refatoração SOLID (2025): development/solid_refactoring_report.md
-      - Guia de Uso SOLID: development/solid_usage_guide.md
-      - Guia de Debug de PDFs: development/debugging_guide.md
+    - Home: index.md
+    - Guia de Uso:
+          - Instalação e Execução: guide/usage.md
+          - Processamento de Boletos: guide/boletos.md
+          - Quick Start Boletos: guide/quickstart_boletos.md
+          - Ingestão de E-mails: guide/ingestion.md
+          - Testes Automatizados: guide/testing.md
+          - Como Estender (Plugins): guide/extending.md
+          - Padrões de Documentação: guide/documentation_standards.md
+    - Referência Técnica:
+          - Visão Geral: api/overview.md
+          - Core (Núcleo): api/core.md
+          - Extractors (Mineração): api/extractors.md
+          - Strategies (Leitura): api/strategies.md
+          - Diagnostics (Qualidade): api/diagnostics.md
+    - Pesquisa & Evolução:
+          - Arquitetura - Extração de PDF: research/architecture_pdf_extraction.md
+          - Arquitetura - Ingestão de E-mails: research/architecture_email_ingestion.md
+          - Insights de Desenvolvimento: research/insights.md
+    - Desenvolvimento:
+          - Histórico de Refatorações: development/refactoring_history.md
+          - Refatoração SOLID (2025): development/solid_refactoring_report.md
+          - Guia de Uso SOLID: development/solid_usage_guide.md
+          - Guia de Debug de PDFs: development/debugging_guide.md
