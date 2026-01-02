@@ -1,29 +1,36 @@
-# Sistema de Extração (MVP PAF)
+# Sistema de Extração de Documentos Fiscais (v2.x)
 
-Sistema para extração e processamento de documentos fiscais (NFSe e Boletos) a partir de PDFs.
+Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Boletos) a partir de PDFs, com suporte a **processamento em lote** e **correlação automática** entre documentos.
 
-O **MVP atual** está focado em gerar as colunas essenciais da planilha PAF:
+## Colunas Extraídas (PAF)
 
 - DATA (processamento)
-- SETOR (**vazio no MVP**, será preenchida via ingestão/metadata do e-mail)
+- SETOR (via metadata do e-mail)
 - EMPRESA
 - FORNECEDOR
-- NF (**vazio no MVP**, será preenchida via API da openAI)
-- EMISSÃO (quando aplicável)
+- NF (número da nota)
+- EMISSÃO
 - VALOR
 - VENCIMENTO
+
+## Novidades da v2.x
+
+- ✅ **Batch Processing**: Processa e-mails como lotes (pasta com `metadata.json`)
+- ✅ **Correlação DANFE/Boleto**: Vincula automaticamente boletos às suas notas
+- ✅ **Herança de campos**: Boleto herda `numero_nota` da DANFE, DANFE herda `vencimento` do Boleto
+- ✅ **Status de conciliação**: OK, DIVERGENTE ou ORFAO
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Documentation](https://img.shields.io/badge/docs-MkDocs-blue.svg)](./docs/)
 
 ## To Do - Notas mentais
 
-- [ ] **Implementar a refatoração descrito em refatora.md incluindo alteraçãos no models e process**.
 - [ ] **Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows**.
 - [ ] Lembrar de atualizar os dados do imap pro email da empresa.
 - [ ] Procurar APIs da openAI para OCR e validadção dos dados no documento no caso para a coluna NF num primeiro momento.
 - [ ] Quando o projeto estiver no estágio real pra primeira release ler git-futuro.md e pesquisar ferramentas/plugins/qualquer coisa que ajude a melhorar a maluquice que é os commits e tudo mais.
 - [ ] Verificar cada caso a fundo dos pdfs e avaliar possíveis estratégias para os casos onde o pdf em si não esta anexado no email (link de prefeitura ou redirecionador de terceiros) [LOW_PRIORITY].
+- [ ] Implementar exportador para Google Sheets (esqueleto já existe).
 
 # Estudar por agora
 
@@ -35,37 +42,34 @@ Procurar pdfs com nome de empresas específicas ao identificar casos falhos nos 
 Get-ChildItem -Path .\failed_cases_pdf\ -Recurse -Filter "*MOTO*" -Name
 ```
 
-### Nova estratégia camada Prata.
+### ✅ Camada Prata Implementada (v2.x)
 
-Alterar o modelo de ingestão para guardar o contexto do email em json e utilizar os dados de diferentes pdfs para validarem entre si. Criar nova coluna identificando o email de origem.
+A estratégia de correlação foi implementada nos seguintes módulos:
 
-- Regra 1: Herança de Dados (Complementação)
-    - Se tem DANFE e Boleto na mesma pasta:
-        - O Boleto herda o numero_nota da DANFE (se não conseguiu ler).
-        - A DANFE herda o vencimento do Boleto (ou da primeira parcela, como vimos no caso da Azul).
-        - Ambos herdam o numero_pedido se estiver no Assunto/Corpo do e-mail.
-- Regra 2: Fallback de Identificação (OCR vs Metadados)
-    - Se o OCR do fornecedor falhou ou veio vazio:
-        - Usar email_sender_name do metadado.
-    - Se o CNPJ não foi achado no PDF:
-        - Procurar CNPJ no email_body_text.
-- Regra 3: Validação Cruzada (Auditoria)
-    - Somar o valor de todos os Boletos da pasta.
-    - Comparar com o valor_total da DANFE.
-    - Novo Campo: status_conciliacao
-        - "OK" (Valores batem)
-        - "DIVERGENTE" (Nota de 10k, Boleto de 5k -> Alerta de parcela faltante)
-        - "ORFAO" (Só veio boleto, sem nota)
+- `core/metadata.py` - EmailMetadata (contexto do e-mail)
+- `core/batch_processor.py` - BatchProcessor (processa lotes)
+- `core/batch_result.py` - BatchResult (resultado de lote)
+- `core/correlation_service.py` - CorrelationService (correlação)
+
+**Regras implementadas:**
+
+- ✅ Regra 1: Herança de Dados (Boleto ↔ DANFE)
+- ✅ Regra 2: Fallback de Identificação (OCR → Metadados)
+- ✅ Regra 3: Validação Cruzada (status_conciliacao: OK/DIVERGENTE/ORFAO)
 
 ### Verificar esses pdfs
 
-    - 10-19 RBC NF20762 ETK INDUSTRIA.pdf
-    - 01-28 NF 127090 AZUL (CARRIER).pdf
-    - 04-09 NF128458 AZUL DISTRIBUIDORA.pdf
-    - 04-18 RBC NF114906 AZUL DISTRIBUIDORA.pdf
-    - 01-21 NF 43802 AZUL DISTRIBUIDORA (EXATA).pdf
-
 ## Done
+
+### 02/01/2026
+
+- [x] **Implementar a refatoração descrito em refatora.md incluindo alteraçãos no models e process** ✅ (v2.x - Batch Processing)
+- [x] **Batch Processing v2.x**: Módulos `BatchProcessor`, `CorrelationService`, `EmailMetadata`, `BatchResult`, `IngestionService`
+- [x] **Correlação DANFE/Boleto**: Herança automática de campos entre documentos do mesmo lote
+- [x] **Novo script `inspect_pdf.py`**: Inspeção rápida com busca automática em `failed_cases_pdf/` e `temp_email/`
+- [x] **164 testes unitários**: Cobertura completa incluindo novos módulos de batch
+- [x] **Documentação atualizada**: Guias de debug, testing, extending e migration atualizados para v2.x
+- [x] **Limpeza de scripts**: Removidos scripts obsoletos (`debug_pdf.py`, `diagnose_failures.py`, `analyze_boletos.py`, etc.)
 
 ### 30/12/2025
 
@@ -200,42 +204,69 @@ Variáveis (ver [.env.example](.env.example)):
 
 ## Uso (MVP)
 
-### 1) Processar PDFs locais (colunas MVP)
+### 1) Inspecionar um PDF
 
-Use o script de debug do MVP para ver as colunas PAF prioritárias:
-
-```bash
-python scripts/debug_pdf.py "caminho/para/arquivo.pdf"
-```
-
-Para inspecionar o texto bruto extraído:
+Use o script de inspeção para ver os campos extraídos:
 
 ```bash
-python scripts/debug_pdf.py "caminho/para/arquivo.pdf" --full-text
+python scripts/inspect_pdf.py "caminho/para/arquivo.pdf"
 ```
 
-### 2) Validar regras em lote (pasta `failed_cases_pdf/`)
+O script busca automaticamente em `failed_cases_pdf/` e `temp_email/`, então você pode passar só o nome:
 
-Processa todos os PDFs em `failed_cases_pdf/` e gera relatórios em `data/debug_output/`:
+```bash
+python scripts/inspect_pdf.py exemplo.pdf
+```
+
+Para ver o texto bruto completo (útil para criar regex):
+
+```bash
+python scripts/inspect_pdf.py exemplo.pdf --raw
+```
+
+Para ver apenas campos específicos:
+
+```bash
+python scripts/inspect_pdf.py exemplo.pdf --fields fornecedor valor vencimento
+```
+
+### 2) Validar regras em lote
+
+**Modo legado** (PDFs soltos em `failed_cases_pdf/`):
 
 ```bash
 python scripts/validate_extraction_rules.py
 ```
 
+**Modo batch** (lotes com `metadata.json` em `temp_email/`):
+
+```bash
+python scripts/validate_extraction_rules.py --batch-mode --apply-correlation
+```
+
 ### 3) Ingestão via e-mail (gera CSVs)
 
-Baixa anexos e processa o pipeline:
+Baixa anexos, cria lotes e processa com correlação:
 
 ```bash
 python run_ingestion.py
+```
+
+**Flags disponíveis:**
+
+```bash
+python run_ingestion.py --reprocess           # Reprocessa lotes existentes
+python run_ingestion.py --batch-folder <path> # Processa pasta específica
+python run_ingestion.py --subject "NF-e"      # Filtro de assunto customizado
+python run_ingestion.py --no-correlation      # Sem correlação (modo legado)
+python run_ingestion.py --cleanup             # Remove lotes antigos
 ```
 
 Saída em `data/output/`:
 
 - `relatorio_nfse.csv`
 - `relatorio_boletos.csv`
-
-Obs.: o filtro de assunto está **hardcoded** em `run_ingestion.py` (variável `assunto_teste`, atualmente `"ENC"`).
+- `relatorio_danfe.csv`
 
 ## Dependências externas (OCR)
 
@@ -246,16 +277,27 @@ No Windows, os caminhos padrão são configurados em `config/settings.py` (`TESS
 
 ```
 config/          # settings (.env), parâmetros e caminhos
-core/            # modelos (PAF), processor e diagnósticos
-extractors/      # extratores por tipo (NFSe/Boleto)
+core/            # modelos, processor, batch_processor, correlation_service
+  metadata.py    # EmailMetadata (contexto do e-mail)
+  batch_processor.py  # Processador de lotes
+  batch_result.py     # Resultado de lote
+  correlation_service.py  # Correlação DANFE/Boleto
+services/        # Serviços de alto nível
+  ingestion_service.py  # Ingestão com lotes
+extractors/      # extratores por tipo (NFSe/Boleto/DANFE)
 strategies/      # estratégias (nativa/ocr/fallback)
 ingestors/       # IMAP e utilitários de download
-scripts/         # ferramentas (debug_pdf, validate_extraction_rules, etc.)
+scripts/         # ferramentas utilitárias
+  inspect_pdf.py           # Inspeção rápida de PDFs
+  validate_extraction_rules.py  # Validação de regras
+  example_batch_processing.py   # Exemplos de batch
+  test_docker_setup.py     # Teste de setup
+temp_email/      # Pastas de lotes (batch folders)
 failed_cases_pdf/# PDFs para testes/validação de regras
 data/
   output/        # CSVs gerados pela ingestão
   debug_output/  # relatórios de validação (sucesso/falha)
-tests/           # suíte de testes
+tests/           # suíte de testes (164 testes)
 ```
 
 📖 Documentação técnica em [docs/](./docs/).

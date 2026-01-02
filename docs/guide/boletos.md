@@ -79,9 +79,9 @@ df_boleto = pd.read_csv('data/output/relatorio_boletos.csv')
 
 # Vincular por referência explícita no boleto
 merged = pd.merge(
-    df_boleto, 
-    df_nfse, 
-    left_on='referencia_nfse', 
+    df_boleto,
+    df_nfse,
+    left_on='referencia_nfse',
     right_on='numero_nota',
     how='left',
     suffixes=('_boleto', '_nfse')
@@ -177,7 +177,7 @@ limite = hoje + timedelta(days=7)
 
 # Boletos vencendo nos próximos 7 dias
 proximos = df_boleto[
-    (df_boleto['vencimento'] >= hoje) & 
+    (df_boleto['vencimento'] >= hoje) &
     (df_boleto['vencimento'] <= limite)
 ]
 
@@ -201,14 +201,21 @@ print(f"Média Boletos: R$ {df_boleto['valor_documento'].mean():,.2f}")
 
 ## Testando o Extrator
 
-Para testar o extrator de boletos:
+Para testar a extração de boletos:
 
 ```powershell
-python scripts/test_boleto_extractor.py
+# Inspecionar um boleto específico
+python scripts/inspect_pdf.py boleto_exemplo.pdf
+
+# Ver campos específicos de boleto
+python scripts/inspect_pdf.py boleto.pdf --fields valor_documento vencimento cnpj_beneficiario
+
+# Validar regras em lote
+python scripts/validate_extraction_rules.py
 ```
 
-Este script valida:
+Campos validados:
 
 - ✅ Identificação correta de boletos
-- ✅ Extração de todos os campos
+- ✅ Extração de todos os campos (valor, vencimento, linha digitável, etc.)
 - ✅ Diferenciação entre NFSe e Boletos

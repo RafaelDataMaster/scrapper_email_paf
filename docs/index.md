@@ -199,8 +199,8 @@ scrapper/
 ├── scripts/                    # Scripts utilitários e de diagnóstico
 │   ├── validate_extraction_rules.py  # Valida regras (legacy + batch mode)
 │   ├── example_batch_processing.py   # 🆕 Exemplos de batch processing
-│   ├── diagnose_failures.py          # Analisa CSV e aponta erros
-│   └── debug_pdf.py                  # Debug de PDF individual
+│   ├── inspect_pdf.py                # 🆕 Inspeção rápida de PDFs (busca automática)
+│   └── test_docker_setup.py          # Testa setup Docker/Tesseract
 │
 ├── tests/                      # Testes Unitários e de Integração
 ├── run_ingestion.py            # CLI para ingestão de e-mail (atualizado v2.x)

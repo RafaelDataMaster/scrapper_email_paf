@@ -100,6 +100,7 @@ docker-compose run --rm scrapper python -u run_ingestion.py
 ```
 
 **Output esperado:**
+
 ```
 📂 Diretório temporário criado: /app/temp_email
 🔌 Conectando a imap.gmail.com como scrapper.nsfe@gmail.com...
@@ -141,6 +142,7 @@ command: sh -c "while true; do python run_ingestion.py && sleep 21600; done"
 ```
 
 Depois de editar:
+
 ```bash
 docker-compose down
 docker-compose up -d scrapper-cron
@@ -246,16 +248,16 @@ docker-compose run --rm scrapper python scripts/test_docker_setup.py
 docker-compose run --rm scrapper python scripts/validate_extraction_rules.py
 ```
 
-### Analisar Boletos
+### Inspecionar PDF
 
 ```bash
-docker-compose run --rm scrapper python scripts/analyze_boletos.py
+docker-compose run --rm scrapper python scripts/inspect_pdf.py arquivo.pdf
 ```
 
-### Diagnóstico de Falhas
+### Validação Batch com Correlação
 
 ```bash
-docker-compose run --rm scrapper python scripts/diagnose_failures.py
+docker-compose run --rm scrapper python scripts/validate_extraction_rules.py --batch-mode --apply-correlation
 ```
 
 ### Teste de Conexão Email (Interativo)
@@ -487,13 +489,14 @@ Edite `docker-compose.yml`:
 
 ```yaml
 deploy:
-  resources:
-    limits:
-      cpus: '4.0'      # Era 2.0, agora 4.0
-      memory: 4G       # Era 2G, agora 4G
+    resources:
+        limits:
+            cpus: "4.0" # Era 2.0, agora 4.0
+            memory: 4G # Era 2G, agora 4G
 ```
 
 Depois:
+
 ```bash
 docker-compose down
 docker-compose up -d scrapper-cron
@@ -518,7 +521,7 @@ Ou rode múltiplas instâncias:
 scrapper-cron-2:
   <<: *scrapper-cron  # Referência
   container_name: nfse-scrapper-cron-2
-  
+
 scrapper-cron-3:
   <<: *scrapper-cron
   container_name: nfse-scrapper-cron-3
@@ -536,25 +539,25 @@ Crie `.github/workflows/docker.yml`:
 name: Build and Push Docker
 
 on:
-  push:
-    branches: [main]
+    push:
+        branches: [main]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Build image
-        run: docker-compose build
-      
-      - name: Run tests
-        run: docker-compose run --rm scrapper python scripts/test_docker_setup.py
-      
-      - name: Push to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker-compose push
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Build image
+              run: docker-compose build
+
+            - name: Run tests
+              run: docker-compose run --rm scrapper python scripts/test_docker_setup.py
+
+            - name: Push to Docker Hub
+              run: |
+                  echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+                  docker-compose push
 ```
 
 ### Monitoramento com Prometheus
@@ -563,16 +566,16 @@ Adicione ao `docker-compose.yml`:
 
 ```yaml
 prometheus:
-  image: prom/prometheus
-  volumes:
-    - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  ports:
-    - "9090:9090"
+    image: prom/prometheus
+    volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+        - "9090:9090"
 
 grafana:
-  image: grafana/grafana
-  ports:
-    - "3000:3000"
+    image: grafana/grafana
+    ports:
+        - "3000:3000"
 ```
 
 ### Alertas por Email/Slack

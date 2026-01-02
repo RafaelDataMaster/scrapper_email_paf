@@ -4,9 +4,9 @@ Este guia descreve como configurar o ambiente de desenvolvimento e executar o pi
 
 ## Pré-requisitos
 
-* **Python 3.8+** instalado.
-* **Tesseract OCR** instalado e configurado no PATH (ou caminho especificado em `config/settings.py`).
-* **Poppler** (para `pdf2image`) instalado.
+- **Python 3.8+** instalado.
+- **Tesseract OCR** instalado e configurado no PATH (ou caminho especificado em `config/settings.py`).
+- **Poppler** (para `pdf2image`) instalado.
 
 ## Instalação
 
@@ -35,10 +35,10 @@ Este guia descreve como configurar o ambiente de desenvolvimento e executar o pi
 
 Você pode alterar o comportamento do extrator através de variáveis de ambiente ou editando `config/settings.py`.
 
-| Variável | Descrição | Padrão (Windows) |
-| :--- | :--- | :--- |
-| `TESSERACT_CMD` | Caminho do executável do OCR | `C:\Program Files\Tesseract-OCR\tesseract.exe` |
-| `POPPLER_PATH` | Caminho dos binários do Poppler | `C:\Program Files\poppler-xx\bin` |
+| Variável        | Descrição                       | Padrão (Windows)                               |
+| :-------------- | :------------------------------ | :--------------------------------------------- |
+| `TESSERACT_CMD` | Caminho do executável do OCR    | `C:\Program Files\Tesseract-OCR\tesseract.exe` |
+| `POPPLER_PATH`  | Caminho dos binários do Poppler | `C:\Program Files\poppler-xx\bin`              |
 
 ## Execução
 
@@ -50,18 +50,30 @@ Executa o pipeline completo (baixa anexos, classifica documento, extrai dados e 
 python run_ingestion.py
 ```
 
-### 2) Debug de um PDF (colunas MVP)
+### 2) Inspecionar um PDF
 
-Mostra as colunas PAF do MVP diretamente no terminal:
+Mostra os campos extraídos diretamente no terminal:
 
 ```bash
-python scripts/debug_pdf.py "caminho/para/arquivo.pdf"
+python scripts/inspect_pdf.py "caminho/para/arquivo.pdf"
 ```
 
-Para ver o texto extraído (útil em casos híbridos/OCR):
+O script busca automaticamente em `failed_cases_pdf/` e `temp_email/`, então você pode passar só o nome:
 
 ```bash
-python scripts/debug_pdf.py "caminho/para/arquivo.pdf" --full-text
+python scripts/inspect_pdf.py exemplo.pdf
+```
+
+Para ver o texto bruto completo (útil para criar regex):
+
+```bash
+python scripts/inspect_pdf.py exemplo.pdf --raw
+```
+
+Para ver apenas campos específicos:
+
+```bash
+python scripts/inspect_pdf.py exemplo.pdf --fields fornecedor valor vencimento
 ```
 
 ### 3) Validar regras / gerar CSVs de debug
@@ -81,5 +93,5 @@ Os CSVs de debug/saída ficam em:
 
 ## Solução de Problemas Comuns
 
-* **Erro `TesseractNotFoundError`**: Verifique se o Tesseract está instalado e se o caminho em `config/settings.py` está correto.
-* **Erro `Poppler not found`**: Certifique-se de que o Poppler está instalado e adicionado ao PATH do sistema.
+- **Erro `TesseractNotFoundError`**: Verifique se o Tesseract está instalado e se o caminho em `config/settings.py` está correto.
+- **Erro `Poppler not found`**: Certifique-se de que o Poppler está instalado e adicionado ao PATH do sistema.

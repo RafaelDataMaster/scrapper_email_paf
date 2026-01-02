@@ -164,8 +164,8 @@ make test
 
 # Scripts específicos
 docker-compose run --rm scrapper python scripts/validate_extraction_rules.py
-docker-compose run --rm scrapper python scripts/analyze_boletos.py
-docker-compose run --rm scrapper python scripts/diagnose_failures.py
+docker-compose run --rm scrapper python scripts/validate_extraction_rules.py --batch-mode --apply-correlation
+docker-compose run --rm scrapper python scripts/inspect_pdf.py arquivo.pdf
 
 # Teste de conexão email
 docker-compose run --rm scrapper python -c "from ingestors.imap import ImapIngestor; from config import settings; i = ImapIngestor(settings.EMAIL_HOST, settings.EMAIL_USER, settings.EMAIL_PASS); i.connect(); print('OK')"

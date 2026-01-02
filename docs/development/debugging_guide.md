@@ -19,6 +19,7 @@ with pdfplumber.open('caminho/do/arquivo.pdf') as pdf:
 **Por que usar `repr()`?**
 
 A função `repr()` mostra caracteres invisíveis como:
+
 - Quebras de linha: `\n`
 - Tabs: `\t`
 - Espaços múltiplos: `'  '`
@@ -109,7 +110,7 @@ def is_nosso_numero(text):
     # Não tem pontos (exclui CNPJ)
     if '.' in text:
         return False
-    
+
     # Formato banco: XX ou XXX / XXXXXXX+ - X
     match = re.match(r'\d{2,3}/\d{7,}-\d', text)
     return bool(match)
@@ -120,122 +121,90 @@ pattern = r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)'  # Específico
 
 ### Tabela de Diferenciação
 
-| Campo | Formato | Dígitos antes da / | Características |
-|-------|---------|-------------------|-----------------|
-| CNPJ | XX.XXX.XXX/XXXX-XX | 8 (com pontos) | Sempre tem `.` |
-| Agência/Conta | XXXX/XXXXXXX-X | 4 | Código de agência |
-| Nosso Número | XXX/XXXXXXXX-X | 2-3 | Código bancário |
+| Campo         | Formato            | Dígitos antes da / | Características   |
+| ------------- | ------------------ | ------------------ | ----------------- |
+| CNPJ          | XX.XXX.XXX/XXXX-XX | 8 (com pontos)     | Sempre tem `.`    |
+| Agência/Conta | XXXX/XXXXXXX-X     | 4                  | Código de agência |
+| Nosso Número  | XXX/XXXXXXXX-X     | 2-3                | Código bancário   |
 
-## 5. Script de Debug Pronto para Uso
+## 5. Script de Inspeção de PDFs
 
-O projeto já inclui um script completo de debug em `scripts/debug_pdf.py` com as seguintes funcionalidades:
+O projeto inclui um script prático de inspeção em `scripts/inspect_pdf.py` que permite debugar rapidamente a extração de campos de qualquer PDF.
 
 ### Recursos Disponíveis
 
-- 🎨 **Output colorido** no terminal para melhor visualização
-- 🔍 **Debug de campo específico** com contexto automático
-- 📊 **Análise geral** de todos os campos importantes
-- 🧪 **Biblioteca de padrões** pré-definidos testados
-- ✏️ **Padrões customizados** para testes específicos
-- 📋 **Lista TODAS ocorrências** de um formato no documento
-- 🔄 **Comparação lado a lado** de múltiplos PDFs
-- 🎯 **Detecta automaticamente** quando `re.DOTALL` faz diferença
+- 🔍 **Busca automática** - passa só o nome do arquivo e ele busca em `failed_cases_pdf/` e `temp_email/`
+- 📊 **Campos por tipo** - mostra automaticamente os campos relevantes para o tipo de documento (DANFE, Boleto, NFSe)
+- 📋 **Texto bruto** - visualiza o texto extraído pelo pdfplumber
+- 🎯 **Campos específicos** - filtra apenas os campos que você quer ver
 
-### Exemplos de Uso Básico
+### Exemplos de Uso
 
 ```bash
-# Debug básico de um PDF
-python scripts/debug_pdf.py failed_cases_pdf/37e40903.pdf
+# Busca automática pelo nome do arquivo
+python scripts/inspect_pdf.py exemplo.pdf
 
-# Debug de campo específico
-python scripts/debug_pdf.py arquivo.pdf -f nosso_numero
+# Caminho completo
+python scripts/inspect_pdf.py failed_cases_pdf/pasta/boleto.pdf
 
-# Mostrar texto completo
-python scripts/debug_pdf.py arquivo.pdf --full-text
-    }
-    
-    if field_name in patterns:
-        match = re.search(patterns[field_name], text, re.IGNORECASE)
-        if match:
-            start = max(0, match.start() - 50)
-            end = min(len(text), match.end() + 100)
-            context = text[start:end]
-            print(f"CONTEXTO:\n{repr(context)}\n")
+# Mostrar apenas campos específicos
+python scripts/inspect_pdf.py danfe.pdf --fields fornecedor valor vencimento
 
-# Testar padrão customizado
-python scripts/debug_pdf.py arquivo.pdf -f nosso_numero -p "r'Nosso.*?(\\d+/\\d+-\\d+)'"
+# Mostrar texto bruto completo (não truncado)
+python scripts/inspect_pdf.py nota.pdf --raw
 
-# Comparar múltiplos boletos
-python scripts/debug_pdf.py file1.pdf file2.pdf file3.pdf --compare
-
-# Sem cores (para redirecionar output para arquivo)
-python scripts/debug_pdf.py arquivo.pdf --no-color > debug.txt
+# Ver ajuda
+python scripts/inspect_pdf.py --help
 ```
 
 ### Output Exemplo
 
-Quando você executa o script, o output é organizado e colorido:
+Quando você executa o script, o output é organizado e claro:
 
 ```
-======================================================================
-Debug de PDF: 37e40903.pdf
-======================================================================
+============================================================
+ARQUIVO: 37e40903_boleto.pdf
+PATH:    failed_cases_pdf/subpasta/37e40903_boleto.pdf
+============================================================
 
-📄 Informações Básicas:
-  Caminho: failed_cases_pdf/37e40903.pdf
-  Tamanho do texto: 2456 caracteres
-  Linhas: 87
-
-📝 Preview (primeiros 300 caracteres):
-'Nosso Número\nCARRIER TELECOM - CNPJ\n109/00000507-1\n230.159.230/0001-64'...
-
-🔍 Debug do Campo: nosso_numero
-──────────────────────────────────────────────────────────────────────
-
-Contexto encontrado:
-'...Nosso Número\nCARRIER TELECOM - CNPJ\n109/00000507-1\n230.159.230...'
-
-Todas as ocorrências do formato:
-  1. 109/00000507-1
-  2. 2938/0053345-8
-  3. 230/0001-64
-
-Teste de Padrões:
-  ✓ Formato 3/8-1 (109/00000507-1)              → 109/00000507-1
-  ✓ Formato 2-3/7+-1+ flexível                  → 109/00000507-1
-  ✓ Com label + re.DOTALL                       → 109/00000507-1 (com DOTALL)
-  ✗ Com label mesma linha                       → ❌ Não encontrado
-
-======================================================================
+[extrator] BoletoExtractor
+[tipo]     BOLETO
+----------------------------------------
+doc_type               = BOLETO
+arquivo_origem         = 37e40903_boleto.pdf
+fornecedor_nome        = CARRIER TELECOM LTDA
+empresa                = (vazio)
+data_emissao           = (vazio)
+vencimento             = 2025-11-08
+data_processamento     = 2025-01-15
+valor_documento        = R$ 4.789,00
+cnpj_beneficiario      = 23.015.923/0001-64
+linha_digitavel        = 23793.38128 60000.000050 75293.801016 1 99999999999999
+nosso_numero           = 109/00000507-1
+numero_documento       = 2/1
+referencia_nfse        = (vazio)
+banco_nome             = Bradesco
+agencia                = 2938
+conta_corrente         = 0053345-8
+----------------------------------------
+[texto_bruto] Nosso Número\nCARRIER TELECOM - CNPJ\n109/00000507-1\n230.159.230...
 ```
-
-### Biblioteca de Padrões Incluída
-
-O script já vem com padrões testados para:
-
-- **nosso_numero**: 4 padrões (formato 3/8-1, flexível, com label, etc.)
-- **numero_documento**: 5 padrões (layout tabular, ano.número, X/Y, etc.)
-- **vencimento**: 4 padrões (com label, abreviado, genérico, data de vencimento)
-- **valor**: 3 padrões (valor documento, genérico, apenas R$)
-- **cnpj**: 3 padrões (formatado, com label, sem formatação)
-- **linha_digitavel**: 2 padrões (formatada, sem espaços)
 
 ### Integração com Workflow
 
-Use o script integrado com outros comandos:
+O `inspect_pdf.py` busca automaticamente em duas pastas:
+
+1. **`failed_cases_pdf/`** (modo legado) - PDFs soltos para debug
+2. **`temp_email/`** (modo batch) - Lotes de e-mail processados
+
+Isso significa que você pode simplesmente passar o nome do arquivo:
 
 ```bash
-# 1. Identificar problema no CSV
-python -c "import pandas as pd; df = pd.read_csv('data/debug_output/boletos_sucesso.csv', encoding='utf-8-sig'); print(df[df['nosso_numero'].isna()])"
+# O script encontra o arquivo automaticamente
+python scripts/inspect_pdf.py NF3595.pdf
 
-# 2. Debugar PDF problemático
-python scripts/debug_pdf.py failed_cases_pdf/37e40903.pdf -f nosso_numero
-
-# 3. Testar padrão novo
-python scripts/debug_pdf.py arquivo.pdf -p "r'\\b(\\d{3}/\\d{8}-\\d)\\b'"
-
-# 4. Validar correção
-python scripts/test_boleto_extractor.py
+# Equivalente a passar o caminho completo:
+python scripts/inspect_pdf.py failed_cases_pdf/12-08_EXATA/NF3595.pdf
 ```
 
 ## 6. Validar com CSV Real
@@ -274,7 +243,7 @@ print(df[df['codigo_arquivo'].isin(problematic)][
 ```python
 # Achar TODOS os padrões XXX/XXXXXXXX-X no documento
 all_matches = re.findall(r'\d{2,4}/\d{7,}-\d', text)
-print(all_matches)  
+print(all_matches)
 # ['109/00000507-1', '2938/0053345-8', '230/0001-64']
 
 # Isso ajuda a ver quais valores estão disponíveis e escolher o correto
@@ -326,31 +295,26 @@ pattern = r'N[uú]mero'  # Aceita u ou ú
 
 ```bash
 # 1. Identificar PDFs com problema
-cd failed_cases_pdf/
-ls *.pdf
+ls failed_cases_pdf/
 
-# 2. Extrair texto bruto e verificar
-python -c "
-import pdfplumber
-with pdfplumber.open('37e40903.pdf') as pdf:
-    print(repr(pdf.pages[0].extract_text()[:500]))
-"
+# 2. Inspecionar o PDF problemático
+python scripts/inspect_pdf.py 37e40903.pdf
 
-# 3. Rodar script de debug personalizado
-python scripts/debug_pdf.py 37e40903.pdf nosso_numero
+# 3. Ver texto bruto completo (para criar regex)
+python scripts/inspect_pdf.py 37e40903.pdf --raw
 
-# 4. Testar mudança no código
-python scripts/test_boleto_extractor.py
+# 4. Testar campos específicos
+python scripts/inspect_pdf.py 37e40903.pdf --fields nosso_numero numero_documento
 
-# 5. Verificar resultado no CSV
+# 5. Validar regras de extração em lote
+python scripts/validate_extraction_rules.py --batch-mode
+
+# 6. Verificar resultado no CSV
 python -c "
 import pandas as pd
 df = pd.read_csv('data/debug_output/boletos_sucesso.csv', encoding='utf-8-sig')
 print(df[df['codigo_arquivo'] == '37e40903'][['numero_documento', 'nosso_numero']])
 "
-
-# 6. Validar com processador completo
-python run_ingestion.py
 ```
 
 ## 9. Como Fazer Prompts Eficientes
@@ -459,10 +423,12 @@ Antes de implementar uma correção, verifique:
 ## 12. Ferramentas Úteis
 
 ### Online Regex Tester
+
 - [regex101.com](https://regex101.com) - Testa padrões com explicação visual
 - Configure para Python flavor e use flag `DOTALL` quando necessário
 
 ### VS Code Extensions
+
 - **Regex Preview** - Testa regex diretamente no editor
 - **PDF Viewer** - Visualiza PDFs lado a lado com código
 
@@ -479,11 +445,20 @@ python -c "import pdfplumber, re; text=pdfplumber.open('file.pdf').pages[0].extr
 python -c "import pdfplumber; p1=pdfplumber.open('f1.pdf').pages[0].extract_text(); p2=pdfplumber.open('f2.pdf').pages[0].extract_text(); print('IGUAL' if p1==p2 else 'DIFERENTE')"
 ```
 
+## 13. Scripts Disponíveis
+
+| Script                         | Descrição                    | Uso                                                              |
+| ------------------------------ | ---------------------------- | ---------------------------------------------------------------- |
+| `inspect_pdf.py`               | Inspeção rápida de PDFs      | `python scripts/inspect_pdf.py arquivo.pdf`                      |
+| `validate_extraction_rules.py` | Valida regras em lote        | `python scripts/validate_extraction_rules.py --batch-mode`       |
+| `example_batch_processing.py`  | Exemplos de batch processing | `python scripts/example_batch_processing.py --create-test-batch` |
+| `test_docker_setup.py`         | Testa setup Docker/Tesseract | `python scripts/test_docker_setup.py`                            |
+
 ## Conclusão
 
 Debug de PDFs é um processo iterativo. As chaves do sucesso são:
 
-1. **Ver o texto real** com `repr()`
+1. **Ver o texto real** com `repr()` ou `inspect_pdf.py --raw`
 2. **Testar isoladamente** antes de implementar
 3. **Diferenciar formatos** similares com precisão
 4. **Validar resultados** no CSV final

@@ -4,7 +4,7 @@ Este guia explica como executar o projeto de scraping de NFSe e Boletos usando D
 
 ## 📋 Pré-requisitos
 
-- Docker Engine 20.10+ 
+- Docker Engine 20.10+
 - Docker Compose 2.0+
 - Arquivo `.env` configurado com credenciais de email
 
@@ -33,7 +33,8 @@ EMAIL_PASS=sua_senha_de_aplicativo
 EMAIL_FOLDER=INBOX
 ```
 
-**⚠️ IMPORTANTE:** 
+**⚠️ IMPORTANTE:**
+
 - Para Gmail, use uma [senha de aplicativo](https://myaccount.google.com/apppasswords), não sua senha normal!
 - As variáveis `TESSERACT_CMD` e `POPPLER_PATH` são automaticamente configuradas no container Linux
 
@@ -80,11 +81,13 @@ Todos os arquivos gerados ficam disponíveis no seu sistema de arquivos local.
 ### Tesseract OCR
 
 **No Windows (desenvolvimento):**
+
 ```
 C:\Program Files\Tesseract-OCR\tesseract.exe
 ```
 
 **No Docker (produção):**
+
 ```
 /usr/bin/tesseract
 ```
@@ -94,11 +97,13 @@ Instalado via `apt-get install tesseract-ocr tesseract-ocr-por` no Dockerfile.
 ### Poppler (pdf2image)
 
 **No Windows (desenvolvimento):**
+
 ```
 C:\Poppler\...\Library\bin
 ```
 
 **No Docker (produção):**
+
 ```
 /usr/bin (pdfinfo, pdftocairo, etc.)
 ```
@@ -192,16 +197,16 @@ print('✅ Config OK:', settings.TESSERACT_CMD)
 docker-compose run --rm scrapper python scripts/validate_extraction_rules.py
 ```
 
-### Analisar boletos
+### Inspecionar PDF
 
 ```bash
-docker-compose run --rm scrapper python scripts/analyze_boletos.py
+docker-compose run --rm scrapper python scripts/inspect_pdf.py arquivo.pdf
 ```
 
-### Diagnóstico de falhas
+### Validação Batch com Correlação
 
 ```bash
-docker-compose run --rm scrapper python scripts/diagnose_failures.py
+docker-compose run --rm scrapper python scripts/validate_extraction_rules.py --batch-mode --apply-correlation
 ```
 
 ## ⚙️ Ajustes de Performance
@@ -210,13 +215,13 @@ Edite `docker-compose.yml` para ajustar recursos:
 
 ```yaml
 deploy:
-  resources:
-    limits:
-      cpus: '4.0'      # Aumentar para processar mais PDFs
-      memory: 4G       # Aumentar se tiver muitos PDFs grandes
-    reservations:
-      cpus: '1.0'
-      memory: 1G
+    resources:
+        limits:
+            cpus: "4.0" # Aumentar para processar mais PDFs
+            memory: 4G # Aumentar se tiver muitos PDFs grandes
+        reservations:
+            cpus: "1.0"
+            memory: 1G
 ```
 
 ## 🐛 Troubleshooting
@@ -248,6 +253,7 @@ docker-compose logs scrapper-cron | grep -i erro
 ### Container não consegue conectar ao email
 
 **Solução:** Verifique:
+
 1. Se o `.env` está no diretório correto
 2. Se as credenciais estão corretas
 3. Se o Gmail tem autenticação de 2 fatores ativa (precisa de senha de app)
@@ -258,12 +264,12 @@ docker-compose run --rm scrapper python -c "from config import settings; print(s
 
 ## 📚 Diferenças Windows vs Docker
 
-| Componente | Windows (Dev) | Docker (Prod) |
-|------------|---------------|---------------|
-| Tesseract  | `C:\Program Files\Tesseract-OCR\tesseract.exe` | `/usr/bin/tesseract` |
-| Poppler    | `C:\Poppler\...\Library\bin` | `/usr/bin` (pdfinfo, etc.) |
-| Python     | Instalação local | Python 3.11 slim no container |
-| Paths      | Barras invertidas `\` | Barras normais `/` |
+| Componente | Windows (Dev)                                  | Docker (Prod)                 |
+| ---------- | ---------------------------------------------- | ----------------------------- |
+| Tesseract  | `C:\Program Files\Tesseract-OCR\tesseract.exe` | `/usr/bin/tesseract`          |
+| Poppler    | `C:\Poppler\...\Library\bin`                   | `/usr/bin` (pdfinfo, etc.)    |
+| Python     | Instalação local                               | Python 3.11 slim no container |
+| Paths      | Barras invertidas `\`                          | Barras normais `/`            |
 
 **As configurações são ajustadas automaticamente!** O `settings.py` usa `os.getenv()` que lê do `.env` ou do Dockerfile.
 
@@ -337,18 +343,18 @@ Exemplo de GitHub Actions:
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches: [main]
+    push:
+        branches: [main]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build image
-        run: docker-compose build
-      - name: Push to registry
-        run: docker-compose push
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Build image
+              run: docker-compose build
+            - name: Push to registry
+              run: docker-compose push
 ```
 
 ---

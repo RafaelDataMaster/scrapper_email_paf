@@ -14,7 +14,7 @@ Princípios SOLID aplicados:
 - OCP: Novas regras podem ser adicionadas via métodos sem alterar existentes
 - DIP: Depende de abstrações (DocumentData), não de implementações concretas
 """
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from core.batch_result import BatchResult, CorrelationResult
 from core.metadata import EmailMetadata

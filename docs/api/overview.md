@@ -315,10 +315,8 @@ Ferramentas de linha de comando para diagnóstico e manutenção:
 | :----------------------------- | :-------------------------------------------- | :------------- |
 | `validate_extraction_rules.py` | Valida regras de extração em PDFs de teste    | Legacy + Batch |
 | `example_batch_processing.py`  | 🆕 Exemplos de processamento em lote          | Batch          |
-| `diagnose_failures.py`         | Analisa falhas no CSV de ingestão             | Legacy         |
-| `analyze_boletos.py`           | Análise estatística e vinculação de boletos   | Legacy         |
-| `move_failed_files.py`         | Move arquivos com falha para pasta de análise | Legacy         |
-| `debug_pdf.py`                 | Debug de PDF individual                       | Legacy         |
+| `inspect_pdf.py`               | 🆕 Inspeção rápida de PDFs (busca automática) | Legacy + Batch |
+| `test_docker_setup.py`         | Testa setup Docker/Tesseract                  | Setup          |
 
 ---
 
