@@ -1,7 +1,8 @@
-import os
 import logging
+import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Carrega as variáveis do arquivo .env para o ambiente
@@ -29,6 +30,7 @@ DEBUG_RELATORIO_QUALIDADE = DIR_DEBUG_OUTPUT / "relatorio_qualidade.txt"
 # Centralizamos aqui para não espalhar caminhos pelo código
 # Detecta automaticamente se está no Docker (Linux) ou Windows
 import platform
+
 is_linux = platform.system() == 'Linux'
 
 # Defaults diferentes para Linux (Docker) e Windows (desenvolvimento)
@@ -66,17 +68,17 @@ if not all([EMAIL_HOST, EMAIL_USER, EMAIL_PASS]):
 # Responsável pela classificação que aparecerá na coluna 15 (TRAT PAF) da planilha
 TRAT_PAF_RESPONSAVEL = os.getenv('TRAT_PAF_RESPONSAVEL', 'SISTEMA_AUTO')
 
-# --- Modo MVP (primeira entrega) ---
-# Objetivo: focar nas colunas principais e permitir evolução por etapas.
+# --- Configuração de Exportação NF ---
+# Controla se a coluna NF (5) e Nº FAT (13) são preenchidas na exportação PAF.
 #
-# Neste primeiro momento, o número de NF (coluna 5) será preenchido via ingestão de e-mail
-# (metadata / assunto / contexto) e NÃO via extração do PDF.
-# Por isso:
-# - Exportação PAF deixa a coluna NF vazia
+# Comportamento atual:
+# - DANFE/NFSe: exporta numero_nota extraído do PDF
+# - Boleto: exporta referencia_nfse (herdado da DANFE/NFSe via correlação) ou numero_documento
 # - Diagnóstico NÃO exige numero_nota para considerar NFSe como "sucesso" (por padrão)
 
 # Se True, a coluna NF (e Nº FAT relacionado) é exportada em branco no to_sheets_row().
-PAF_EXPORT_NF_EMPTY = os.getenv('PAF_EXPORT_NF_EMPTY', '1') == '1'
+# Default: False - exporta numero_nota extraído do PDF (DANFE/NFSe) ou referencia_nfse (Boleto)
+PAF_EXPORT_NF_EMPTY = os.getenv('PAF_EXPORT_NF_EMPTY', '0') == '1'
 
 # Se True, a validação/diagnóstico exige número de NF na NFSe (numero_nota).
 # Para o MVP, default é False.

@@ -28,6 +28,7 @@ from .models import (
     OtherDocumentData,
 )
 from .processor import BaseInvoiceProcessor
+from .xml_extractor import XmlExtractor, extract_xml
 
 __all__ = [
     # Models
@@ -43,6 +44,8 @@ __all__ = [
     "BaseExtractor",
     "register_extractor",
     "find_linha_digitavel",
+    "XmlExtractor",
+    "extract_xml",
     # Processors
     "BaseInvoiceProcessor",
     "BatchProcessor",

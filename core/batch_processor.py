@@ -24,6 +24,7 @@ from core.correlation_service import CorrelationResult, CorrelationService
 from core.metadata import EmailMetadata
 from core.models import DocumentData
 from core.processor import BaseInvoiceProcessor
+from core.xml_extractor import XmlExtractor
 
 
 class BatchProcessor:
@@ -112,7 +113,8 @@ class BatchProcessor:
 
         # 4. Aplica correlação entre documentos (se habilitado)
         if apply_correlation and result.total_documents > 0:
-            self.correlation_service.correlate(result, metadata)
+            correlation_result = self.correlation_service.correlate(result, metadata)
+            result.correlation_result = correlation_result
 
         return result
 
@@ -209,15 +211,39 @@ class BatchProcessor:
         Returns:
             DocumentData ou None se falhar
         """
-        # Por enquanto só suporta PDF
+        # Processa PDF
         if file_path.suffix.lower() == '.pdf':
             return self.processor.process(str(file_path))
 
-        # TODO: Adicionar suporte a XML (NFe original) no futuro
-        # if file_path.suffix.lower() == '.xml':
-        #     return self._process_xml(file_path)
+        # Processa XML (NF-e / NFS-e)
+        if file_path.suffix.lower() == '.xml':
+            return self._process_xml(file_path)
 
         return None
+
+    def _process_xml(self, file_path: Path) -> Optional[DocumentData]:
+        """
+        Processa um arquivo XML de NF-e ou NFS-e.
+
+        Args:
+            file_path: Caminho do arquivo XML
+
+        Returns:
+            DocumentData (DanfeData ou InvoiceData) ou None se falhar
+        """
+        try:
+            extractor = XmlExtractor()
+            result = extractor.extract(str(file_path))
+
+            if result.success and result.document:
+                return result.document
+            else:
+                print(f"Erro ao processar XML {file_path.name}: {result.error}")
+                return None
+
+        except Exception as e:
+            print(f"Erro ao processar XML {file_path.name}: {e}")
+            return None
 
     def _list_processable_files(self, folder_path: Path) -> List[Path]:
         """

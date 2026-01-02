@@ -277,6 +277,99 @@ class TestBatchResult(unittest.TestCase):
         self.assertEqual(summary["email_subject"], "Test Subject")
 
 
+class TestCorrelationServicePropagation(unittest.TestCase):
+    """Testes para propagação de status_conciliacao e valor_total_lote."""
+
+    def test_propagate_status_conciliacao_ok(self):
+        """Testa propagação de status OK para documentos."""
+        batch = BatchResult(batch_id="test_prop_ok")
+        batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=1000.0))
+        batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1000.0))
+
+        service = CorrelationService()
+        result = service.correlate(batch)
+
+        # Verifica propagação para todos os documentos
+        for doc in batch.documents:
+            self.assertEqual(doc.status_conciliacao, "OK")
+            self.assertEqual(doc.valor_total_lote, 2000.0)
+
+    def test_propagate_status_conciliacao_divergente(self):
+        """Testa propagação de status DIVERGENTE para documentos."""
+        batch = BatchResult(batch_id="test_prop_div")
+        batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=1000.0))
+        batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1500.0))
+
+        service = CorrelationService()
+        result = service.correlate(batch)
+
+        # Verifica propagação para todos os documentos
+        for doc in batch.documents:
+            self.assertEqual(doc.status_conciliacao, "DIVERGENTE")
+            self.assertEqual(doc.valor_total_lote, 2500.0)
+
+    def test_propagate_status_conciliacao_orfao(self):
+        """Testa propagação de status ORFAO para boleto sem nota."""
+        batch = BatchResult(batch_id="test_prop_orfao")
+        batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=500.0))
+
+        service = CorrelationService()
+        result = service.correlate(batch)
+
+        boleto = batch.boletos[0]
+        self.assertEqual(boleto.status_conciliacao, "ORFAO")
+        self.assertEqual(boleto.valor_total_lote, 500.0)
+
+    def test_to_dict_includes_new_fields(self):
+        """Testa se to_dict() inclui status_conciliacao e valor_total_lote."""
+        batch = BatchResult(batch_id="test_dict")
+        batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=100.0))
+        batch.add_document(InvoiceData(arquivo_origem="n.pdf", valor_total=100.0))
+        batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=100.0))
+        batch.add_document(OtherDocumentData(arquivo_origem="o.pdf", valor_total=100.0))
+
+        service = CorrelationService()
+        service.correlate(batch)
+
+        for doc in batch.documents:
+            d = doc.to_dict()
+            self.assertIn('status_conciliacao', d)
+            self.assertIn('valor_total_lote', d)
+            self.assertIsNotNone(d['status_conciliacao'])
+            self.assertIsNotNone(d['valor_total_lote'])
+
+    def test_batch_result_stores_correlation_result(self):
+        """Testa se BatchResult armazena CorrelationResult."""
+        batch = BatchResult(batch_id="test_store")
+        batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=1000.0))
+        batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1000.0))
+
+        service = CorrelationService()
+        result = service.correlate(batch)
+        batch.correlation_result = result
+
+        self.assertIsNotNone(batch.correlation_result)
+        self.assertEqual(batch.correlation_result.status, "OK")
+
+    def test_to_summary_includes_correlation_data(self):
+        """Testa se to_summary() inclui dados de conciliação."""
+        batch = BatchResult(batch_id="test_summary")
+        batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=1000.0))
+        batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1500.0))
+
+        service = CorrelationService()
+        result = service.correlate(batch)
+        batch.correlation_result = result
+
+        summary = batch.to_summary()
+
+        self.assertIn('status_conciliacao', summary)
+        self.assertIn('divergencia', summary)
+        self.assertIn('diferenca_valor', summary)
+        self.assertEqual(summary['status_conciliacao'], 'DIVERGENTE')
+        self.assertEqual(summary['diferenca_valor'], 500.0)
+
+
 class TestCorrelationResult(unittest.TestCase):
     """Testes para a classe CorrelationResult."""
 

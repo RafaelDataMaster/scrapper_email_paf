@@ -1,15 +1,17 @@
-import imaplib
 import email
+import imaplib
 from email.header import decode_header
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from core.interfaces import EmailIngestorStrategy
+
 
 class ImapIngestor(EmailIngestorStrategy):
     """
     Implementação de ingestão de e-mails via protocolo IMAP.
 
     Esta classe gerencia a conexão segura (SSL) com servidores de e-mail,
-    realiza buscas filtradas por assunto e extrai anexos PDF.
+    realiza buscas filtradas por assunto e extrai anexos PDF e XML.
 
     Attributes:
         host (str): Endereço do servidor IMAP (ex: imap.gmail.com).
@@ -17,6 +19,9 @@ class ImapIngestor(EmailIngestorStrategy):
         password (str): Senha ou App Password.
         folder (str): Pasta do e-mail a ser monitorada (Padrão: INBOX).
     """
+
+    # Extensões de arquivos válidos para extração
+    VALID_EXTENSIONS = {'.pdf', '.xml'}
 
     def __init__(self, host: str, user: str, password: str, folder: str = "INBOX"):
         self.host = host
@@ -44,16 +49,16 @@ class ImapIngestor(EmailIngestorStrategy):
         """
         if not text:
             return ""
-            
+
         decoded_list = decode_header(text)
         final_text = ""
-        
+
         for content, encoding in decoded_list:
             if isinstance(content, bytes):
                 if not encoding:
                     # Se não vier encoding, tenta utf-8, se falhar vai de latin-1
                     encoding = "utf-8"
-                
+
                 try:
                     final_text += content.decode(encoding, errors="replace")
                 except (LookupError, UnicodeDecodeError):
@@ -61,12 +66,99 @@ class ImapIngestor(EmailIngestorStrategy):
                     final_text += content.decode("latin-1", errors="replace")
             else:
                 final_text += str(content)
-                
+
         return final_text
+
+    def _is_valid_attachment(self, filename: str) -> bool:
+        """
+        Verifica se o arquivo é um anexo válido (PDF ou XML).
+
+        Args:
+            filename: Nome do arquivo
+
+        Returns:
+            True se for PDF ou XML
+        """
+        if not filename:
+            return False
+
+        ext = filename.lower()
+        return any(ext.endswith(valid_ext) for valid_ext in self.VALID_EXTENSIONS)
+
+    def _extract_email_body(self, msg: email.message.Message) -> str:
+        """
+        Extrai o corpo do e-mail em texto plano.
+
+        Args:
+            msg: Objeto Message do email
+
+        Returns:
+            Texto do corpo do e-mail
+        """
+        body_text = ""
+
+        if msg.is_multipart():
+            for part in msg.walk():
+                content_type = part.get_content_type()
+                content_disposition = str(part.get("Content-Disposition", ""))
+
+                # Pula anexos
+                if "attachment" in content_disposition:
+                    continue
+
+                if content_type == "text/plain":
+                    try:
+                        payload = part.get_payload(decode=True)
+                        if payload:
+                            charset = part.get_content_charset() or 'utf-8'
+                            body_text += payload.decode(charset, errors='replace')
+                    except Exception:
+                        pass
+        else:
+            content_type = msg.get_content_type()
+            if content_type == "text/plain":
+                try:
+                    payload = msg.get_payload(decode=True)
+                    if payload:
+                        charset = msg.get_content_charset() or 'utf-8'
+                        body_text = payload.decode(charset, errors='replace')
+                except Exception:
+                    pass
+
+        return body_text
+
+    def _extract_sender_info(self, msg: email.message.Message) -> Dict[str, str]:
+        """
+        Extrai informações do remetente do e-mail.
+
+        Args:
+            msg: Objeto Message do email
+
+        Returns:
+            Dict com 'name' e 'address' do remetente
+        """
+        from_header = msg.get("From", "")
+        decoded_from = self._decode_text(from_header)
+
+        sender_name = ""
+        sender_address = ""
+
+        # Tenta extrair nome e email do formato "Nome <email@domain.com>"
+        if "<" in decoded_from and ">" in decoded_from:
+            parts = decoded_from.rsplit("<", 1)
+            sender_name = parts[0].strip().strip('"\'')
+            sender_address = parts[1].rstrip(">").strip()
+        else:
+            sender_address = decoded_from.strip()
+
+        return {"name": sender_name, "address": sender_address}
 
     def fetch_attachments(self, subject_filter: str = "Nota Fiscal") -> List[Dict[str, Any]]:
         """
-        Busca e-mails pelo assunto e extrai anexos PDF.
+        Busca e-mails pelo assunto e extrai anexos PDF e XML.
+
+        Cada anexo retornado inclui um 'email_id' para permitir
+        agrupamento de múltiplos anexos do mesmo e-mail.
 
         Args:
             subject_filter (str): Texto para filtrar o assunto dos e-mails.
@@ -77,14 +169,18 @@ class ImapIngestor(EmailIngestorStrategy):
                 - content (bytes): Conteúdo binário do arquivo.
                 - source (str): E-mail de origem (usuário).
                 - subject (str): Assunto do e-mail.
+                - email_id (str): Identificador único do e-mail de origem.
+                - sender_name (str): Nome do remetente.
+                - sender_address (str): E-mail do remetente.
+                - body_text (str): Corpo do e-mail (texto).
+                - received_date (str): Data de recebimento.
         """
         if not self.connection:
             self.connect()
-            
+
         # Busca no servidor (Filtering Server-side é limitado no IMAP)
-        # IMAP search é verboso
         status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
-        
+
         results = []
         if not messages or messages[0] == b'':
             return results
@@ -96,30 +192,97 @@ class ImapIngestor(EmailIngestorStrategy):
                     continue
 
                 msg = email.message_from_bytes(msg_data[0][1])
-                
-                # Uso do método seguro
+
+                # Gera um email_id único baseado no Message-ID ou número sequencial
+                message_id = msg.get("Message-ID", "")
+                if message_id:
+                    # Limpa o Message-ID para usar como identificador
+                    email_id = message_id.strip("<>").replace("@", "_").replace(".", "_")
+                else:
+                    # Fallback: usa o número do email no servidor
+                    email_id = f"email_{num.decode('utf-8')}"
+
+                # Extrai metadados do e-mail
                 subject = self._decode_text(msg["Subject"])
-                
-                # Navegar pela árvore MIME para achar anexos 
+                sender_info = self._extract_sender_info(msg)
+                body_text = self._extract_email_body(msg)
+                received_date = msg.get("Date", "")
+
+                # Navegar pela árvore MIME para achar anexos
                 for part in msg.walk():
                     if part.get_content_maintype() == 'multipart':
                         continue
                     if part.get('Content-Disposition') is None:
                         continue
-                        
+
                     filename = part.get_filename()
-                    if filename and filename.lower().endswith('.pdf'):
+
+                    # Aceita PDF e XML
+                    if self._is_valid_attachment(filename):
                         # Uso do método seguro
                         filename = self._decode_text(filename)
-                        
+
                         results.append({
                             'filename': filename,
                             'content': part.get_payload(decode=True),
                             'source': self.user,
-                            'subject': subject
+                            'subject': subject,
+                            'email_id': email_id,
+                            'sender_name': sender_info['name'],
+                            'sender_address': sender_info['address'],
+                            'body_text': body_text,
+                            'received_date': received_date,
                         })
+
             except Exception as e:
                 print(f"⚠️ Erro ao ler e-mail ID {num}: {e}")
                 continue
 
         return results
+
+    def fetch_emails_grouped(self, subject_filter: str = "Nota Fiscal") -> List[Dict[str, Any]]:
+        """
+        Busca e-mails pelo assunto e retorna agrupados (um dict por e-mail).
+
+        Diferente de fetch_attachments que retorna um item por anexo,
+        este método retorna um item por e-mail com todos os anexos juntos.
+
+        Args:
+            subject_filter (str): Texto para filtrar o assunto dos e-mails.
+
+        Returns:
+            List[Dict[str, Any]]: Lista de dicionários (um por e-mail) contendo:
+                - email_id (str): Identificador único do e-mail.
+                - subject (str): Assunto do e-mail.
+                - sender_name (str): Nome do remetente.
+                - sender_address (str): E-mail do remetente.
+                - body_text (str): Corpo do e-mail (texto).
+                - received_date (str): Data de recebimento.
+                - attachments (List[Dict]): Lista de anexos com 'filename' e 'content'.
+        """
+        # Busca anexos individuais
+        attachments = self.fetch_attachments(subject_filter)
+
+        # Agrupa por email_id
+        emails_map: Dict[str, Dict[str, Any]] = {}
+
+        for att in attachments:
+            email_id = att['email_id']
+
+            if email_id not in emails_map:
+                emails_map[email_id] = {
+                    'email_id': email_id,
+                    'subject': att['subject'],
+                    'sender_name': att['sender_name'],
+                    'sender_address': att['sender_address'],
+                    'body_text': att['body_text'],
+                    'received_date': att['received_date'],
+                    'attachments': [],
+                }
+
+            emails_map[email_id]['attachments'].append({
+                'filename': att['filename'],
+                'content': att['content'],
+            })
+
+        return list(emails_map.values())

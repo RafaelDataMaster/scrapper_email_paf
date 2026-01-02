@@ -30,6 +30,7 @@ class BoletoExtractor(BaseExtractor):
         - Presença de "Linha Digitável" ou código de barras padrão
         - Palavras-chave: "Beneficiário", "Vencimento", "Valor do Documento"
         - Ausência de "NFS-e" ou "Nota Fiscal de Serviço"
+        - NÃO é DANFSe (Documento Auxiliar da NFS-e)
         """
         def _strip_accents(value: str) -> str:
             if not value:
@@ -43,6 +44,32 @@ class BoletoExtractor(BaseExtractor):
         text_upper = (text or "").upper()
         text_norm_upper = _strip_accents(text_upper)
         text_compact = re.sub(r"[^A-Z0-9]+", "", text_norm_upper)
+
+        # ========== VERIFICAÇÃO DE EXCLUSÃO: DANFSe ==========
+        # DANFSe (Documento Auxiliar da NFS-e) NÃO é boleto, mesmo tendo
+        # uma chave de acesso que pode parecer linha digitável.
+        # Se o documento contém indicadores fortes de DANFSe, excluir imediatamente.
+        danfse_exclusion_patterns = [
+            'DANFSE',
+            'DANFS-E',
+            'DOCUMENTOAUXILIARDANFSE',
+            'DOCUMENTOAUXILIARDANFS',
+            'CHAVEDEACESSODANFSE',
+            'CHAVEDEACESSODANFS',
+        ]
+
+        for pattern in danfse_exclusion_patterns:
+            if pattern in text_compact:
+                return False
+
+        # Verificação adicional: "DOCUMENTO AUXILIAR" + "NFS" no mesmo contexto
+        if 'DOCUMENTOAUXILIAR' in text_compact and 'NFS' in text_compact:
+            return False
+
+        # Verificação: "CHAVE DE ACESSO" + "NFS-E" ou "NOTA FISCAL DE SERVIÇO" indica DANFSe
+        if 'CHAVEDEACESSO' in text_compact:
+            if 'NFSE' in text_compact or 'NOTAFISCALDESERVICO' in text_compact:
+                return False
 
         # Indicadores positivos de boleto
         # Observação: alguns PDFs (especialmente com OCR/híbrido) podem corromper letras
@@ -63,7 +90,9 @@ class BoletoExtractor(BaseExtractor):
             'CODIGO DE BARRAS',
             'AGÊNCIA/CÓDIGO',
             'AGENCIA/CODIGO',
-            'CEDENTE'
+            'CEDENTE',
+            'RECIBO DO PAGADOR',
+            'RECIBO DO SACADO',
         ]
 
         # Indicadores negativos (se é NFSe, não é boleto puro)
@@ -73,7 +102,9 @@ class BoletoExtractor(BaseExtractor):
             'NOTA FISCAL DE SERVICO ELETRONICA',
             'PREFEITURA',
             'DANFE',
-            'DOCUMENTO AUXILIAR DA NOTA FISCAL'
+            'DOCUMENTO AUXILIAR DA NOTA FISCAL',
+            'DOCUMENTO AUXILIAR DA NFS',
+            'DANFSE',
         ]
 
         def _kw_compact(kw: str) -> str:
@@ -82,14 +113,12 @@ class BoletoExtractor(BaseExtractor):
         boleto_score = sum(1 for kw in boleto_keywords if _kw_compact(kw) and _kw_compact(kw) in text_compact)
         nfse_score = sum(1 for kw in nfse_keywords if _kw_compact(kw) and _kw_compact(kw) in text_compact)
 
-
-
         # É boleto se:
         # - Tem alta pontuação de palavras-chave de boleto OU linha digitável
-        # - E não tem muitas palavras de NFSe
+        # - E não tem muitas palavras de NFSe (threshold aumentado para 3)
         # Garante retorno booleano (evita retornar match object)
         has_linha_digitavel = find_linha_digitavel(text)
-        return bool((boleto_score >= 3 or has_linha_digitavel) and nfse_score < 2)
+        return bool((boleto_score >= 3 or has_linha_digitavel) and nfse_score < 3)
 
     def extract(self, text: str) -> Dict[str, Any]:
         """

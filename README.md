@@ -34,6 +34,37 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 
 # Estudar por agora
 
+### Verificar esses casos
+
+#### DIVERGENTE (1 caso)
+
+- **`email_20260102_133321_b39bedb6`** - [Kentro] Lembrete de Vencimento
+    - Problema: 2 NFS-e diferentes no mesmo email
+    - Nota PDF R$ 2.780,40 (nº12) + Nota XML R$ 2.980,20 (nº15059) vs Boleto R$ 2.980,20
+
+#### ORFÃO (7 casos - boleto sem nota)
+
+- **`email_20260102_133320_90c1703d`** - Nota Fatura - 2025-02 (CARRIER)
+    - Boleto R$ 4.789,00 — PDF da nota não extraído
+
+- **`email_20260102_133320_ec04189f`** - Fechamento Locação 11/2025 (REPROMAQ)
+    - Boleto R$ 2.855,00 — Docs são demonstrativos de locação
+
+- **`email_20260102_133321_7b0346db`** - Fatura Locaweb
+    - Boleto R$ 352,08 — PDF da fatura não é NFS-e padrão
+
+- **`email_20260102_133322_0f8e9655`** - Boleto Skymail
+    - Boleto R$ 7.620,00 (2 boletos) — PDF nfe.pdf mal classificado
+
+- **`email_20260102_133322_301980c9`** - Fechamento Locação 09/2025 (REPROMAQ)
+    - Boleto R$ 2.855,00 — Docs são demonstrativos de locação
+
+- **`email_20260102_133322_8a637468`** - Nota Fatura - 2025-44 (CARRIER)
+    - Boleto R$ 4.789,00 — PDF da nota não extraído
+
+- **`email_20260102_133323_d0bd799a`** - Fatura 50446 - EMC Tecnologia
+    - Boleto R$ 37.817,48 — Só tem boleto, nota não veio
+
 ### Comandos de terminal uteis
 
 Procurar pdfs com nome de empresas específicas ao identificar casos falhos nos debugs do validate
@@ -57,12 +88,18 @@ A estratégia de correlação foi implementada nos seguintes módulos:
 - ✅ Regra 2: Fallback de Identificação (OCR → Metadados)
 - ✅ Regra 3: Validação Cruzada (status_conciliacao: OK/DIVERGENTE/ORFAO)
 
-### Verificar esses pdfs
-
 ## Done
 
 ### 02/01/2026
 
+- [x] **Fix MATRIXGO**: DANFSe classificado como boleto (chave de acesso confundida com linha digitável)
+    - Corrigido `find_linha_digitavel()` para excluir chaves de acesso NFS-e
+    - Corrigido `BoletoExtractor.can_handle()` para excluir documentos DANFSe
+    - **2 lotes DIVERGENTE → OK**
+- [x] **Fix Sigcorp**: XML municipal SigISS não era reconhecido
+    - Adicionado método `_extract_nfse_sigiss()` no `xml_extractor.py`
+    - Suporte ao formato XML SigISS (Marília-SP e outras prefeituras)
+    - **1 lote sem extração → OK**
 - [x] **Implementar a refatoração descrito em refatora.md incluindo alteraçãos no models e process** ✅ (v2.x - Batch Processing)
 - [x] **Batch Processing v2.x**: Módulos `BatchProcessor`, `CorrelationService`, `EmailMetadata`, `BatchResult`, `IngestionService`
 - [x] **Correlação DANFE/Boleto**: Herança automática de campos entre documentos do mesmo lote

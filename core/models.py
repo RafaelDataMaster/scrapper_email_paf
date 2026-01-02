@@ -210,7 +210,9 @@ class InvoiceData(DocumentData):
             'link_drive': self.link_drive,
             'observacoes': self.observacoes,
             'obs_interna': self.obs_interna,
-            'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None
+            'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
+            'status_conciliacao': self.status_conciliacao,
+            'valor_total_lote': self.valor_total_lote,
         }
 
     def to_sheets_row(self) -> list:
@@ -335,6 +337,8 @@ class DanfeData(DocumentData):
             'lanc_sistema': self.lanc_sistema,
             'chave_acesso': self.chave_acesso,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
+            'status_conciliacao': self.status_conciliacao,
+            'valor_total_lote': self.valor_total_lote,
         }
 
     def to_sheets_row(self) -> list:
@@ -426,6 +430,8 @@ class OtherDocumentData(DocumentData):
             'lanc_sistema': self.lanc_sistema,
             'subtipo': self.subtipo,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
+            'status_conciliacao': self.status_conciliacao,
+            'valor_total_lote': self.valor_total_lote,
         }
 
     def to_sheets_row(self) -> list:
@@ -574,7 +580,9 @@ class BoletoData(DocumentData):
             'lanc_sistema': self.lanc_sistema,
             'observacoes': self.observacoes,
             'obs_interna': self.obs_interna,
-            'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None
+            'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
+            'status_conciliacao': self.status_conciliacao,
+            'valor_total_lote': self.valor_total_lote,
         }
 
     def to_sheets_row(self) -> list:
@@ -621,8 +629,10 @@ class BoletoData(DocumentData):
         except Exception:
             PAF_EXPORT_NF_EMPTY = False
 
-        nf_value = "" if PAF_EXPORT_NF_EMPTY else fmt_str(self.numero_documento)
-        fat_value = "" if PAF_EXPORT_NF_EMPTY else fmt_str(self.numero_documento)
+        # Prioriza referencia_nfse (herdado da DANFE/NFSe via correlação)
+        # Fallback para numero_documento se não houver correlação
+        nf_value = "" if PAF_EXPORT_NF_EMPTY else fmt_str(self.referencia_nfse or self.numero_documento)
+        fat_value = "" if PAF_EXPORT_NF_EMPTY else fmt_str(self.referencia_nfse or self.numero_documento)
 
         return [
             fmt_date(self.data_processamento),  # 1. DATA

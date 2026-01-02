@@ -107,25 +107,57 @@ class IngestionService:
         if not raw_attachments:
             return []
 
-        # Agrupa anexos por e-mail de origem
-        # (assumindo que cada item tem um identificador de e-mail)
+        # Agrupa anexos por e-mail de origem usando email_id
+        emails_grouped = self._group_attachments_by_email(raw_attachments)
+
         batches_created = []
 
-        # Processa cada anexo
-        # Nota: A estrutura atual do ingestor retorna anexos individuais.
-        # Para agrupar por e-mail, precisamos de um identificador comum.
-        # Por enquanto, tratamos cada anexo como um lote separado.
-        # TODO: Melhorar agrupamento quando ingestor suportar email_id
-
-        for attachment in raw_attachments:
-            batch_path = self._create_batch_from_attachment(
-                attachment,
+        # Processa cada e-mail como um lote único (com todos os seus anexos)
+        for email_data in emails_grouped.values():
+            batch_path = self.ingest_single_email(
+                email_data,
                 create_ignored_folder=create_ignored_folder
             )
             if batch_path and batch_path not in batches_created:
                 batches_created.append(batch_path)
 
         return batches_created
+
+    def _group_attachments_by_email(
+        self,
+        attachments: List[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Agrupa anexos pelo email_id para criar um lote único por e-mail.
+
+        Args:
+            attachments: Lista de anexos individuais com email_id
+
+        Returns:
+            Dict mapeando email_id para dados do e-mail com todos os anexos
+        """
+        emails_map: Dict[str, Dict[str, Any]] = {}
+
+        for att in attachments:
+            # Usa email_id se disponível, senão gera um ID único por anexo (modo legado)
+            email_id = att.get('email_id', self._generate_batch_id())
+
+            if email_id not in emails_map:
+                emails_map[email_id] = {
+                    'subject': att.get('subject', ''),
+                    'sender_name': att.get('sender_name', ''),
+                    'sender_address': att.get('sender_address', att.get('source', '')),
+                    'body_text': att.get('body_text', ''),
+                    'received_date': att.get('received_date', ''),
+                    'attachments': [],
+                }
+
+            emails_map[email_id]['attachments'].append({
+                'filename': att.get('filename', ''),
+                'content': att.get('content', b''),
+            })
+
+        return emails_map
 
     def ingest_single_email(
         self,

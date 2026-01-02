@@ -69,7 +69,31 @@ class CorrelationService:
         # 3. Validação cruzada de valores
         self._validate_cross_values(batch, result)
 
+        # 4. Propaga status e valor_total_lote para cada documento
+        self._propagate_batch_context(batch, result)
+
         return result
+
+    def _propagate_batch_context(
+        self,
+        batch: BatchResult,
+        result: CorrelationResult
+    ) -> None:
+        """
+        Propaga informações de contexto do lote para cada documento.
+
+        Preenche os campos status_conciliacao e valor_total_lote em cada
+        documento, permitindo que a exportação inclua essas informações.
+
+        Args:
+            batch: Resultado do processamento em lote
+            result: Resultado da correlação com status calculado
+        """
+        valor_total_lote = batch.get_valor_total_lote()
+
+        for doc in batch.documents:
+            doc.status_conciliacao = result.status
+            doc.valor_total_lote = valor_total_lote
 
     def _enrich_from_metadata(
         self,

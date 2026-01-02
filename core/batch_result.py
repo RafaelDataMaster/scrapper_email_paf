@@ -8,8 +8,10 @@ Princípios SOLID aplicados:
 - SRP: Classe focada apenas em resultados de lote
 - OCP: Extensível via composição sem modificar código existente
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from core.models import (
     BoletoData,
@@ -18,6 +20,9 @@ from core.models import (
     InvoiceData,
     OtherDocumentData,
 )
+
+if TYPE_CHECKING:
+    from core.batch_result import CorrelationResult
 
 
 @dataclass
@@ -44,6 +49,9 @@ class BatchResult:
     # Campos de contexto enriquecido (vindos do metadata.json)
     email_subject: Optional[str] = None
     email_sender: Optional[str] = None
+
+    # Resultado da correlação (preenchido após correlate())
+    correlation_result: Optional[CorrelationResult] = None
 
     def add_document(self, doc: DocumentData) -> None:
         """Adiciona um documento ao lote."""
@@ -130,7 +138,7 @@ class BatchResult:
         Returns:
             Dicionário com estatísticas do lote
         """
-        return {
+        summary = {
             'batch_id': self.batch_id,
             'source_folder': self.source_folder,
             'email_subject': self.email_subject,
@@ -145,6 +153,14 @@ class BatchResult:
             'valor_danfes': self.get_valor_total_danfes(),
             'valor_boletos': self.get_valor_total_boletos(),
         }
+
+        # Adiciona dados de conciliação se disponível
+        if self.correlation_result:
+            summary['status_conciliacao'] = self.correlation_result.status
+            summary['divergencia'] = self.correlation_result.divergencia
+            summary['diferenca_valor'] = self.correlation_result.diferenca
+
+        return summary
 
 
 @dataclass

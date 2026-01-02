@@ -87,6 +87,14 @@ def export_batch_results(
     """
     Exporta resultados dos lotes para CSVs.
 
+    Gera os seguintes arquivos:
+    - relatorio_boleto.csv: Apenas boletos
+    - relatorio_nfse.csv: Apenas NFSe
+    - relatorio_danfe.csv: Apenas DANFE
+    - relatorio_outro.csv: Outros documentos
+    - relatorio_consolidado.csv: TODOS os documentos juntos (tabela final)
+    - relatorio_lotes.csv: Resumo por lote com status de conciliação
+
     Args:
         batches: Lista de resultados de lotes processados
         output_dir: Diretório de saída
@@ -95,6 +103,12 @@ def export_batch_results(
 
     # Agrupa documentos por tipo
     documentos_por_tipo = defaultdict(list)
+
+    # Lista consolidada de TODOS os documentos
+    todos_documentos = []
+
+    # Lista de resumos por lote
+    resumos_lotes = []
 
     for batch in batches:
         for doc in batch.documents:
@@ -107,8 +121,12 @@ def export_batch_results(
             doc_dict['email_sender'] = batch.email_sender
 
             documentos_por_tipo[doc_type].append(doc_dict)
+            todos_documentos.append(doc_dict)
 
-    # Exporta cada tipo
+        # Adiciona resumo do lote
+        resumos_lotes.append(batch.to_summary())
+
+    # Exporta cada tipo separadamente
     for doc_type, documentos in documentos_por_tipo.items():
         if not documentos:
             continue
@@ -120,6 +138,47 @@ def export_batch_results(
         df.to_csv(output_path, index=False, sep=';', encoding='utf-8-sig', decimal=',')
 
         logger.info(f"✅ {len(documentos)} {doc_type} exportados -> {output_path}")
+
+    # Exporta tabela consolidada (TODOS os documentos juntos)
+    if todos_documentos:
+        output_consolidado = output_dir / "relatorio_consolidado.csv"
+        df_consolidado = pd.DataFrame(todos_documentos)
+
+        # Reordena colunas para melhor visualização
+        colunas_prioritarias = [
+            'batch_id', 'tipo_documento', 'status_conciliacao', 'valor_total_lote',
+            'fornecedor_nome', 'valor_documento', 'valor_total', 'vencimento',
+            'data_emissao', 'numero_nota', 'numero_documento', 'email_subject'
+        ]
+        colunas_existentes = [c for c in colunas_prioritarias if c in df_consolidado.columns]
+        outras_colunas = [c for c in df_consolidado.columns if c not in colunas_prioritarias]
+        df_consolidado = df_consolidado[colunas_existentes + outras_colunas]
+
+        df_consolidado.to_csv(
+            output_consolidado, index=False, sep=';', encoding='utf-8-sig', decimal=','
+        )
+        logger.info(f"✅ {len(todos_documentos)} documentos -> {output_consolidado.name} (CONSOLIDADO)")
+
+    # Exporta relatório de lotes (resumo por batch)
+    if resumos_lotes:
+        output_lotes = output_dir / "relatorio_lotes.csv"
+        df_lotes = pd.DataFrame(resumos_lotes)
+
+        # Reordena colunas do resumo
+        colunas_lote = [
+            'batch_id', 'status_conciliacao', 'divergencia', 'diferenca_valor',
+            'total_documents', 'total_errors', 'valor_total_lote',
+            'danfes', 'boletos', 'nfses', 'outros',
+            'valor_danfes', 'valor_boletos', 'email_subject', 'email_sender'
+        ]
+        colunas_existentes = [c for c in colunas_lote if c in df_lotes.columns]
+        outras_colunas = [c for c in df_lotes.columns if c not in colunas_lote]
+        df_lotes = df_lotes[colunas_existentes + outras_colunas]
+
+        df_lotes.to_csv(
+            output_lotes, index=False, sep=';', encoding='utf-8-sig', decimal=','
+        )
+        logger.info(f"✅ {len(resumos_lotes)} lotes -> {output_lotes.name} (AUDITORIA)")
 
 
 def ingest_and_process(
