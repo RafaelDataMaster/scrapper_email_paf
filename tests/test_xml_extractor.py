@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 
 from core.models import DanfeData, InvoiceData
-from core.xml_extractor import XmlExtractionResult, XmlExtractor, extract_xml
+from extractors.xml_extractor import XmlExtractionResult, XmlExtractor, extract_xml
 
 
 class TestXmlExtractorDetection(unittest.TestCase):
@@ -92,6 +92,39 @@ class TestXmlExtractorDetection(unittest.TestCase):
         </NFe>'''
         doc_type = self.extractor._detect_document_type(xml)
         self.assertEqual(doc_type, 'NFSE_SIGISS')
+
+    def test_detect_nfse_sped_by_namespace(self):
+        """Detecta NFS-e SPED pelo namespace sped.fazenda.gov.br."""
+        xml = '<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse"><infNFSe Id="NFS123"><nNFSe>912</nNFSe></infNFSe></NFSe>'
+        doc_type = self.extractor._detect_document_type(xml)
+        self.assertEqual(doc_type, 'NFSE_SPED')
+
+    def test_detect_nfse_sped_by_tags(self):
+        """Detecta NFS-e SPED pelas tags características."""
+        xml = '''<NFSe versao="1.00">
+            <infNFSe Id="NFS123">
+                <nNFSe>912</nNFSe>
+                <nDFSe>16442633</nDFSe>
+                <emit><CNPJ>12345678000195</CNPJ></emit>
+            </infNFSe>
+        </NFSe>'''
+        doc_type = self.extractor._detect_document_type(xml)
+        self.assertEqual(doc_type, 'NFSE_SPED')
+
+    def test_detect_nfse_sped_by_dps_structure(self):
+        """Detecta NFS-e SPED pela estrutura DPS/infDPS."""
+        xml = '''<NFSe>
+            <infNFSe Id="NFS123">
+                <DPS versao="1.00">
+                    <infDPS Id="DPS123">
+                        <toma><CNPJ>38323227000140</CNPJ></toma>
+                        <prest><CNPJ>17907897000134</CNPJ></prest>
+                    </infDPS>
+                </DPS>
+            </infNFSe>
+        </NFSe>'''
+        doc_type = self.extractor._detect_document_type(xml)
+        self.assertEqual(doc_type, 'NFSE_SPED')
 
     def test_detect_unknown_document(self):
         """Retorna vazio para documento não reconhecido."""
@@ -316,6 +349,117 @@ class TestXmlExtractorNFSe(unittest.TestCase):
             self.assertEqual(doc.valor_csll, 100.0)
         finally:
             Path(temp_path).unlink()
+
+
+class TestXmlExtractorNFSeSPED(unittest.TestCase):
+    """Testa extração de NFS-e no padrão SPED/SEFIN Nacional."""
+
+    def setUp(self):
+        self.extractor = XmlExtractor()
+
+    def _create_sped_xml(self, numero_nfse="912", cnpj_emit="17907897000134",
+                         nome_emit="4SECURITY TECNOLOGIA LTDA", valor="561.47",
+                         data_emissao="2025-11-01T03:35:38-03:00",
+                         vencimento_desc="18/11/2025"):
+        """Cria XML de NFS-e SPED para testes."""
+        return f'''<?xml version="1.0" encoding="utf-8"?>
+        <NFSe versao="1.00" xmlns="http://www.sped.fazenda.gov.br/nfse">
+            <infNFSe Id="NFS123">
+                <nNFSe>{numero_nfse}</nNFSe>
+                <nDFSe>16442633</nDFSe>
+                <dhProc>{data_emissao}</dhProc>
+                <emit>
+                    <CNPJ>{cnpj_emit}</CNPJ>
+                    <xNome>{nome_emit}</xNome>
+                </emit>
+                <valores>
+                    <vLiq>{valor}</vLiq>
+                </valores>
+                <DPS versao="1.00">
+                    <infDPS Id="DPS123">
+                        <dhEmi>2025-11-01T03:35:17-03:00</dhEmi>
+                        <toma>
+                            <CNPJ>38323227000140</CNPJ>
+                            <xNome>CSC Gestão Integrada S/A</xNome>
+                        </toma>
+                        <prest>
+                            <CNPJ>{cnpj_emit}</CNPJ>
+                        </prest>
+                        <serv>
+                            <cServ>
+                                <xDescServ>Gestão de Firewall R${valor}
+                                    Ref: Parcela com vencimento {vencimento_desc}
+                                </xDescServ>
+                            </cServ>
+                        </serv>
+                    </infDPS>
+                </DPS>
+            </infNFSe>
+        </NFSe>'''
+
+    def test_extract_nfse_sped_success(self):
+        """Testa extração de NFS-e SPED com sucesso."""
+        xml = self._create_sped_xml()
+
+        # Salva em arquivo temporário
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-8') as f:
+            f.write(xml)
+            temp_path = f.name
+
+        try:
+            result = self.extractor.extract(temp_path)
+
+            self.assertTrue(result.success)
+            self.assertEqual(result.doc_type, 'NFSE')
+            self.assertIsNotNone(result.document)
+
+            doc = result.document
+            self.assertEqual(doc.numero_nota, '912')
+            self.assertEqual(doc.fornecedor_nome, '4SECURITY TECNOLOGIA LTDA')
+            self.assertEqual(doc.cnpj_prestador, '17.907.897/0001-34')
+            self.assertEqual(doc.data_emissao, '2025-11-01')
+            self.assertAlmostEqual(doc.valor_total, 561.47, places=2)
+        finally:
+            import os
+            os.unlink(temp_path)
+
+    def test_extract_nfse_sped_vencimento_from_description(self):
+        """Testa extração de vencimento da descrição do serviço."""
+        xml = self._create_sped_xml(vencimento_desc="25/12/2025")
+
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-8') as f:
+            f.write(xml)
+            temp_path = f.name
+
+        try:
+            result = self.extractor.extract(temp_path)
+
+            self.assertTrue(result.success)
+            doc = result.document
+            self.assertEqual(doc.vencimento, '2025-12-25')
+        finally:
+            import os
+            os.unlink(temp_path)
+
+    def test_extract_nfse_sped_formats_cnpj(self):
+        """Testa formatação de CNPJ em NFS-e SPED."""
+        xml = self._create_sped_xml(cnpj_emit="12345678000195")
+
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-8') as f:
+            f.write(xml)
+            temp_path = f.name
+
+        try:
+            result = self.extractor.extract(temp_path)
+
+            self.assertTrue(result.success)
+            self.assertEqual(result.document.cnpj_prestador, '12.345.678/0001-95')
+        finally:
+            import os
+            os.unlink(temp_path)
 
 
 class TestXmlExtractorNFSeSigISS(unittest.TestCase):

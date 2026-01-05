@@ -67,10 +67,7 @@ def create_ingestor_from_config() -> EmailIngestorStrategy:
         ValueError: Se credenciais estiverem faltando
     """
     if not settings.EMAIL_PASS:
-        raise ValueError(
-            "Senha de e-mail não encontrada no arquivo .env. "
-            "Por favor, configure o arquivo .env com suas credenciais."
-        )
+        raise ValueError("Por favor, configure o arquivo .env com suas credenciais.")
 
     return ImapIngestor(
         host=settings.EMAIL_HOST,
@@ -146,7 +143,7 @@ def export_batch_results(
 
         # Reordena colunas para melhor visualização
         colunas_prioritarias = [
-            'batch_id', 'tipo_documento', 'status_conciliacao', 'valor_total_lote',
+            'batch_id', 'tipo_documento', 'status_conciliacao', 'valor_compra',
             'fornecedor_nome', 'valor_documento', 'valor_total', 'vencimento',
             'data_emissao', 'numero_nota', 'numero_documento', 'email_subject'
         ]
@@ -167,9 +164,10 @@ def export_batch_results(
         # Reordena colunas do resumo
         colunas_lote = [
             'batch_id', 'status_conciliacao', 'divergencia', 'diferenca_valor',
-            'total_documents', 'total_errors', 'valor_total_lote',
+            'fornecedor', 'vencimento', 'numero_nota', 'valor_compra', 'valor_boleto',
+            'total_documents', 'total_errors',
             'danfes', 'boletos', 'nfses', 'outros',
-            'valor_danfes', 'valor_boletos', 'email_subject', 'email_sender'
+            'email_subject', 'email_sender'
         ]
         colunas_existentes = [c for c in colunas_lote if c in df_lotes.columns]
         outras_colunas = [c for c in df_lotes.columns if c not in colunas_lote]
@@ -249,7 +247,7 @@ def ingest_and_process(
                 results.append(batch_result)
                 logger.info(
                     f"   ✓ {batch_result.total_documents} documento(s) | "
-                    f"Valor: R$ {batch_result.get_valor_total_lote():,.2f}"
+                    f"Valor: R$ {batch_result.get_valor_compra():,.2f}"
                 )
             else:
                 logger.warning(f"   ⚠️ Nenhum documento extraído")
@@ -314,7 +312,7 @@ def process_single_batch(
     if batch_result.total_documents > 0:
         logger.info(
             f"✅ {batch_result.total_documents} documento(s) | "
-            f"Valor: R$ {batch_result.get_valor_total_lote():,.2f}"
+            f"Valor: R$ {batch_result.get_valor_compra():,.2f}"
         )
     else:
         logger.warning("⚠️ Nenhum documento extraído")
@@ -430,7 +428,7 @@ Exemplos:
         # Resumo final
         total_docs = sum(r.total_documents for r in results)
         total_erros = sum(r.total_errors for r in results)
-        valor_total = sum(r.get_valor_total_lote() for r in results)
+        valor_total = sum(r.get_valor_compra() for r in results)
 
         logger.info("\n" + "=" * 60)
         logger.info("📊 RESUMO FINAL")

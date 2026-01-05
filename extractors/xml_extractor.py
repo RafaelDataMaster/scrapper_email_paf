@@ -127,6 +127,8 @@ class XmlExtractor:
             return self._extract_nfse(xml_content, path.name)
         elif doc_type == 'NFSE_SIGISS':
             return self._extract_nfse_sigiss(xml_content, path.name)
+        elif doc_type == 'NFSE_SPED':
+            return self._extract_nfse_sped(xml_content, path.name)
         else:
             return XmlExtractionResult(
                 success=False,
@@ -141,8 +143,28 @@ class XmlExtractor:
             xml_content: Conteúdo do XML
 
         Returns:
-            'NFE', 'NFSE', 'NFSE_SIGISS' ou '' se não reconhecido
+            'NFE', 'NFSE', 'NFSE_SIGISS', 'NFSE_SPED' ou '' se não reconhecido
         """
+        # Padrões para NFS-e SPED/SEFIN Nacional (novo padrão federal)
+        # Namespace: http://www.sped.fazenda.gov.br/nfse
+        # Tags: <NFSe>, <infNFSe>, <emit>, <DPS>, <infDPS>, <prest>, <toma>
+        # IMPORTANTE: Verificar ANTES de NF-e porque usa <NFSe> (não <NFe>)
+        nfse_sped_patterns = [
+            r'sped\.fazenda\.gov\.br/nfse',
+            r'<infNFSe\s',
+            r'<nNFSe>',
+            r'<nDFSe>',
+            r'<DPS\s',
+            r'<infDPS\s',
+            r'<toma>',
+            r'<prest>',
+        ]
+
+        # Verifica NFS-e SPED Nacional primeiro (padrão mais específico)
+        sped_score = sum(1 for p in nfse_sped_patterns if re.search(p, xml_content, re.IGNORECASE | re.DOTALL))
+        if sped_score >= 2:
+            return 'NFSE_SPED'
+
         # Padrões para NF-e (modelo 55) - nota fiscal de produtos
         # IMPORTANTE: <NFe> com namespace do portal fiscal, ou com <infNFe>, ou com <mod>55</mod>
         nfe_patterns = [
@@ -152,7 +174,7 @@ class XmlExtractor:
             r'<mod>55</mod>',
         ]
 
-        # Padrões para NFS-e ABRASF (padrão nacional)
+        # Padrões para NFS-e ABRASF (padrão nacional antigo)
         nfse_patterns = [
             r'<CompNfse',
             r'<Nfse>',
@@ -487,6 +509,153 @@ class XmlExtractor:
             return XmlExtractionResult(
                 success=False,
                 error=f"Erro ao processar NFS-e SigISS: {e}"
+            )
+
+    def _extract_nfse_sped(self, xml_content: str, filename: str) -> XmlExtractionResult:
+        """
+        Extrai dados de XML de NFS-e no padrão SPED/SEFIN Nacional.
+
+        Formato novo federal com namespace http://www.sped.fazenda.gov.br/nfse
+        Tags principais: <NFSe>, <infNFSe>, <emit>, <DPS>, <infDPS>, <prest>, <toma>
+
+        Args:
+            xml_content: Conteúdo do XML
+            filename: Nome do arquivo de origem
+
+        Returns:
+            XmlExtractionResult com InvoiceData
+        """
+        try:
+            # Remove BOM se presente
+            xml_content = xml_content.lstrip('\ufeff')
+
+            # Remove namespaces do XML para facilitar parsing
+            xml_content = self._remove_namespaces(xml_content)
+
+            # Parse do XML
+            root = ET.fromstring(xml_content)
+
+            raw_data = {}
+
+            # Busca infNFSe (elemento principal)
+            inf_nfse = root.find('.//infNFSe')
+            if inf_nfse is None:
+                inf_nfse = root
+
+            # Número da NFS-e
+            raw_data['numero_nota'] = self._find_text_in_paths(inf_nfse, [
+                'nNFSe', 'nDFSe', 'Numero'
+            ])
+
+            # Data de emissão (busca em infNFSe ou DPS/infDPS)
+            data_emissao_raw = self._find_text_in_paths(inf_nfse, [
+                'dhProc', 'dhEmi'
+            ])
+            # Também tenta no DPS
+            if not data_emissao_raw:
+                dps = inf_nfse.find('.//DPS')
+                if dps is not None:
+                    inf_dps = dps.find('.//infDPS')
+                    if inf_dps is not None:
+                        data_emissao_raw = self._find_text_in_paths(inf_dps, [
+                            'dhEmi', 'dCompet'
+                        ])
+            raw_data['data_emissao'] = self._parse_date(data_emissao_raw)
+
+            # Emitente/Prestador (emit)
+            emit = inf_nfse.find('.//emit')
+            if emit is not None:
+                raw_data['cnpj_prestador'] = self._format_cnpj(
+                    self._get_element_text(emit, 'CNPJ')
+                )
+                raw_data['fornecedor_nome'] = self._get_element_text(emit, 'xNome')
+
+            # Valores
+            valores = inf_nfse.find('.//valores')
+            if valores is not None:
+                # Valor líquido
+                raw_data['valor_total'] = self._parse_float(
+                    self._find_text_in_paths(valores, [
+                        'vLiq', 'vServ', 'vTotServ'
+                    ])
+                )
+
+            # Se não achou valores na raiz, tenta no DPS
+            if not raw_data.get('valor_total'):
+                dps = inf_nfse.find('.//DPS')
+                if dps is not None:
+                    inf_dps = dps.find('.//infDPS')
+                    if inf_dps is not None:
+                        valores_dps = inf_dps.find('.//valores')
+                        if valores_dps is not None:
+                            v_serv_prest = valores_dps.find('.//vServPrest')
+                            if v_serv_prest is not None:
+                                raw_data['valor_total'] = self._parse_float(
+                                    self._get_element_text(v_serv_prest, 'vServ')
+                                )
+
+            # Tomador (toma) - cliente que recebeu o serviço
+            dps = inf_nfse.find('.//DPS')
+            if dps is not None:
+                inf_dps = dps.find('.//infDPS')
+                if inf_dps is not None:
+                    toma = inf_dps.find('.//toma')
+                    if toma is not None:
+                        raw_data['cnpj_tomador'] = self._format_cnpj(
+                            self._get_element_text(toma, 'CNPJ')
+                        )
+                        raw_data['tomador_nome'] = self._get_element_text(toma, 'xNome')
+
+                    # Descrição do serviço (pode conter número do pedido)
+                    serv = inf_dps.find('.//serv')
+                    if serv is not None:
+                        c_serv = serv.find('.//cServ')
+                        if c_serv is not None:
+                            desc_serv = self._get_element_text(c_serv, 'xDescServ')
+                            if desc_serv:
+                                raw_data['info_complementar'] = desc_serv
+                                pedido = self._extract_numero_pedido(desc_serv)
+                                if pedido:
+                                    raw_data['numero_pedido'] = pedido
+
+                                # Tenta extrair vencimento da descrição
+                                venc_match = re.search(
+                                    r'vencimento[:\s]+(\d{2}[/\-]\d{2}[/\-]\d{4})',
+                                    desc_serv,
+                                    re.IGNORECASE
+                                )
+                                if venc_match:
+                                    raw_data['vencimento'] = self._parse_date(venc_match.group(1))
+
+            # Cria InvoiceData
+            document = InvoiceData(
+                arquivo_origem=filename,
+                texto_bruto=f"XML NFS-e SPED - Número: {raw_data.get('numero_nota', '')}",
+                cnpj_prestador=raw_data.get('cnpj_prestador'),
+                fornecedor_nome=raw_data.get('fornecedor_nome'),
+                numero_nota=raw_data.get('numero_nota'),
+                data_emissao=raw_data.get('data_emissao'),
+                valor_total=raw_data.get('valor_total', 0.0),
+                numero_pedido=raw_data.get('numero_pedido'),
+                vencimento=raw_data.get('vencimento'),
+            )
+
+            return XmlExtractionResult(
+                success=True,
+                document=document,
+                doc_type='NFSE',
+                raw_data=raw_data
+            )
+
+        except ET.ParseError as e:
+            return XmlExtractionResult(
+                success=False,
+                error=f"Erro ao fazer parse do XML SPED: {e}"
+            )
+        except Exception as e:
+            return XmlExtractionResult(
+                success=False,
+                error=f"Erro ao processar NFS-e SPED: {e}"
             )
 
     def _extract_nfse(self, xml_content: str, filename: str) -> XmlExtractionResult:

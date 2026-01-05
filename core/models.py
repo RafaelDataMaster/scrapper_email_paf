@@ -26,8 +26,8 @@ class DocumentData(ABC):
         batch_id (Optional[str]): Identificador da pasta/lote de processamento.
         source_email_subject (Optional[str]): Assunto do e-mail original (para tabela MVP).
         source_email_sender (Optional[str]): Remetente do e-mail (fallback para Fornecedor).
-        valor_total_lote (Optional[float]): Soma total dos valores do lote.
-        status_conciliacao (Optional[str]): Status da validação ('OK', 'DIVERGENTE', 'ORFAO').
+        valor_compra (Optional[float]): Valor da compra/locação do lote.
+        status_conciliacao (Optional[str]): Status da validação ('OK', 'DIVERGENTE', 'CONFERIR').
     """
     arquivo_origem: str
     texto_bruto: str = ""
@@ -41,7 +41,7 @@ class DocumentData(ABC):
     batch_id: Optional[str] = None
     source_email_subject: Optional[str] = None
     source_email_sender: Optional[str] = None
-    valor_total_lote: Optional[float] = None
+    valor_compra: Optional[float] = None
     status_conciliacao: Optional[str] = None
 
     @property
@@ -212,7 +212,7 @@ class InvoiceData(DocumentData):
             'obs_interna': self.obs_interna,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
             'status_conciliacao': self.status_conciliacao,
-            'valor_total_lote': self.valor_total_lote,
+            'valor_compra': self.valor_compra,
         }
 
     def to_sheets_row(self) -> list:
@@ -338,7 +338,7 @@ class DanfeData(DocumentData):
             'chave_acesso': self.chave_acesso,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
             'status_conciliacao': self.status_conciliacao,
-            'valor_total_lote': self.valor_total_lote,
+            'valor_compra': self.valor_compra,
         }
 
     def to_sheets_row(self) -> list:
@@ -431,7 +431,7 @@ class OtherDocumentData(DocumentData):
             'subtipo': self.subtipo,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
             'status_conciliacao': self.status_conciliacao,
-            'valor_total_lote': self.valor_total_lote,
+            'valor_compra': self.valor_compra,
         }
 
     def to_sheets_row(self) -> list:
@@ -582,7 +582,7 @@ class BoletoData(DocumentData):
             'obs_interna': self.obs_interna,
             'texto_bruto': self.texto_bruto[:200] if self.texto_bruto else None,
             'status_conciliacao': self.status_conciliacao,
-            'valor_total_lote': self.valor_total_lote,
+            'valor_compra': self.valor_compra,
         }
 
     def to_sheets_row(self) -> list:

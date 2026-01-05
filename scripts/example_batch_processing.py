@@ -70,9 +70,9 @@ def print_batch_summary(batch: BatchResult) -> None:
         print(f"❌ Erros: {batch.total_errors}")
 
     # Valores
-    valor_total = batch.get_valor_total_lote()
-    if valor_total > 0:
-        print(f"\n💰 Valor total do lote: R$ {valor_total:,.2f}")
+    valor_compra = batch.get_valor_compra()
+    if valor_compra > 0:
+        print(f"\n💰 Valor da compra: R$ {valor_compra:,.2f}")
 
         if batch.has_danfe:
             print(f"   - DANFEs: R$ {batch.get_valor_total_danfes():,.2f}")

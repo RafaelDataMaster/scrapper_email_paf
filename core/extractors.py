@@ -20,7 +20,7 @@ def find_linha_digitavel(text: str) -> bool:
     text_upper = (text or "").upper()
     text_cleaned = text.replace('\n', ' ')
 
-    # Se o documento contém indicadores fortes de ser DANFSe/NF-e, não considera
+    # Se o documento contém indicadores fortes de ser DANFSe/NF-e/NFS-e, não considera
     # sequências numéricas longas como linha digitável
     danfse_indicators = [
         'DANFSE',
@@ -29,6 +29,11 @@ def find_linha_digitavel(text: str) -> bool:
         'CHAVE DE ACESSO DA NFS-E',
         'CHAVE DE ACESSO DA NFE',
         'CHAVE DE ACESSO',
+        'CÓDIGO DE VERIFICAÇÃO',
+        'CODIGO DE VERIFICACAO',
+        'NFS-E',
+        'NOTA FISCAL DE SERVIÇO ELETRÔNICA',
+        'NOTA FISCAL DE SERVICO ELETRONICA',
     ]
 
     is_danfse_context = any(ind in text_upper for ind in danfse_indicators)

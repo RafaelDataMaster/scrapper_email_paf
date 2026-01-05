@@ -6,6 +6,7 @@ from typing import Optional, Union
 
 import extractors.boleto
 import extractors.danfe
+import extractors.emc_fatura
 import extractors.net_center
 import extractors.nfse_generic
 import extractors.outros

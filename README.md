@@ -36,34 +36,12 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 
 ### Verificar esses casos
 
-#### DIVERGENTE (1 caso)
-
-- **`email_20260102_133321_b39bedb6`** - [Kentro] Lembrete de Vencimento
-    - Problema: 2 NFS-e diferentes no mesmo email
-    - Nota PDF R$ 2.780,40 (nº12) + Nota XML R$ 2.980,20 (nº15059) vs Boleto R$ 2.980,20
-
-#### ORFÃO (7 casos - boleto sem nota)
-
-- **`email_20260102_133320_90c1703d`** - Nota Fatura - 2025-02 (CARRIER)
-    - Boleto R$ 4.789,00 — PDF da nota não extraído
-
-- **`email_20260102_133320_ec04189f`** - Fechamento Locação 11/2025 (REPROMAQ)
-    - Boleto R$ 2.855,00 — Docs são demonstrativos de locação
-
-- **`email_20260102_133321_7b0346db`** - Fatura Locaweb
-    - Boleto R$ 352,08 — PDF da fatura não é NFS-e padrão
-
-- **`email_20260102_133322_0f8e9655`** - Boleto Skymail
-    - Boleto R$ 7.620,00 (2 boletos) — PDF nfe.pdf mal classificado
-
-- **`email_20260102_133322_301980c9`** - Fechamento Locação 09/2025 (REPROMAQ)
-    - Boleto R$ 2.855,00 — Docs são demonstrativos de locação
-
-- **`email_20260102_133322_8a637468`** - Nota Fatura - 2025-44 (CARRIER)
-    - Boleto R$ 4.789,00 — PDF da nota não extraído
-
-- **`email_20260102_133323_d0bd799a`** - Fatura 50446 - EMC Tecnologia
-    - Boleto R$ 37.817,48 — Só tem boleto, nota não veio
+- [ ] **email_20260105_125517_cc334d1b** e **email_20260105_125518_48a68ac5**: Divergência de R$ -6.250,00
+    - Caso de **múltiplas NFs no mesmo email** (2 NFs + 2 Boletos)
+    - Fornecedor: MAIS CONSULTORIA E SERVICOS LTDA
+    - O sistema está somando valor de 1 NF vs 2 boletos (ou vice-versa)
+    - Arquivos: `02_NF 2025.119.pdf`, `03_BOLETO NF 2025.119.pdf`, `05_NF 2025.122.pdf`, `06_BOLETO NF 2025.122.pdf`
+    - **Possível solução**: Criar lógica para parear NF↔Boleto por número da nota no nome do arquivo ou conteúdo
 
 ### Comandos de terminal uteis
 
@@ -89,6 +67,15 @@ A estratégia de correlação foi implementada nos seguintes módulos:
 - ✅ Regra 3: Validação Cruzada (status_conciliacao: OK/DIVERGENTE/ORFAO)
 
 ## Done
+
+### 05/01/2026
+
+- [x] Verificação de dados em fallback com diversos documentos e contexto do próprio email. Adicionado avisos de divergencia para falta de data de vencimento onde é colocado a data do processamento mais um texto explicativo para verificar.
+- [x] **Fix EMC Fatura de Locação**: PDF multi-página extraía apenas primeiro valor (R$ 130,00 vs R$ 37.817,48)
+    - Criado extrator especializado `EmcFaturaExtractor` em `extractors/emc_fatura.py`
+    - Procura "TOTAL R$ XX.XXX,XX" na última página do documento
+    - Reconhece faturas de locação EMC Tecnologia com múltiplas páginas de itens
+    - **1 lote DIVERGENTE → OK** (email_20260105_125519_9b0b0752)
 
 ### 02/01/2026
 

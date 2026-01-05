@@ -210,3 +210,168 @@ class EmailMetadata:
     def is_legacy(self) -> bool:
         """Verifica se este metadata é de modo legado (sem e-mail real)."""
         return self.extra.get('legacy_mode', False)
+
+    def _normalize_date(self, date_str: str) -> Optional[str]:
+        """
+        Normaliza uma string de data para o formato DD/MM/YYYY.
+
+        Aceita formatos:
+        - DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+        - DD/MM/YY, DD-MM-YY, DD.MM.YY
+
+        Args:
+            date_str: String com a data em formato variado
+
+        Returns:
+            Data formatada como DD/MM/YYYY ou None se inválida
+        """
+        import re
+
+        if not date_str:
+            return None
+
+        # Remove espaços extras
+        date_str = date_str.strip()
+
+        # Padrão para capturar dia, mês e ano com diferentes separadores
+        match = re.match(r'(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{2,4})', date_str)
+        if not match:
+            return None
+
+        dia, mes, ano = match.groups()
+
+        # Converte ano de 2 dígitos para 4 dígitos
+        if len(ano) == 2:
+            ano_int = int(ano)
+            # Assume que anos 00-30 são 2000-2030, e 31-99 são 1931-1999
+            if ano_int <= 30:
+                ano = f"20{ano}"
+            else:
+                ano = f"19{ano}"
+
+        # Valida dia e mês
+        try:
+            dia_int = int(dia)
+            mes_int = int(mes)
+            if not (1 <= dia_int <= 31 and 1 <= mes_int <= 12):
+                return None
+        except ValueError:
+            return None
+
+        # Formata com zeros à esquerda
+        return f"{int(dia):02d}/{int(mes):02d}/{ano}"
+
+    def extract_numero_nota_from_context(self) -> Optional[str]:
+        """
+        Tenta extrair número da nota/fatura do assunto ou corpo do e-mail.
+
+        Procura por padrões como:
+        - "Fatura 50446" ou "Fatura: 50446"
+        - "NF 12345" ou "NF-e 12345" ou "NFe 12345"
+        - "NFS-e 12345" ou "NFSe 12345"
+        - "Nota Fiscal 12345"
+        - "Nº: 50446" ou "Nº 50446"
+        - "Número: 12345"
+        - "2025/44" ou "2025-44" (padrão composto ano/sequencial)
+
+        Returns:
+            Número da nota/fatura ou None
+        """
+        import re
+
+        # Prioriza assunto do e-mail, depois corpo
+        sources = [
+            (self.email_subject or '', 'subject'),
+            (self.email_body_text or '', 'body')
+        ]
+
+        for text, source in sources:
+            if not text.strip():
+                continue
+
+            # Remove URLs para evitar falsos positivos (ex: 2017-01 de URLs de imagem)
+            text_clean = re.sub(r'https?://[^\s<>"]+', ' ', text)
+            text_clean = re.sub(r'<[^>]+>', ' ', text_clean)  # Remove tags HTML
+            # Remove padrões de nome de arquivo de imagem (ex: 2017-01-20-b.png)
+            text_clean = re.sub(r'\b\d{4}-\d{2}-\d{2}[^/\s]*\.(png|jpg|jpeg|gif|bmp)\b', ' ', text_clean, flags=re.IGNORECASE)
+
+            # Padrões de número de nota/fatura (ordem de prioridade)
+            patterns = [
+                # "Fatura 50446" ou "Fatura: 50446" ou "Fatura Nº 50446"
+                r'\b[Ff]atura\s*(?:N[ºo°]\.?\s*)?[:\s]*(\d{3,10})\b',
+                # "NF 12345" ou "NF-e 12345" ou "NFe 12345" ou "NF: 12345"
+                r'\bNF(?:-?[Ee])?\s*[:\s]*(\d{3,15})\b',
+                # "NFS-e 12345" ou "NFSe 12345" ou "NFS-e: 12345"
+                r'\bNFS-?[Ee]\s*[:\s]*(\d{3,15})\b',
+                # "Nota Fiscal 12345" ou "Nota Fiscal Nº 12345"
+                r'\b[Nn]ota\s+[Ff]iscal\s*(?:N[ºo°]\.?\s*)?[:\s]*(\d{3,15})\b',
+                # "Nº: 50446" ou "Nº 50446" ou "N°: 50446" ou "No: 50446"
+                r'\bN[ºo°]\.?\s*[:\s]*(\d{3,10})\b',
+                # "Número: 12345" ou "Numero: 12345"
+                r'\b[Nn][úu]mero\s*[:\s]*(\d{3,10})\b',
+                # "Documento 12345" ou "Doc. 12345"
+                r'\b[Dd]oc(?:umento)?\.?\s*[:\s]*(\d{3,10})\b',
+                # Padrão composto "Nota Fatura - 2025-44" (com contexto de nota/fatura)
+                r'(?i)(?:nota|fatura|nf)[^\d]{0,10}(20\d{2}[/\-]\d{1,6})\b',
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, text_clean)
+                if match:
+                    numero = match.group(1)
+                    # Valida que não é apenas um ano (ex: 2025)
+                    if numero.isdigit() and len(numero) == 4 and numero.startswith('20'):
+                        continue  # Provavelmente é só um ano, pula
+                    return numero
+
+        return None
+
+    def extract_vencimento_from_context(self) -> Optional[str]:
+        """
+        Tenta extrair data de vencimento do assunto ou corpo do e-mail.
+
+        Procura por padrões como:
+        - "Vencimento: 15/01/2025"
+        - "Vence em 15-01-2025"
+        - "Data venc.: 15.01.2025"
+        - "Vencto: 15/01/2025"
+        - "Dt. Vencimento 15/01/25"
+
+        Returns:
+            Data formatada DD/MM/YYYY ou None
+        """
+        import re
+
+        # Combina assunto e corpo para busca
+        text = f"{self.email_subject or ''} {self.email_body_text or ''}"
+
+        if not text.strip():
+            return None
+
+        # Padrões de vencimento no texto (ordem de prioridade)
+        patterns = [
+            # "Vencimento: 15/01/2025" ou "Vencimento 15/01/2025" ou "vencimento em 15/01/2025"
+            r'[Vv]encimento\s+(?:em|para|dia|no dia)?[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            r'[Vv]encimento[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            # "Vencto: 15/01/2025" ou "Vencto 15/01/2025"
+            r'[Vv]encto\.?[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            # "Vence em 15/01/2025" ou "Vencem dia 15/01/2025"
+            r'[Vv]ence(?:m)?\s+(?:em|dia|no dia)?[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            # "Data de vencimento: 15/01/2025" ou "Dt. Vencimento 15/01/2025"
+            r'[Dd](?:ata|t)\.?\s+(?:de\s+)?[Vv]enc(?:imento|to)?\.?[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            # "Data venc.: 15/01/2025"
+            r'[Dd]ata\s+[Vv]enc\.?[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            # "Prazo: 15/01/2025" ou "Prazo pagamento: 15/01/2025"
+            r'[Pp]razo(?:\s+(?:de\s+)?pagamento)?[:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+            # "Pagar até 15/01/2025"
+            r'[Pp]agar\s+at[ée][:\s]*(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                normalized = self._normalize_date(match.group(1))
+                if normalized:
+                    return normalized
+
+        return None

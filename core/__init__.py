@@ -13,6 +13,9 @@ SOLID Principles applied:
 - DIP: Depends on abstractions (interfaces)
 """
 
+# Re-export from extractors module for backwards compatibility
+from extractors.xml_extractor import XmlExtractor, extract_xml
+
 from .batch_processor import BatchProcessor, process_email_batch, process_legacy_folder
 from .batch_result import BatchResult, CorrelationResult
 from .correlation_service import CorrelationService, correlate_batch
@@ -28,7 +31,6 @@ from .models import (
     OtherDocumentData,
 )
 from .processor import BaseInvoiceProcessor
-from .xml_extractor import XmlExtractor, extract_xml
 
 __all__ = [
     # Models

@@ -1,8 +1,9 @@
 import re
 from datetime import datetime
 from socket import has_ipv6
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
+from config.empresas import EMPRESAS_CADASTRO
 from core.extractors import BaseExtractor, find_linha_digitavel, register_extractor
 
 
@@ -18,6 +19,27 @@ class NfseGenericExtractor(BaseExtractor):
     def can_handle(cls, text: str) -> bool:
         """Retorna True apenas para textos que parecem NFSe (e não boleto/DANFE/outros)."""
         text_upper = (text or "").upper()
+
+        # Indicadores FORTES de NFS-e - se presentes, É NFS-e mesmo com outras palavras
+        nfse_strong_indicators = [
+            "NFS-E",
+            "NFSE",
+            "NOTA FISCAL DE SERVIÇO ELETRÔNICA",
+            "NOTA FISCAL DE SERVICO ELETRONICA",
+            "NOTA FISCAL ELETRÔNICA DE SERVIÇO",
+            "NOTA FISCAL ELETRONICA DE SERVICO",
+            "PREFEITURA MUNICIPAL",
+            "CÓDIGO DE VERIFICAÇÃO",
+            "CODIGO DE VERIFICACAO",
+        ]
+        is_strong_nfse = any(indicator in text_upper for indicator in nfse_strong_indicators)
+
+        # Se for NFS-e forte, retorna True imediatamente (ignora outras verificações)
+        if is_strong_nfse:
+            # Mas ainda verifica se não é um boleto com linha digitável
+            has_linha_digitavel = find_linha_digitavel(text)
+            if not has_linha_digitavel:
+                return True
 
         # DANFE / NF-e (produto) - não é NFSe
         danfe_keywords = [
@@ -35,11 +57,16 @@ class NfseGenericExtractor(BaseExtractor):
                 return False
 
         # Outros documentos (faturas / demonstrativos) - deixar para extrator dedicado
+        # NOTA: "NOTA FATURA" da VSP Solution é NFS-e, mas "FATURA" genérica não é
         other_keywords = [
             "DEMONSTRATIVO",
             "LOCAWEB",
-            "FATURA",
         ]
+        # FATURA só bloqueia se NÃO tiver indicadores de NFS-e
+        if "FATURA" in text_upper and not is_strong_nfse:
+            # Verifica se é "NOTA FATURA" (comum em NFS-e)
+            if "NOTA FATURA" not in text_upper and "NOTA-FATURA" not in text_upper:
+                return False
         if any(kw in text_upper for kw in other_keywords):
             return False
 
@@ -143,10 +170,27 @@ class NfseGenericExtractor(BaseExtractor):
             return None
 
         texto_limpo = text
+        # Remove datas no formato DD/MM/YYYY para não confundir com números
         texto_limpo = re.sub(r"\d{2}/\d{2}/\d{4}", " ", texto_limpo)
         padroes_lixo = r"(?i)\b(RPS|Lote|Protocolo|Recibo|S[eé]rie)\b\D{0,10}?\d+"
         texto_limpo = re.sub(padroes_lixo, " ", texto_limpo)
 
+        # Padrões que capturam números compostos (ex: 2025/44, 2025-44)
+        padroes_compostos = [
+            # "Nº: 2025/44" ou "N°: 2025-44" - padrão composto ano/sequencial
+            r"(?i)N[º°o]\.?\s*[:.-]?\s*(\d{4}[/\-]\d{1,6})\b",
+            # "NFS-e ... Nº: 2025/44"
+            r"(?i)NFS-?e\s*(?:N[º°o]|Num)?\.?\s*[:.-]?\s*(\d{4}[/\-]\d{1,6})\b",
+        ]
+
+        # Primeiro tenta padrões compostos (mais específicos)
+        for regex in padroes_compostos:
+            match = re.search(regex, texto_limpo, re.IGNORECASE)
+            if match:
+                resultado = match.group(1)
+                return resultado
+
+        # Padrões para números simples (fallback)
         padroes = [
             r"(?i)Número\s+da\s+Nota.*?(?<!\d)(\d{1,15})(?!\d)",
             r"(?i)(?:(?:Número|Numero|N[º°o])\s*da\s*)?NFS-e\s*(?:N[º°o]|Num)?\.?\s*[:.-]?\s*\b(\d{1,15})\b",
@@ -164,19 +208,99 @@ class NfseGenericExtractor(BaseExtractor):
 
         return None
 
+    def _is_empresa_propria(self, nome: str, cnpj: Optional[str] = None) -> bool:
+        """
+        Verifica se o nome/CNPJ pertence ao grupo de empresas do usuário (Tomador).
+
+        Isso evita capturar a própria empresa como "fornecedor" em NFS-e
+        onde o Tomador aparece antes do Prestador no layout do PDF.
+
+        Args:
+            nome: Nome da empresa a verificar
+            cnpj: CNPJ opcional para verificação mais precisa
+
+        Returns:
+            True se for empresa própria (deve ser rejeitada como fornecedor)
+        """
+        if not nome:
+            return False
+
+        nome_upper = nome.upper().strip()
+
+        # Se temos CNPJ, verifica diretamente no cadastro
+        if cnpj:
+            cnpj_limpo = re.sub(r'\D', '', cnpj)
+            if cnpj_limpo in EMPRESAS_CADASTRO:
+                return True
+
+        # Verifica se o nome contém alguma razão social do cadastro
+        for dados in EMPRESAS_CADASTRO.values():
+            razao = dados.get('razao_social', '').upper()
+            if not razao:
+                continue
+            # Extrai a parte principal do nome (antes de parênteses)
+            razao_principal = razao.split('(')[0].strip()
+            # Remove sufixos comuns para comparação mais flexível
+            razao_limpa = re.sub(r'\s*(LTDA|S/?A|EIRELI|ME|EPP|S\.A\.?|-\s*ME|-\s*EPP)\s*$', '', razao_principal, flags=re.IGNORECASE).strip()
+            nome_limpo = re.sub(r'\s*(LTDA|S/?A|EIRELI|ME|EPP|S\.A\.?|-\s*ME|-\s*EPP)\s*$', '', nome_upper, flags=re.IGNORECASE).strip()
+
+            # Verifica match exato ou se um contém o outro
+            if razao_limpa and nome_limpo:
+                if razao_limpa == nome_limpo:
+                    return True
+                # Verifica se o nome extraído é parte significativa da razão social
+                if len(nome_limpo) >= 10 and nome_limpo in razao_limpa:
+                    return True
+                if len(razao_limpa) >= 10 and razao_limpa in nome_limpo:
+                    return True
+
+        return False
+
     def _extract_fornecedor_nome(self, text: str) -> str:
         text = self._normalize_text(text or "")
 
+        # Padrão 1: Empresa com sufixo (LTDA, S/A, etc.) antes de CPF/CNPJ
+        # Este é o padrão mais confiável para NFS-e
+        m_empresa_antes_cnpj = re.search(
+            r"([A-ZÀ-ÿ][A-Za-zÀ-ÿ0-9\s&\.\-]+(?:LTDA|S/?A|EIRELI|ME|EPP))\s*\n?\s*(?:CPF/)?CNPJ",
+            text,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if m_empresa_antes_cnpj:
+            nome = m_empresa_antes_cnpj.group(1).strip()
+            # Limpar possível lixo no início (ex: "Código de Verificação\n12345\n")
+            # Pega apenas a última linha (que contém o nome da empresa)
+            if '\n' in nome:
+                nome = nome.split('\n')[-1].strip()
+            # Extrai CNPJ próximo para verificação
+            cnpj_proximo = re.search(r"(?:CPF/)?CNPJ\s*[:\-]?\s*(\d{2}\D?\d{3}\D?\d{3}\D?\d{4}\D?\d{2})", text[m_empresa_antes_cnpj.start():m_empresa_antes_cnpj.end()+50])
+            cnpj = cnpj_proximo.group(1) if cnpj_proximo else None
+            if len(nome) >= 5 and not self._is_empresa_propria(nome, cnpj):
+                return nome
+
+        # Padrão 2: Após "Código de Verificação" + número (comum em NFS-e de prefeituras)
+        m_apos_verificacao = re.search(
+            r"(?i)(?:Código de Verificação|Verificação)\s+[\w\d]+\s+([A-ZÀ-ÿ][A-Za-zÀ-ÿ0-9\s&\.\-]+(?:LTDA|S/?A|EIRELI|ME|EPP))",
+            text
+        )
+        if m_apos_verificacao:
+            nome = m_apos_verificacao.group(1).strip()
+            if len(nome) >= 5 and not self._is_empresa_propria(nome):
+                return nome
+
+        # Padrão 3: Texto antes de CNPJ (antigo padrão, agora suporta CPF/CNPJ)
         m_before_cnpj = re.search(
-            r"(?is)([A-ZÀ-ÿ][A-ZÀ-ÿ0-9\s&\.\-]{5,140})\s+CNPJ\s*[:\-]?\s*"
+            r"(?is)([A-ZÀ-ÿ][A-ZÀ-ÿ0-9\s&\.\-]{5,140})\s+(?:CPF/)?CNPJ\s*[:\-]?\s*"
             r"\d{2}\D?\d{3}\D?\d{3}\D?\d{4}\D?\d{2}",
             text,
         )
         if m_before_cnpj:
             nome = re.sub(r"\s+", " ", m_before_cnpj.group(1)).strip()
             if not re.match(r"(?i)^(TOMADOR|CPF|CNPJ|INSCRI|PREFEITURA|NOTA\s+FISCAL)\b", nome):
-                return nome
+                if not self._is_empresa_propria(nome):
+                    return nome
 
+        # Padrão 4: Busca por rótulos específicos
         patterns = [
             r"(?im)^\s*Raz[ãa]o\s+Social\s*[:\-]\s*([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})\s*$",
             r"(?i)Raz[ãa]o\s+Social[^\n]*?[:\-\s]+([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s&\.\-]{5,100})",
@@ -189,19 +313,38 @@ class NfseGenericExtractor(BaseExtractor):
             if match:
                 nome = match.group(1).strip()
                 nome = re.sub(r"\d+", "", nome).strip()
-                if len(nome) >= 5:
+                if len(nome) >= 5 and not self._is_empresa_propria(nome):
                     return nome
 
+        # Padrão 5: Primeira empresa com sufixo no documento (fallback genérico)
+        m_primeira_empresa = re.search(
+            r"\b([A-ZÀ-ÿ][A-Za-zÀ-ÿ0-9\s&\.\-]{5,80}(?:LTDA|S/?A|EIRELI|ME|EPP))\b",
+            text,
+            re.IGNORECASE
+        )
+        if m_primeira_empresa:
+            nome = m_primeira_empresa.group(1).strip()
+            # Evitar capturar frases que terminam com sufixo por coincidência
+            if not re.match(r"(?i)^(Documento|Regime|optante)", nome):
+                if not self._is_empresa_propria(nome):
+                    return nome
+
+        # Padrão 6 (último fallback): Texto após primeiro CNPJ
+        # Este é o fallback menos confiável, mas ainda útil em alguns casos
         cnpj_match = re.search(r"\d{2}\D?\d{3}\D?\d{3}\D?\d{4}\D?\d{2}", text)
         if cnpj_match:
             start_pos = cnpj_match.end()
             text_after_cnpj = text[start_pos : start_pos + 100]
+            # Evitar capturar "Inscrição municipal" ou similar
             nome_match = re.search(r"([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,80})", text_after_cnpj)
             if nome_match:
                 nome = nome_match.group(1).strip()
+                # Rejeitar se começar com palavras-chave de metadados
+                if re.match(r"(?i)^(Inscri[çc][ãa]o|Municipal|Estadual|CEP|AV\.|RUA|Telefone|Email)", nome):
+                    return None
                 nome = re.sub(r"\d{2}/\d{2}/\d{4}", "", nome).strip()
                 nome = re.sub(r"\d+", "", nome).strip()
-                if len(nome) >= 5:
+                if len(nome) >= 5 and not self._is_empresa_propria(nome):
                     return nome
 
         return None
