@@ -646,28 +646,36 @@ class BoletoExtractor(BaseExtractor):
 
         Comum em boletos de serviços (pode conter o número da NF).
         Evita capturar números muito curtos (1 dígito) que são genéricos.
-        Aceita formatos: "123", "2025.122", "2/1", "NF-12345", etc.
+        Aceita formatos: "123", "2025.122", "2/1", "NF-12345", "S06633", "BOLS066331", etc.
         """
         patterns = [
             # 1. PRIORIDADE ALTA - Layout tabular com data: "Nº Documento ... data ... X/Y"
             # Comum em boletos VSP/Itaú onde data vem antes do número
             r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)',
 
-            # 2-6. Padrões específicos com diferentes variações de "número"
+            # 2. Padrão REPROMAQ: "S" seguido de 5-6 dígitos com dígito verificador opcional (ex: S06633, S06633-1)
+            # Busca no texto inteiro, geralmente aparece em títulos ou referências
+            r'\b(S\d{5,6}(?:-\d)?)\b',
+
+            # 3. Padrão REPROMAQ em nome de arquivo: "BOL" + código (ex: BOLS066331)
+            # Remove o prefixo BOL e extrai S + números
+            r'BOL(S\d{5,6}(?:-\d)?)',
+
+            # 4-8. Padrões específicos com diferentes variações de "número"
             r'(?i)N[uú]mero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',  # Com ú ou u
             r'(?i)Numero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',  # Sem acento
             r'(?i)Num\.?\s*Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
             r'(?i)N[ºº°]\s*Documento\s*[:\s]*([0-9]+(?:[/\.][0-9]+)?)',  # Aceita / ou .
             r'(?i)N\.\s*documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
 
-            # 7. Busca "Número do Documento" seguido do valor na próxima linha
+            # 9. Busca "Número do Documento" seguido do valor na próxima linha
             r'(?i)N.mero\s+do\s+Documento\s+.+?\n\s+.+?\s+([0-9]+\.[0-9]+)',  # Qualquer char em "Número"
 
-            # 8. Padrão contextual: palavra "documento" seguida de número (NÃO data)
+            # 10. Padrão contextual: palavra "documento" seguida de número (NÃO data)
             # Regex negativa para evitar capturar datas DD/MM/YYYY
             r'(?i)documento\s+(?!\d{2}/\d{2}/\d{4})([0-9]+(?:\.[0-9]+)?)',
 
-            # 9. Genérico: busca por padrão ano.número (ex: 2025.122)
+            # 11. Genérico: busca por padrão ano.número (ex: 2025.122)
             r'\b(20\d{2}\.\d+)\b'  # 2024.xxx, 2025.xxx, etc.
         ]
 

@@ -170,6 +170,7 @@ class CorrelationService:
         danfes = batch.danfes
         boletos = batch.boletos
         nfses = batch.nfses
+        outros = batch.outros
 
         # Se tem DANFE e Boleto, faz cruzamento
         if danfes and boletos:
@@ -224,7 +225,6 @@ class CorrelationService:
                         boleto.referencia_nfse = numero_nota
                 if not result.numero_nota_herdado:
                     result.numero_nota_herdado = numero_nota
-
             # NFSe herda vencimento do Boleto
             if vencimento:
                 for nfse in nfses:
@@ -232,6 +232,21 @@ class CorrelationService:
                         nfse.vencimento = vencimento
                 if not result.vencimento_herdado:
                     result.vencimento_herdado = vencimento
+
+        #Fallback pra pegar o numero da nota do numero do documento do outros
+        if outros and boletos:
+            numero_nota = None
+            for outro in outros:
+                if outro.numero_documento:
+                    numero_nota = outro.numero_documento
+                    break
+
+            if numero_nota:
+                for boleto in boletos:
+                    if not boleto.referencia_nfse:
+                        boleto.referencia_nfse = numero_nota
+                if not result.numero_nota_herdado:
+                    result.numero_nota_herdado = numero_nota
 
         # Fallback final: Se nenhum documento tem vencimento, tenta extrair do e-mail
         if not result.vencimento_herdado and metadata:
@@ -486,18 +501,24 @@ class CorrelationService:
         """Verifica se documento tem numero_pedido preenchido."""
         if isinstance(doc, (DanfeData, InvoiceData, BoletoData)):
             return bool(doc.numero_pedido)
+        elif isinstance(doc,(OtherDocumentData)):
+            return bool(doc.numero_documento)
         return False
 
     def _get_numero_pedido(self, doc: DocumentData) -> Optional[str]:
         """Obtém numero_pedido do documento."""
         if isinstance(doc, (DanfeData, InvoiceData, BoletoData)):
             return doc.numero_pedido
+        elif isinstance(doc,(OtherDocumentData)):
+            return doc.numero_documento
         return None
 
     def _set_numero_pedido(self, doc: DocumentData, value: str) -> None:
         """Define numero_pedido no documento."""
         if isinstance(doc, (DanfeData, InvoiceData, BoletoData)):
             doc.numero_pedido = value
+        elif isinstance(doc,(OtherDocumentData)):
+            doc.numero_documento = value
 
     def _has_vencimento(self, doc: DocumentData) -> bool:
         """Verifica se documento tem vencimento preenchido."""

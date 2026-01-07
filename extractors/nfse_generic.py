@@ -23,6 +23,7 @@ class NfseGenericExtractor(BaseExtractor):
         """Retorna True apenas para textos que parecem NFSe (e não boleto/DANFE/outros)."""
         text_upper = (text or "").upper()
 
+
         # Indicadores FORTES de NFS-e - se presentes, É NFS-e mesmo com outras palavras
         nfse_strong_indicators = [
             "NFS-E",

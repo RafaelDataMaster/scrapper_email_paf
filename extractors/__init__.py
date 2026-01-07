@@ -1,10 +1,13 @@
 # IMPORT ORDER MATTERS: o registro (EXTRACTOR_REGISTRY) é uma lista e a prioridade
 # é definida pela ordem em que os módulos são importados.
+# REGRA: Extractors ESPECÍFICOS devem vir ANTES dos GENÉRICOS
 
 from .boleto import BoletoExtractor
 from .danfe import DanfeExtractor
 from .emc_fatura import EmcFaturaExtractor
 from .net_center import NetCenterExtractor
+from .nfse_custom_montes_claros import NfseCustomMontesClarosExtractor
+from .nfse_custom_vila_velha import NfseCustomVilaVelhaExtractor
 from .nfse_generic import NfseGenericExtractor
 from .outros import OutrosExtractor
 from .sicoob import SicoobExtractor
@@ -15,6 +18,8 @@ __all__ = [
 	"DanfeExtractor",
 	"EmcFaturaExtractor",
 	"NetCenterExtractor",
+	"NfseCustomMontesClarosExtractor",
+	"NfseCustomVilaVelhaExtractor",
 	"NfseGenericExtractor",
 	"OutrosExtractor",
 	"SicoobExtractor",

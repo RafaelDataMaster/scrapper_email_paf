@@ -4,13 +4,10 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Optional, Union
 
-import extractors.boleto
-import extractors.danfe
-import extractors.emc_fatura
-import extractors.net_center
-import extractors.nfse_generic
-import extractors.outros
-import extractors.sicoob
+# ORDEM IMPORTANTE: Importar apenas o pacote extractors
+# A ordem de registro é controlada pelo extractors/__init__.py
+# que garante que extractors específicos vêm ANTES dos genéricos
+import extractors
 from config.settings import TRAT_PAF_RESPONSAVEL
 from core.empresa_matcher import (
     find_empresa_no_texto,

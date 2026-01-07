@@ -87,6 +87,7 @@ NFSE_FIELDS = [
 
 OUTROS_FIELDS = [
     'numero_documento',
+    'numero_nota',
     'valor_total',
     'cnpj_fornecedor',
     'subtipo',

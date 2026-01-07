@@ -34,14 +34,27 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 
 # Estudar por agora
 
-### Verificar esses casos
+### Funcionalidade de Pareamento NF↔Boleto
 
-- [ ] **email_20260105_125517_cc334d1b** e **email_20260105_125518_48a68ac5**: Divergência de R$ -6.250,00
-    - Caso de **múltiplas NFs no mesmo email** (2 NFs + 2 Boletos)
-    - Fornecedor: MAIS CONSULTORIA E SERVICOS LTDA
-    - O sistema está somando valor de 1 NF vs 2 boletos (ou vice-versa)
-    - Arquivos: `02_NF 2025.119.pdf`, `03_BOLETO NF 2025.119.pdf`, `05_NF 2025.122.pdf`, `06_BOLETO NF 2025.122.pdf`
-    - **Possível solução**: Criar lógica para parear NF↔Boleto por número da nota no nome do arquivo ou conteúdo
+O sistema agora identifica pares de documentos (NF + Boleto) dentro do mesmo email e gera uma linha separada no `relatorio_lotes.csv` para cada par:
+
+**Estratégias de pareamento (em ordem de prioridade):**
+
+1. Número da nota no nome do arquivo (ex: `NF 2025.119.pdf` ↔ `BOLETO NF 2025.119.pdf`)
+2. Número da nota no conteúdo (`numero_nota` vs `referencia_nfse`)
+3. Valor exato quando não há número identificável (caso Locaweb)
+
+**Exemplo de resultado:**
+| batch*id | numero_nota | valor_compra | valor_boleto | status |
+|----------|-------------|--------------|--------------|--------|
+| email*...cc334d1b*2025.119 | 2025/119 | 9.290,71 | 9.290,71 | OK |
+| email*...cc334d1b_2025.122 | 2025/122 | 6.250,00 | 6.250,00 | OK |
+
+**Módulos envolvidos:**
+
+- `core/document_pairing.py` - Serviço de pareamento (novo)
+- `core/batch_result.py` - Método `to_summaries()` (novo)
+- `run_ingestion.py` - Exportação expandida
 
 ### Comandos de terminal uteis
 
@@ -67,6 +80,17 @@ A estratégia de correlação foi implementada nos seguintes módulos:
 - ✅ Regra 3: Validação Cruzada (status_conciliacao: OK/DIVERGENTE/ORFAO)
 
 ## Done
+
+### 07/01/2026
+
+- [x] extrator específico pra nfse de Vila Velha e Montes Claros
+- [x] **email_20260105_125517_cc334d1b** e **email_20260105_125518_48a68ac5**: Divergência de R$ -6.250,00
+    - Caso de **múltiplas NFs no mesmo email** (2 NFs + 2 Boletos)
+    - Fornecedor: MAIS CONSULTORIA E SERVICOS LTDA
+    - **RESOLVIDO**: Implementado `core/document_pairing.py` que:
+        - Pareia NF↔Boleto por número da nota no nome do arquivo ou conteúdo
+        - Gera uma linha no relatório para cada par (em vez de uma linha por email)
+        - Casos como Locaweb (sem número de nota) são pareados por valor
 
 ### 06/01/2026
 

@@ -429,6 +429,7 @@ class OtherDocumentData(DocumentData):
             'vencimento': self.vencimento,
             'valor_total': self.valor_total,
             'numero_documento': self.numero_documento,
+            'numero_pedido': self.numero_documento,
             'tipo_doc_paf': self.tipo_doc_paf,
             'dt_classificacao': self.dt_classificacao,
             'trat_paf': self.trat_paf,
@@ -460,7 +461,7 @@ class OtherDocumentData(DocumentData):
             fmt_str(self.setor),                 # 2. SETOR
             fmt_str(self.empresa),               # 3. EMPRESA
             fmt_str(self.fornecedor_nome),       # 4. FORNECEDOR
-            "",                                  # 5. NF (não aplicável)
+            fmt_str(self.numero_documento),                                  # 5. NF (não aplicável)
             fmt_date(self.data_emissao),         # 6. EMISSÃO
             fmt_num(self.valor_total),           # 7. VALOR
             "",                                  # 8. Nº PEDIDO

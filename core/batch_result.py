@@ -4,8 +4,12 @@ Resultado de processamento em lote.
 Este módulo define estruturas de dados para armazenar os resultados
 do processamento de um lote (pasta de e-mail com múltiplos documentos).
 
-Cada lote representa UMA compra/locação única, então temos:
-- valor_compra: valor da compra (não soma de documentos)
+Cada lote pode conter MÚLTIPLAS compras/locações (múltiplas NFs + boletos),
+então o método to_summaries() gera um resumo para cada par NF↔Boleto.
+
+Funcionalidades:
+- Pareamento inteligente NF↔Boleto por número da nota ou valor
+- Separação de múltiplas notas do mesmo email em linhas distintas
 - Priorização de XML quando completo (tem todos os campos)
 - Fallback para PDF quando XML incompleto
 
@@ -288,22 +292,41 @@ class BatchResult:
         Ordem de prioridade:
         1. NFS-e (InvoiceData) - numero_nota
         2. DANFE (DanfeData) - numero_nota
-        3. Outros documentos - numero_documento
-        4. Boletos - numero_documento
+        3. Fallback para numero_pedido ou numero_fatura em NFSE/DANFE
+        4. Outros documentos - numero_documento
+        5. Boletos - numero_documento
         """
-        # Primeira passada: prioriza NFSE
+        # Primeira passada: prioriza NFSE com numero_nota
         for doc in self.nfses:
             numero = getattr(doc, 'numero_nota', None)
             if numero:
                 return numero
 
-        # Segunda passada: prioriza DANFE
+        # Segunda passada: prioriza DANFE com numero_nota
         for doc in self.danfes:
             numero = getattr(doc, 'numero_nota', None)
             if numero:
                 return numero
 
-        # Terceira passada: outros documentos
+        # Terceira passada: fallback para numero_pedido ou numero_fatura em NFSE
+        for doc in self.nfses:
+            numero_pedido = getattr(doc, 'numero_pedido', None)
+            if numero_pedido:
+                return numero_pedido
+            numero_fatura = getattr(doc, 'numero_fatura', None)
+            if numero_fatura:
+                return numero_fatura
+
+        # Quarta passada: fallback para numero_pedido ou numero_fatura em DANFE
+        for doc in self.danfes:
+            numero_pedido = getattr(doc, 'numero_pedido', None)
+            if numero_pedido:
+                return numero_pedido
+            numero_fatura = getattr(doc, 'numero_fatura', None)
+            if numero_fatura:
+                return numero_fatura
+
+        # Quinta passada: outros documentos
         for doc in self.outros:
             numero = getattr(doc, 'numero_documento', None)
             if numero:
@@ -319,7 +342,10 @@ class BatchResult:
 
     def to_summary(self) -> Dict[str, Any]:
         """
-        Gera um resumo do lote para relatórios.
+        Gera um resumo do lote para relatórios (compatibilidade).
+
+        NOTA: Para lotes com múltiplas NFs, use to_summaries() que retorna
+        uma lista de resumos, um para cada par NF↔Boleto.
 
         Returns:
             Dicionário com estatísticas do lote
@@ -350,6 +376,51 @@ class BatchResult:
             summary['diferenca_valor'] = self.correlation_result.diferenca
 
         return summary
+
+    def to_summaries(self) -> List[Dict[str, Any]]:
+        """
+        Gera lista de resumos do lote, um para cada par NF↔Boleto.
+
+        Esta função usa o serviço de pareamento para identificar pares
+        de documentos (NF + Boleto) e gera um resumo separado para cada.
+
+        Casos tratados:
+        - 1 NF + 1 Boleto → 1 resumo
+        - 2 NFs + 2 Boletos pareados → 2 resumos
+        - 1 NF sem boleto → 1 resumo com status CONFERIR
+        - Documentos sem par → agrupados por valor
+
+        Returns:
+            Lista de dicionários com estatísticas de cada par
+        """
+        from core.document_pairing import pair_batch_documents
+
+        # Usa o serviço de pareamento
+        pairs = pair_batch_documents(self)
+
+        # Converte cada par para o formato de resumo
+        summaries = []
+        for pair in pairs:
+            summary = pair.to_summary()
+            summaries.append(summary)
+
+        return summaries
+
+    def has_multiple_invoices(self) -> bool:
+        """
+        Verifica se o lote contém múltiplas notas fiscais.
+
+        Útil para decidir se deve usar to_summary() ou to_summaries().
+
+        Returns:
+            True se há mais de uma nota fiscal no lote
+        """
+        total_notas = len(self.nfses) + len(self.danfes)
+        # Conta também "outros" que tenham valor (podem ser faturas)
+        for outro in self.outros:
+            if outro.valor_total and outro.valor_total > 0:
+                total_notas += 1
+        return total_notas > 1
 
 
 @dataclass

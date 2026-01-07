@@ -91,6 +91,7 @@ def export_batch_results(
     - relatorio_outro.csv: Outros documentos
     - relatorio_consolidado.csv: TODOS os documentos juntos (tabela final)
     - relatorio_lotes.csv: Resumo por lote com status de conciliação
+      (uma linha para cada par NF↔Boleto identificado)
 
     Args:
         batches: Lista de resultados de lotes processados
@@ -104,7 +105,7 @@ def export_batch_results(
     # Lista consolidada de TODOS os documentos
     todos_documentos = []
 
-    # Lista de resumos por lote
+    # Lista de resumos por lote (agora pode ter múltiplos por batch)
     resumos_lotes = []
 
     for batch in batches:
@@ -120,8 +121,13 @@ def export_batch_results(
             documentos_por_tipo[doc_type].append(doc_dict)
             todos_documentos.append(doc_dict)
 
-        # Adiciona resumo do lote
-        resumos_lotes.append(batch.to_summary())
+        # Usa to_summaries() para gerar um resumo por par NF↔Boleto
+        # Isso separa múltiplas notas do mesmo email em linhas distintas
+        batch_summaries = batch.to_summaries()
+        resumos_lotes.extend(batch_summaries)
+
+        if len(batch_summaries) > 1:
+            logger.debug(f"📊 Lote {batch.batch_id}: {len(batch_summaries)} pares NF↔Boleto identificados")
 
     # Exporta cada tipo separadamente
     for doc_type, documentos in documentos_por_tipo.items():
@@ -176,7 +182,14 @@ def export_batch_results(
         df_lotes.to_csv(
             output_lotes, index=False, sep=';', encoding='utf-8-sig', decimal=','
         )
-        logger.info(f"✅ {len(resumos_lotes)} lotes -> {output_lotes.name} (AUDITORIA)")
+
+        # Conta quantos batches originais e quantos pares gerados
+        batches_originais = len(batches)
+        pares_gerados = len(resumos_lotes)
+        if pares_gerados > batches_originais:
+            logger.info(f"✅ {pares_gerados} pares NF↔Boleto (de {batches_originais} emails) -> {output_lotes.name}")
+        else:
+            logger.info(f"✅ {pares_gerados} lotes -> {output_lotes.name} (AUDITORIA)")
 
 
 def ingest_and_process(
