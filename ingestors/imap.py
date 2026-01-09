@@ -1,9 +1,12 @@
 import email
 import imaplib
+import logging
 from email.header import decode_header
 from typing import Any, Dict, List
 
 from core.interfaces import EmailIngestorStrategy
+
+logger = logging.getLogger(__name__)
 
 
 class ImapIngestor(EmailIngestorStrategy):
@@ -255,7 +258,7 @@ class ImapIngestor(EmailIngestorStrategy):
                         })
 
             except Exception as e:
-                print(f"⚠️ Erro ao ler e-mail ID {num}: {e}")
+                logger.warning(f"Erro ao ler e-mail ID {num}: {e}")
                 continue
 
         return results
@@ -398,7 +401,7 @@ class ImapIngestor(EmailIngestorStrategy):
                 count += 1
 
             except Exception as e:
-                print(f"⚠️ Erro ao ler e-mail ID {num}: {e}")
+                logger.warning(f"Erro ao ler e-mail ID {num}: {e}")
                 continue
 
         return results

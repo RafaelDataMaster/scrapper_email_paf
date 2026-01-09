@@ -21,6 +21,7 @@ Princípios SOLID aplicados:
 - DIP: Depende de abstrações, não de implementações concretas
 - LSP: BatchResult pode ser substituído por subclasses sem quebrar código
 """
+import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
@@ -32,6 +33,8 @@ from core.metadata import EmailMetadata
 from core.models import DanfeData, DocumentData, InvoiceData
 from core.processor import BaseInvoiceProcessor
 from extractors.xml_extractor import XmlExtractor
+
+logger = logging.getLogger(__name__)
 
 
 class BatchProcessor:
@@ -102,15 +105,10 @@ class BatchProcessor:
         Returns:
             BatchResult com todos os documentos processados
         """
-        import time
-        import logging
-        _logger = logging.getLogger(__name__)
-        
         folder_path = Path(folder_path)
 
         # Gera batch_id a partir do nome da pasta
         batch_id = folder_path.name
-        _timing = {}  # Para debug de performance
 
         result = BatchResult(
             batch_id=batch_id,
@@ -118,25 +116,20 @@ class BatchProcessor:
         )
 
         # 1. Carrega metadados (se existir)
-        _t0 = time.time()
         metadata = EmailMetadata.load(folder_path)
         if metadata:
             result.metadata_path = str(folder_path / "metadata.json")
             result.email_subject = metadata.email_subject
             # Usa email_sender_name, com fallback para email_sender_address se vazio
             result.email_sender = metadata.email_sender_name or metadata.email_sender_address
-        _timing['metadata'] = time.time() - _t0
 
         # 2. Lista arquivos processáveis (separados por tipo)
-        _t0 = time.time()
         xml_files, pdf_files = self._list_files_by_type(folder_path)
-        _timing['list_files'] = time.time() - _t0
 
         if not xml_files and not pdf_files:
             return result
 
         # 3. Processa XMLs primeiro
-        _t0 = time.time()
         xml_docs: List[DocumentData] = []
         xml_notas_completas: Set[str] = set()  # Números de nota de XMLs completos
 
@@ -150,16 +143,10 @@ class BatchProcessor:
                         numero_nota = getattr(doc, 'numero_nota', None)
                         if numero_nota:
                             xml_notas_completas.add(str(numero_nota).strip())
-                            print(f"[INFO] XML completo: {file_path.name} (nota {numero_nota})")
-                    else:
-                        campos_faltantes = self._get_campos_faltantes(doc)
-                        print(f"[INFO] XML incompleto: {file_path.name} - faltam: {campos_faltantes}")
             except Exception as e:
                 result.add_error(str(file_path), str(e))
-        _timing['xml_processing'] = time.time() - _t0
 
         # 4. Processa PDFs
-        _t0 = time.time()
         pdf_docs: List[DocumentData] = []
 
         for file_path in pdf_files:
@@ -169,39 +156,17 @@ class BatchProcessor:
                     pdf_docs.append(doc)
             except Exception as e:
                 result.add_error(str(file_path), str(e))
-        _timing['pdf_processing'] = time.time() - _t0
 
         # 5. Mescla documentos: XML completo prevalece, senão usa PDF
-        _t0 = time.time()
         final_docs = self._merge_documents(xml_docs, pdf_docs, xml_notas_completas)
-        _timing['merge'] = time.time() - _t0
 
-        _t0 = time.time()
         for doc in final_docs:
             result.add_document(doc)
-        _timing['add_docs'] = time.time() - _t0
 
         # 6. Aplica correlação entre documentos (se habilitado)
-        _t0 = time.time()
         if apply_correlation and result.total_documents > 0:
             correlation_result = self.correlation_service.correlate(result, metadata)
             result.correlation_result = correlation_result
-        _timing['correlation'] = time.time() - _t0
-
-        # Log de timing se demorou mais que 30s
-        total_time = sum(_timing.values())
-        if total_time > 30:
-            _logger.warning(
-                f"⏱️ {batch_id} timing breakdown: "
-                f"meta={_timing['metadata']:.1f}s, "
-                f"list={_timing['list_files']:.1f}s, "
-                f"xml={_timing['xml_processing']:.1f}s, "
-                f"pdf={_timing['pdf_processing']:.1f}s, "
-                f"merge={_timing['merge']:.1f}s, "
-                f"add={_timing['add_docs']:.1f}s, "
-                f"corr={_timing['correlation']:.1f}s, "
-                f"TOTAL={total_time:.1f}s"
-            )
 
         return result
 
@@ -325,7 +290,6 @@ class BatchProcessor:
 
             # Verifica se já foi usado ou se XML completo já cobre essa nota
             if numero_str and numero_str in xml_notas_completas:
-                print(f"[INFO] PDF ignorado (XML completo): nota {numero_str}")
                 continue
 
             if numero_str and numero_str in pdf_notas_usadas:
@@ -720,11 +684,11 @@ class BatchProcessor:
                 
                 return doc
             else:
-                print(f"Erro ao processar XML {file_path.name}: {result.error}")
+                logger.debug(f"Erro ao processar XML {file_path.name}: {result.error}")
                 return None
 
         except Exception as e:
-            print(f"Erro ao processar XML {file_path.name}: {e}")
+            logger.debug(f"Erro ao processar XML {file_path.name}: {e}")
             return None
 
     def _list_processable_files(self, folder_path: Path) -> List[Path]:
