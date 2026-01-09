@@ -155,26 +155,80 @@ class BoletoExtractor(BaseExtractor):
         - Razão Social do beneficiário (fornecedor_nome)
         - Dados bancários normalizados (banco_nome, agencia, conta_corrente)
         """
+        import time
+        import logging
+        _logger = logging.getLogger(__name__)
+        _timing = {}
+        _t_start = time.time()
+        
         data = {}
         data['tipo_documento'] = 'BOLETO'
 
         # Campos básicos (já existentes)
+        _t0 = time.time()
         data['cnpj_beneficiario'] = self._extract_cnpj_beneficiario(text)
+        _timing['cnpj_benef'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['valor_documento'] = self._extract_valor(text)
+        _timing['valor'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['vencimento'] = self._extract_vencimento(text)
+        _timing['vencimento'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['numero_documento'] = self._extract_numero_documento(text)
+        _timing['num_doc'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['data_emissao'] = self._extract_data_documento(text)
+        _timing['data_emissao'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['linha_digitavel'] = self._extract_linha_digitavel(text)
+        _timing['linha_dig'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['nosso_numero'] = self._extract_nosso_numero(text)
+        _timing['nosso_num'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['referencia_nfse'] = self._extract_referencia_nfse(text)
+        _timing['ref_nfse'] = time.time() - _t0
 
         # Campos Core PAF (Prioridade Alta)
+        _t0 = time.time()
         data['fornecedor_nome'] = self._extract_fornecedor_nome(text)
+        _timing['fornecedor'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['empresa'] = self._extract_pagador_nome(text)
+        _timing['pagador'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['cnpj_pagador'] = self._extract_cnpj_pagador(text)
+        _timing['cnpj_pag'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['banco_nome'] = self._extract_banco_nome(text, data.get('linha_digitavel'))
+        _timing['banco'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['agencia'] = self._extract_agencia(text)
+        _timing['agencia'] = time.time() - _t0
+        
+        _t0 = time.time()
         data['conta_corrente'] = self._extract_conta_corrente(text)
+        _timing['conta'] = time.time() - _t0
+
+        # Log de timing se demorou mais que 5s
+        total_time = time.time() - _t_start
+        if total_time > 5:
+            timing_str = ', '.join(f'{k}={v:.1f}s' for k, v in _timing.items() if v > 0.1)
+            _logger.warning(
+                f"⏱️ BoletoExtractor.extract() timing: {timing_str}, TOTAL={total_time:.1f}s"
+            )
 
         return data
 

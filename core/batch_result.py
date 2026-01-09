@@ -65,6 +65,11 @@ class BatchResult:
     # Resultado da correlação (preenchido após correlate())
     correlation_result: Optional[CorrelationResult] = None
 
+    # Status de processamento (OK, TIMEOUT, ERROR)
+    status: str = "OK"
+    processing_time: float = 0.0
+    timeout_error: Optional[str] = None
+
     def add_document(self, doc: DocumentData) -> None:
         """Adiciona um documento ao lote."""
         self.documents.append(doc)

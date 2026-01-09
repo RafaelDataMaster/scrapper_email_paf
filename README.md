@@ -93,6 +93,23 @@ A estratégia de correlação foi implementada nos seguintes módulos:
 
 ## Done
 
+### 09/01/2026
+
+- [x] **Extrator específico para boletos REPROMAQ/Bradesco** (`extractors/boleto_repromaq.py`)
+    - Resolve problema de **catastrophic backtracking** no `BoletoExtractor` genérico
+    - **Causa raiz**: OCR de baixa qualidade gera texto "sujo" onde colunas vizinhas invadem os dados (ex: dígito da "Carteira" aparece entre o label "Valor do Documento" e o valor real)
+    - Regexes gulosos (`.*`, `[\s\S]*`) entram em loop infinito tentando fazer match
+    - **Solução**: Abordagem baseada em linhas + regexes com limites rígidos de caracteres
+    - Performance: **~10x mais rápido** que o extrator genérico (0.03s vs 0.27s)
+    - Tolerância a erros de OCR: `REPROMAQ` → `REPROMAO` (Q confundido com O)
+- [x] **Script genérico `test_extractor_routing.py`**: Testa qual extrator seria usado para qualquer PDF
+    - Mostra tempo de `can_handle()` e `extract()` para identificar gargalos
+    - Flag `--texto` para ver o texto OCR extraído (útil para debug de regex)
+- [x] **Limpeza de scripts de debug**: Removidos arquivos de diagnóstico pontual
+    - `diagnose_batch_939db0f8.py`, `diagnose_bottleneck.py`, `diagnose_imports.py`
+    - `test_extractor_timing.py`, `test_ocr_issue.py`, `benchmark_ocr.py`
+    - `scripts/debug_batch.py`
+
 ### 08/01/2026
 
 - [x] **Fix detecção de empresa (coluna EMPRESA)**: Sistema agora detecta corretamente a empresa em todos os tipos de documento

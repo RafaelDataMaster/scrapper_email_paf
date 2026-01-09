@@ -43,7 +43,9 @@ else:
 
 # --- Parâmetros do OCR ---
 # --psm 6: Assume um bloco único de texto uniforme (vital para notas fiscais)
-OCR_CONFIG = r'--psm 6'
+# load_system_dawg=0 e load_freq_dawg=0: Desativa dicionários de linguagem
+# Otimização para leitura de códigos/números (não prosa), economiza CPU
+OCR_CONFIG = r'--psm 6 -c load_system_dawg=0 -c load_freq_dawg=0'
 OCR_LANG = 'por'
 
 # --- Modo híbrido (PDF com texto + partes em imagem) ---

@@ -27,7 +27,7 @@ Example:
 """
 import logging
 import pytesseract
-from pdf2image import convert_from_path
+import pypdfium2 as pdfium
 from core.interfaces import TextExtractionStrategy
 from config import settings  # Importando suas configurações
 
@@ -37,7 +37,7 @@ class TesseractOcrStrategy(TextExtractionStrategy):
     """
     Estratégia de leitura baseada em OCR (Reconhecimento Óptico de Caracteres).
 
-    Utiliza `pdf2image` para rasterizar o PDF e `pytesseract` para extrair texto da imagem.
+    Utiliza `pypdfium2` para rasterizar o PDF em memória e `pytesseract` para extrair texto.
     Acionada quando o PDF não possui camada de texto (ex: digitalizações).
     """
     def __init__(self):
@@ -50,7 +50,10 @@ class TesseractOcrStrategy(TextExtractionStrategy):
 
     def extract(self, file_path: str) -> str:
         """
-        Converte PDF em imagem e executa OCR.
+        Converte PDF em imagem usando pypdfium2 e executa OCR.
+
+        pypdfium2 rasteriza o PDF em memória (sem subprocessos),
+        oferecendo performance significativamente melhor que pdf2image/Poppler.
 
         Args:
             file_path (str): Caminho do arquivo PDF.
@@ -61,25 +64,39 @@ class TesseractOcrStrategy(TextExtractionStrategy):
         Raises:
             Exception: Se houver erro na conversão ou no OCR.
         """
+        import time
+        import os
+        
         custom_config = settings.OCR_CONFIG
+        filename = os.path.basename(file_path)
+        
+        logger.info(f"🔍 [OCR] Iniciando: {filename}")
+        start_time = time.time()
         
         try:
-            # 2. Passar o poppler_path explicitamente
-            # Sem isso, ele grita "Unable to get page count"
-            imagens = convert_from_path(
-                file_path, 
-                first_page=1, 
-                last_page=1,
-                poppler_path=settings.POPPLER_PATH ### AQUI ESTAVA FALTANDO!
-            )
+            # Rasterização em memória com pypdfium2 (muito mais rápido que Poppler)
+            pdf = pdfium.PdfDocument(file_path)
             
             texto_final = ""
-            for img in imagens:
-                texto_final += pytesseract.image_to_string(
-                    img, 
-                    lang=settings.OCR_LANG, 
-                    config=custom_config
-                )
+            # Processa apenas a primeira página (otimização para notas fiscais)
+            page = pdf[0]
+            
+            # Renderiza a página como bitmap (300 DPI é bom equilíbrio qualidade/velocidade)
+            bitmap = page.render(scale=300/72)  # 300 DPI
+            pil_image = bitmap.to_pil()
+            
+            # Executa OCR na imagem
+            texto_final = pytesseract.image_to_string(
+                pil_image, 
+                lang=settings.OCR_LANG, 
+                config=custom_config
+            )
+            
+            # Libera recursos do PDF
+            pdf.close()
+            
+            elapsed = time.time() - start_time
+            logger.info(f"✅ [OCR] Concluído: {filename} ({len(texto_final)} chars em {elapsed:.1f}s)")
             
             # Validação: Se OCR retornou texto muito curto, considere falha
             if len(texto_final.strip()) < 50:

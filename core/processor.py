@@ -72,8 +72,16 @@ class BaseInvoiceProcessor(ABC):
         Returns:
             DocumentData: Objeto contendo os dados extraídos (InvoiceData, BoletoData, etc.).
         """
+        import time
+        import logging
+        _logger = logging.getLogger(__name__)
+        _timing = {}
+        _t_start = time.time()
+        
         # 1. Leitura
+        _t0 = time.time()
         raw_text = self.reader.extract(file_path)
+        _timing['extract'] = time.time() - _t0
 
         if not raw_text or "Falha" in raw_text:
             # Retorna objeto vazio de NFSe por padrão
@@ -84,8 +92,13 @@ class BaseInvoiceProcessor(ABC):
 
         # 2. Seleção do Extrator
         try:
+            _t0 = time.time()
             extractor = self._get_extractor(raw_text)
+            _timing['get_extractor'] = time.time() - _t0
+            
+            _t0 = time.time()
             extracted_data = extractor.extract(raw_text)
+            _timing['extractor_extract'] = time.time() - _t0
 
             # Dados comuns PAF (aplicados a todos os documentos)
             now_iso = datetime.now().strftime('%Y-%m-%d')
@@ -105,7 +118,10 @@ class BaseInvoiceProcessor(ABC):
             # --- Regra de negócio (EMPRESA nossa) ---
             # Se existir um CNPJ do nosso cadastro no documento, ele define a coluna EMPRESA.
             # Qualquer outro CNPJ no documento tende a ser fornecedor/terceiro.
+            _t0 = time.time()
             empresa_match = find_empresa_no_texto(raw_text or "")
+            _timing['find_empresa'] = time.time() - _t0
+            
             if empresa_match:
                 # Padroniza para um identificador curto (ex: CSC, MASTER, OP11, RBC)
                 common_data['empresa'] = empresa_match.codigo
@@ -126,6 +142,7 @@ class BaseInvoiceProcessor(ABC):
 
                 # Se o extrator capturou CNPJ nosso como "prestador/beneficiário" por engano,
                 # tenta trocar para o primeiro CNPJ não-nosso presente no texto.
+                _t0 = time.time()
                 if extracted_data.get('tipo_documento') == 'BOLETO':
                     cnpj_ben = extracted_data.get('cnpj_beneficiario')
                     if cnpj_ben and is_cnpj_nosso(cnpj_ben):
@@ -138,13 +155,30 @@ class BaseInvoiceProcessor(ABC):
                         other = pick_first_non_our_cnpj(raw_text or "")
                         if other:
                             extracted_data['cnpj_prestador'] = format_cnpj(other)
+                _timing['pick_cnpj'] = time.time() - _t0
 
             # Fallback conservador: se fornecedor ainda está vazio e temos empresa nossa,
             # tenta inferir um fornecedor por linha com CNPJ (que não seja do cadastro).
+            _t0 = time.time()
             if (not extracted_data.get('fornecedor_nome')) and empresa_match:
                 inferred = infer_fornecedor_from_text(raw_text or "", empresa_match.cnpj_digits)
                 if inferred:
                     extracted_data['fornecedor_nome'] = inferred
+            _timing['infer_fornecedor'] = time.time() - _t0
+
+            # Log de timing se demorou mais que 30s
+            total_time = time.time() - _t_start
+            if total_time > 30:
+                _logger.warning(
+                    f"⏱️ processor.process() timing: "
+                    f"extract={_timing.get('extract', 0):.1f}s, "
+                    f"get_ext={_timing.get('get_extractor', 0):.1f}s, "
+                    f"ext_extract={_timing.get('extractor_extract', 0):.1f}s, "
+                    f"find_emp={_timing.get('find_empresa', 0):.1f}s, "
+                    f"pick_cnpj={_timing.get('pick_cnpj', 0):.1f}s, "
+                    f"infer={_timing.get('infer_fornecedor', 0):.1f}s, "
+                    f"TOTAL={total_time:.1f}s"
+                )
 
             # 3. Identifica o tipo e cria o modelo apropriado
             if extracted_data.get('tipo_documento') == 'BOLETO':

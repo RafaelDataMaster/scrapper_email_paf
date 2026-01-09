@@ -48,7 +48,8 @@ class SmartExtractionStrategy(TextExtractionStrategy):
             if not text:
                 return True
 
-            t = text.strip()
+            # Normaliza espaços em branco (PDFs com layout=True podem ter muitos espaços)
+            t = ' '.join(text.split())
             if len(t) < 200:
                 return True
 

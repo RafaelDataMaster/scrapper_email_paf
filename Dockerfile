@@ -25,11 +25,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Download do traineddata robusto (best) para português
-# O pacote Debian é minimalista, o "best" do GitHub é mais preciso
-RUN wget -q https://github.com/tesseract-ocr/tessdata_best/raw/main/por.traineddata \
+# Download do traineddata otimizado (fast/int8) para português
+# tessdata_fast é ~4x mais rápido que tessdata_best com perda mínima de precisão
+RUN wget -q https://github.com/tesseract-ocr/tessdata_fast/raw/main/por.traineddata \
     -O /usr/share/tesseract-ocr/4.00/tessdata/por.traineddata \
     || echo "Fallback: usando traineddata do pacote Debian"
+
+# Desativa multithreading interno do Tesseract para evitar thrashing de CPU
+# Melhor performance em processamento paralelo de múltiplos documentos
+ENV OMP_THREAD_LIMIT=1
 
 # Cria usuário não-root para segurança
 RUN useradd -m -u 1000 scrapper && \

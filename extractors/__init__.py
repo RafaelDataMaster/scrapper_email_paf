@@ -2,6 +2,7 @@
 # é definida pela ordem em que os módulos são importados.
 # REGRA: Extractors ESPECÍFICOS devem vir ANTES dos GENÉRICOS
 
+from .boleto_repromaq import BoletoRepromaqExtractor  # Específico: antes do genérico
 from .boleto import BoletoExtractor
 from .danfe import DanfeExtractor
 from .emc_fatura import EmcFaturaExtractor
@@ -14,6 +15,7 @@ from .sicoob import SicoobExtractor
 from .xml_extractor import XmlExtractionResult, XmlExtractor, extract_xml
 
 __all__ = [
+	"BoletoRepromaqExtractor",
 	"BoletoExtractor",
 	"DanfeExtractor",
 	"EmcFaturaExtractor",

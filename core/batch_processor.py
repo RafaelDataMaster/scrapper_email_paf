@@ -102,10 +102,15 @@ class BatchProcessor:
         Returns:
             BatchResult com todos os documentos processados
         """
+        import time
+        import logging
+        _logger = logging.getLogger(__name__)
+        
         folder_path = Path(folder_path)
 
         # Gera batch_id a partir do nome da pasta
         batch_id = folder_path.name
+        _timing = {}  # Para debug de performance
 
         result = BatchResult(
             batch_id=batch_id,
@@ -113,20 +118,25 @@ class BatchProcessor:
         )
 
         # 1. Carrega metadados (se existir)
+        _t0 = time.time()
         metadata = EmailMetadata.load(folder_path)
         if metadata:
             result.metadata_path = str(folder_path / "metadata.json")
             result.email_subject = metadata.email_subject
             # Usa email_sender_name, com fallback para email_sender_address se vazio
             result.email_sender = metadata.email_sender_name or metadata.email_sender_address
+        _timing['metadata'] = time.time() - _t0
 
         # 2. Lista arquivos processáveis (separados por tipo)
+        _t0 = time.time()
         xml_files, pdf_files = self._list_files_by_type(folder_path)
+        _timing['list_files'] = time.time() - _t0
 
         if not xml_files and not pdf_files:
             return result
 
         # 3. Processa XMLs primeiro
+        _t0 = time.time()
         xml_docs: List[DocumentData] = []
         xml_notas_completas: Set[str] = set()  # Números de nota de XMLs completos
 
@@ -146,8 +156,10 @@ class BatchProcessor:
                         print(f"[INFO] XML incompleto: {file_path.name} - faltam: {campos_faltantes}")
             except Exception as e:
                 result.add_error(str(file_path), str(e))
+        _timing['xml_processing'] = time.time() - _t0
 
         # 4. Processa PDFs
+        _t0 = time.time()
         pdf_docs: List[DocumentData] = []
 
         for file_path in pdf_files:
@@ -157,17 +169,39 @@ class BatchProcessor:
                     pdf_docs.append(doc)
             except Exception as e:
                 result.add_error(str(file_path), str(e))
+        _timing['pdf_processing'] = time.time() - _t0
 
         # 5. Mescla documentos: XML completo prevalece, senão usa PDF
+        _t0 = time.time()
         final_docs = self._merge_documents(xml_docs, pdf_docs, xml_notas_completas)
+        _timing['merge'] = time.time() - _t0
 
+        _t0 = time.time()
         for doc in final_docs:
             result.add_document(doc)
+        _timing['add_docs'] = time.time() - _t0
 
         # 6. Aplica correlação entre documentos (se habilitado)
+        _t0 = time.time()
         if apply_correlation and result.total_documents > 0:
             correlation_result = self.correlation_service.correlate(result, metadata)
             result.correlation_result = correlation_result
+        _timing['correlation'] = time.time() - _t0
+
+        # Log de timing se demorou mais que 30s
+        total_time = sum(_timing.values())
+        if total_time > 30:
+            _logger.warning(
+                f"⏱️ {batch_id} timing breakdown: "
+                f"meta={_timing['metadata']:.1f}s, "
+                f"list={_timing['list_files']:.1f}s, "
+                f"xml={_timing['xml_processing']:.1f}s, "
+                f"pdf={_timing['pdf_processing']:.1f}s, "
+                f"merge={_timing['merge']:.1f}s, "
+                f"add={_timing['add_docs']:.1f}s, "
+                f"corr={_timing['correlation']:.1f}s, "
+                f"TOTAL={total_time:.1f}s"
+            )
 
         return result
 
@@ -445,32 +479,133 @@ class BatchProcessor:
 
         return xml_files, pdf_files
 
+    # Timeout padrão para processamento de batch (5 minutos)
+    BATCH_TIMEOUT_SECONDS: int = 300
+
     def process_multiple_batches(
         self,
         root_folder: Union[str, Path],
-        apply_correlation: bool = True
+        apply_correlation: bool = True,
+        timeout_seconds: Optional[int] = None
     ) -> List[BatchResult]:
         """
-        Processa múltiplas pastas (lotes) de uma vez.
+        Processa múltiplas pastas (lotes) de uma vez com timeout por lote.
 
         Args:
             root_folder: Pasta raiz contendo subpastas de lotes
             apply_correlation: Se True, aplica correlação entre documentos
+            timeout_seconds: Timeout por batch em segundos (default: 300 = 5 min)
 
         Returns:
             Lista de BatchResult, um para cada lote
         """
+        import time
+        import json
+        import logging
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+        from datetime import datetime
+        
+        logger = logging.getLogger(__name__)
+        timeout = timeout_seconds or self.BATCH_TIMEOUT_SECONDS
+        
         root_folder = Path(root_folder)
         results = []
+        timeouts = []  # Lista de batches que deram timeout
 
         if not root_folder.exists():
             return results
 
-        # Processa cada subpasta como um lote
-        for item in sorted(root_folder.iterdir()):
-            if item.is_dir() and not item.name.startswith('.'):
-                batch_result = self.process_batch(item, apply_correlation)
-                results.append(batch_result)
+        # Lista lotes para processar
+        batch_folders = [item for item in sorted(root_folder.iterdir()) 
+                         if item.is_dir() and not item.name.startswith('.')]
+        total_batches = len(batch_folders)
+        
+        logger.info(f"⏳ Iniciando processamento de {total_batches} lotes (timeout: {timeout}s)...")
+        overall_start = time.time()
+        
+        # Processa cada subpasta como um lote com timeout
+        for idx, item in enumerate(batch_folders, 1):
+            batch_start = time.time()
+            batch_result = None
+            
+            try:
+                # Executa com timeout usando ThreadPoolExecutor
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(self.process_batch, item, apply_correlation)
+                    batch_result = future.result(timeout=timeout)
+                    batch_result.processing_time = time.time() - batch_start
+                    batch_result.status = "OK"
+                    
+            except FuturesTimeoutError:
+                # Timeout! Cria resultado vazio com status TIMEOUT
+                batch_elapsed = time.time() - batch_start
+                logger.error(f"⏱️ [{idx}/{total_batches}] TIMEOUT: {item.name} excedeu {timeout}s!")
+                
+                batch_result = BatchResult(
+                    batch_id=item.name,
+                    source_folder=str(item),
+                    status="TIMEOUT",
+                    processing_time=batch_elapsed,
+                    timeout_error=f"Processamento excedeu {timeout}s"
+                )
+                batch_result.add_error(str(item), f"TIMEOUT após {batch_elapsed:.1f}s")
+                
+                # Registra para log de timeouts
+                timeouts.append({
+                    "batch_id": item.name,
+                    "folder": str(item),
+                    "timeout_seconds": timeout,
+                    "timestamp": datetime.now().isoformat()
+                })
+                
+            except Exception as e:
+                # Erro genérico
+                batch_elapsed = time.time() - batch_start
+                logger.error(f"❌ [{idx}/{total_batches}] ERRO: {item.name}: {e}")
+                
+                batch_result = BatchResult(
+                    batch_id=item.name,
+                    source_folder=str(item),
+                    status="ERROR",
+                    processing_time=batch_elapsed,
+                    timeout_error=str(e)
+                )
+                batch_result.add_error(str(item), str(e))
+            
+            results.append(batch_result)
+            batch_elapsed = batch_result.processing_time
+            
+            # Log de progresso
+            if batch_result.status == "TIMEOUT":
+                pass  # Já logou acima
+            elif batch_result.status == "ERROR":
+                pass  # Já logou acima
+            elif batch_elapsed > 5:
+                logger.warning(f"🐢 [{idx}/{total_batches}] {item.name}: {batch_elapsed:.1f}s (LENTO!)")
+            else:
+                logger.debug(f"✅ [{idx}/{total_batches}] {item.name}: {batch_elapsed:.1f}s")
+        
+        overall_elapsed = time.time() - overall_start
+        logger.info(f"⏱️ Tempo total de processamento: {overall_elapsed:.1f}s ({overall_elapsed/60:.1f} min)")
+        
+        # Salva log de timeouts para reprocessamento posterior
+        if timeouts:
+            timeout_log_path = root_folder / "_timeouts.json"
+            try:
+                # Carrega timeouts anteriores (se existir)
+                existing_timeouts = []
+                if timeout_log_path.exists():
+                    existing_timeouts = json.loads(timeout_log_path.read_text(encoding='utf-8'))
+                
+                # Adiciona novos timeouts
+                all_timeouts = existing_timeouts + timeouts
+                timeout_log_path.write_text(
+                    json.dumps(all_timeouts, indent=2, ensure_ascii=False),
+                    encoding='utf-8'
+                )
+                logger.warning(f"⚠️ {len(timeouts)} timeout(s) registrado(s) em {timeout_log_path}")
+            except Exception as e:
+                logger.error(f"Erro ao salvar log de timeouts: {e}")
 
         return results
 

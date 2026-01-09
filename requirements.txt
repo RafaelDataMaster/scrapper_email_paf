@@ -2,7 +2,7 @@
 pdfplumber
 pandas
 pytesseract
-pdf2image
+pypdfium2
 pillow
 python-dotenv
 

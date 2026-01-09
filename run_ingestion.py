@@ -9,6 +9,7 @@ REFATORADO para usar a nova estrutura de lotes (Batch Processing):
 - Processamento por lote (pasta) ao invés de arquivo individual
 - Correlação entre documentos do mesmo lote (DANFE + Boleto)
 - Enriquecimento de dados via contexto do e-mail
+- Limpeza automática de lotes antigos (opcional)
 
 Princípios SOLID aplicados:
 - SRP: Responsabilidades separadas em serviços específicos
@@ -25,8 +26,11 @@ Usage:
     # Processar pasta específica
     python run_ingestion.py --batch-folder temp_email/email_123
 
-    # Modo legado (arquivos soltos)
-    python run_ingestion.py --legacy --folder failed_cases_pdf
+    # Com limpeza automática de lotes antigos (>48h)
+    python run_ingestion.py --cleanup
+
+    # Filtro customizado + correlação desabilitada
+    python run_ingestion.py --subject "Nota Fiscal" --no-correlation
 """
 
 import argparse
@@ -93,9 +97,11 @@ def export_batch_results(
     - relatorio_lotes.csv: Resumo por lote com status de conciliação
       (uma linha para cada par NF↔Boleto identificado)
 
+    Todos os CSVs usam separador ';', encoding 'utf-8-sig' e decimal ','.
+
     Args:
         batches: Lista de resultados de lotes processados
-        output_dir: Diretório de saída
+        output_dir: Diretório de saída para os arquivos CSV
     """
     import pandas as pd
 
@@ -200,13 +206,19 @@ def ingest_and_process(
     """
     Executa ingestão de e-mails e processamento em lote.
 
+    Fluxo completo:
+    1. Conecta ao servidor de e-mail
+    2. Baixa anexos e organiza em pastas de lote (temp_email/)
+    3. Processa cada lote (extração de dados)
+    4. Aplica correlação entre documentos (se habilitado)
+
     Args:
         ingestor: Ingestor de e-mail (opcional, usa factory se None)
-        subject_filter: Filtro de assunto para busca
+        subject_filter: Filtro de assunto para busca (padrão: "ENC")
         apply_correlation: Se True, aplica correlação entre documentos
 
     Returns:
-        Lista de BatchResult com documentos processados
+        Lista de BatchResult com documentos processados e correlacionados
     """
     # 1. Cria ingestor se não fornecido
     if ingestor is None:
@@ -273,17 +285,22 @@ def ingest_and_process(
 
 def reprocess_existing_batches(
     root_folder: Optional[Path] = None,
-    apply_correlation: bool = True
+    apply_correlation: bool = True,
+    timeout_seconds: int = 300
 ) -> List[BatchResult]:
     """
     Reprocessa lotes existentes (pastas já criadas).
 
+    Útil para re-executar extração após correções de bugs ou
+    ajustes nos extractors sem precisar baixar e-mails novamente.
+
     Args:
-        root_folder: Pasta raiz com lotes (default: DIR_TEMP)
-        apply_correlation: Se True, aplica correlação
+        root_folder: Pasta raiz com lotes (default: settings.DIR_TEMP)
+        apply_correlation: Se True, aplica correlação entre documentos
+        timeout_seconds: Timeout por lote em segundos
 
     Returns:
-        Lista de BatchResult
+        Lista de BatchResult com documentos reprocessados
     """
     root_folder = root_folder or settings.DIR_TEMP
 
@@ -294,10 +311,125 @@ def reprocess_existing_batches(
     batch_processor = BatchProcessor()
     results = batch_processor.process_multiple_batches(
         root_folder,
-        apply_correlation=apply_correlation
+        apply_correlation=apply_correlation,
+        timeout_seconds=timeout_seconds
     )
 
-    logger.info(f"📦 {len(results)} lote(s) reprocessado(s)")
+    # Contabiliza resultados
+    ok_count = sum(1 for r in results if r.status == "OK")
+    timeout_count = sum(1 for r in results if r.status == "TIMEOUT")
+    error_count = sum(1 for r in results if r.status == "ERROR")
+    
+    logger.info(f"📦 {len(results)} lote(s) reprocessado(s): {ok_count} OK, {timeout_count} TIMEOUT, {error_count} ERRO")
+
+    return results
+
+
+def reprocess_timeout_batches(
+    root_folder: Optional[Path] = None,
+    apply_correlation: bool = True,
+    timeout_seconds: int = 600  # Timeout maior para segunda tentativa
+) -> List[BatchResult]:
+    """
+    Reprocessa apenas lotes que deram timeout anteriormente.
+
+    Lê o arquivo _timeouts.json e tenta processar novamente apenas esses lotes,
+    com timeout aumentado para 10 minutos.
+
+    Args:
+        root_folder: Pasta raiz com lotes (default: settings.DIR_TEMP)
+        apply_correlation: Se True, aplica correlação entre documentos
+        timeout_seconds: Timeout por lote (default: 600 = 10 min)
+
+    Returns:
+        Lista de BatchResult com documentos reprocessados
+    """
+    import json
+    
+    root_folder = root_folder or settings.DIR_TEMP
+    timeout_log_path = root_folder / "_timeouts.json"
+
+    if not timeout_log_path.exists():
+        logger.info("✅ Nenhum timeout registrado para reprocessar.")
+        return []
+
+    # Carrega lista de timeouts
+    try:
+        timeouts = json.loads(timeout_log_path.read_text(encoding='utf-8'))
+    except Exception as e:
+        logger.error(f"❌ Erro ao ler {timeout_log_path}: {e}")
+        return []
+
+    if not timeouts:
+        logger.info("✅ Lista de timeouts vazia.")
+        return []
+
+    # Extrai batch_ids únicos
+    batch_ids = list(set(t['batch_id'] for t in timeouts))
+    logger.info(f"🔄 Reprocessando {len(batch_ids)} lote(s) que deram timeout...")
+
+    batch_processor = BatchProcessor()
+    results = []
+
+    for idx, batch_id in enumerate(batch_ids, 1):
+        batch_folder = root_folder / batch_id
+        
+        if not batch_folder.exists():
+            logger.warning(f"⚠️ Pasta não encontrada: {batch_folder}")
+            continue
+        
+        logger.info(f"   [{idx}/{len(batch_ids)}] {batch_id}...")
+        
+        try:
+            from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+            import time
+            
+            batch_start = time.time()
+            
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(batch_processor.process_batch, batch_folder, apply_correlation)
+                result = future.result(timeout=timeout_seconds)
+                result.processing_time = time.time() - batch_start
+                result.status = "OK"
+                results.append(result)
+                logger.info(f"   ✅ {batch_id}: OK ({result.processing_time:.1f}s)")
+                
+        except FuturesTimeoutError:
+            logger.error(f"   ⏱️ {batch_id}: TIMEOUT novamente!")
+            result = BatchResult(
+                batch_id=batch_id,
+                source_folder=str(batch_folder),
+                status="TIMEOUT",
+                processing_time=timeout_seconds,
+                timeout_error=f"TIMEOUT na segunda tentativa ({timeout_seconds}s)"
+            )
+            results.append(result)
+            
+        except Exception as e:
+            logger.error(f"   ❌ {batch_id}: ERRO - {e}")
+            result = BatchResult(
+                batch_id=batch_id,
+                source_folder=str(batch_folder),
+                status="ERROR",
+                timeout_error=str(e)
+            )
+            results.append(result)
+
+    # Remove timeouts que foram resolvidos
+    resolved = [r.batch_id for r in results if r.status == "OK"]
+    if resolved:
+        remaining_timeouts = [t for t in timeouts if t['batch_id'] not in resolved]
+        try:
+            if remaining_timeouts:
+                timeout_log_path.write_text(
+                    json.dumps(remaining_timeouts, indent=2, ensure_ascii=False),
+                    encoding='utf-8'
+                )
+            else:
+                timeout_log_path.unlink()  # Remove arquivo se não há mais timeouts
+            logger.info(f"📝 {len(resolved)} timeout(s) resolvido(s)")
+        except Exception as e:
+            logger.warning(f"Erro ao atualizar log de timeouts: {e}")
 
     return results
 
@@ -307,14 +439,16 @@ def process_single_batch(
     apply_correlation: bool = True
 ) -> Optional[BatchResult]:
     """
-    Processa um único lote.
+    Processa um único lote específico.
+
+    Útil para debugging ou reprocessamento seletivo de um único e-mail.
 
     Args:
-        folder_path: Caminho da pasta do lote
-        apply_correlation: Se True, aplica correlação
+        folder_path: Caminho da pasta do lote (ex: temp_email/email_123)
+        apply_correlation: Se True, aplica correlação entre documentos
 
     Returns:
-        BatchResult ou None
+        BatchResult com documentos processados ou None se pasta não existe
     """
     if not folder_path.exists():
         logger.error(f"❌ Pasta não encontrada: {folder_path}")
@@ -350,8 +484,14 @@ Exemplos:
   # Ingestão padrão
   python run_ingestion.py
 
-  # Reprocessar lotes existentes
+  # Reprocessar lotes existentes (com timeout de 5 min)
   python run_ingestion.py --reprocess
+
+  # Reprocessar com timeout customizado (10 min)
+  python run_ingestion.py --reprocess --timeout 600
+
+  # Reprocessar apenas lotes que deram timeout
+  python run_ingestion.py --reprocess-timeouts
 
   # Processar pasta específica
   python run_ingestion.py --batch-folder temp_email/email_123
@@ -361,6 +501,12 @@ Exemplos:
 
   # Filtro de assunto customizado
   python run_ingestion.py --subject "Nota Fiscal"
+
+  # Com limpeza automática de lotes antigos (>48h)
+  python run_ingestion.py --cleanup
+
+  # Reprocessar e limpar em seguida
+  python run_ingestion.py --reprocess --cleanup
         """
     )
 
@@ -390,6 +536,17 @@ Exemplos:
         action='store_true',
         help='Limpar lotes antigos (> 48h) após processamento'
     )
+    parser.add_argument(
+        '--reprocess-timeouts',
+        action='store_true',
+        help='Reprocessar apenas lotes que deram timeout anteriormente'
+    )
+    parser.add_argument(
+        '--timeout',
+        type=int,
+        default=300,
+        help='Timeout por lote em segundos (default: 300 = 5 min)'
+    )
 
     args = parser.parse_args()
 
@@ -397,7 +554,7 @@ Exemplos:
 
     # 1. Verificação de configuração
     try:
-        if ingestor is None and not args.reprocess and not args.batch_folder:
+        if ingestor is None and not args.reprocess and not args.batch_folder and not args.reprocess_timeouts:
             ingestor = create_ingestor_from_config()
     except ValueError as e:
         logger.error(f"❌ Erro de configuração: {e}")
@@ -406,7 +563,16 @@ Exemplos:
     # 2. Executa modo apropriado
     results: List[BatchResult] = []
 
-    if args.batch_folder:
+    if args.reprocess_timeouts:
+        # Modo: Reprocessar apenas timeouts
+        logger.info("🔄 Reprocessando lotes que deram timeout...")
+        results = reprocess_timeout_batches(
+            settings.DIR_TEMP,
+            apply_correlation,
+            timeout_seconds=args.timeout * 2  # Dobra o timeout para segunda tentativa
+        )
+
+    elif args.batch_folder:
         # Modo: Processar pasta específica
         logger.info(f"🔄 Processando lote: {args.batch_folder}")
         result = process_single_batch(
@@ -421,7 +587,8 @@ Exemplos:
         logger.info("🔄 Reprocessando lotes existentes...")
         results = reprocess_existing_batches(
             settings.DIR_TEMP,
-            apply_correlation
+            apply_correlation,
+            timeout_seconds=args.timeout
         )
 
     else:
@@ -442,15 +609,30 @@ Exemplos:
         total_docs = sum(r.total_documents for r in results)
         total_erros = sum(r.total_errors for r in results)
         valor_total = sum(r.get_valor_compra() for r in results)
+        
+        # Contagem de status
+        ok_count = sum(1 for r in results if r.status == "OK")
+        timeout_count = sum(1 for r in results if r.status == "TIMEOUT")
+        error_count = sum(1 for r in results if r.status == "ERROR")
 
         logger.info("\n" + "=" * 60)
         logger.info("📊 RESUMO FINAL")
         logger.info("=" * 60)
         logger.info(f"   Lotes processados: {len(results)}")
+        logger.info(f"      ✅ OK: {ok_count}")
+        if timeout_count > 0:
+            logger.info(f"      ⏱️ TIMEOUT: {timeout_count}")
+        if error_count > 0:
+            logger.info(f"      ❌ ERRO: {error_count}")
         logger.info(f"   Total de documentos: {total_docs}")
         logger.info(f"   Total de erros: {total_erros}")
         logger.info(f"   Valor total: R$ {valor_total:,.2f}")
         logger.info("=" * 60)
+        
+        # Aviso se teve timeouts
+        if timeout_count > 0:
+            logger.warning(f"\n⚠️  {timeout_count} lote(s) deram timeout!")
+            logger.warning("   Execute 'python run_ingestion.py --reprocess-timeouts' para tentar novamente")
     else:
         logger.warning("⚠️ Nenhum resultado para exportar.")
 
