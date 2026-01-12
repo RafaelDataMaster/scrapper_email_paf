@@ -176,7 +176,7 @@ class ImapIngestor(EmailIngestorStrategy):
 
         return {"name": sender_name, "address": sender_address}
 
-    def fetch_attachments(self, subject_filter: str = "Nota Fiscal") -> List[Dict[str, Any]]:
+    def fetch_attachments(self, subject_filter: str = "") -> List[Dict[str, Any]]:
         """
         Busca e-mails pelo assunto e extrai anexos PDF e XML.
 
@@ -185,6 +185,7 @@ class ImapIngestor(EmailIngestorStrategy):
 
         Args:
             subject_filter (str): Texto para filtrar o assunto dos e-mails.
+                                  Se vazio ou "*", busca TODOS os e-mails.
 
         Returns:
             List[Dict[str, Any]]: Lista de dicionários contendo:
@@ -201,8 +202,11 @@ class ImapIngestor(EmailIngestorStrategy):
         if not self.connection:
             self.connect()
 
-        # Busca no servidor (Filtering Server-side é limitado no IMAP)
-        status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
+        # Busca no servidor - se filtro vazio ou "*", busca TODOS
+        if not subject_filter or subject_filter == "*":
+            status, messages = self.connection.search(None, 'ALL')
+        else:
+            status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
 
         results = []
         if not messages or messages[0] == b'':
@@ -312,8 +316,8 @@ class ImapIngestor(EmailIngestorStrategy):
 
     def fetch_emails_without_attachments(
         self,
-        subject_filter: str = "Nota Fiscal",
-        limit: int = 100
+        subject_filter: str = "",
+        limit: int = 0
     ) -> List[Dict[str, Any]]:
         """
         Busca e-mails SEM anexos PDF/XML válidos.
@@ -323,7 +327,8 @@ class ImapIngestor(EmailIngestorStrategy):
 
         Args:
             subject_filter (str): Texto para filtrar o assunto dos e-mails.
-            limit (int): Máximo de e-mails a retornar.
+                                  Se vazio ou "*", busca TODOS os e-mails.
+            limit (int): Máximo de e-mails a retornar (0 = sem limite).
 
         Returns:
             List[Dict[str, Any]]: Lista de dicionários (um por e-mail) contendo:
@@ -338,8 +343,11 @@ class ImapIngestor(EmailIngestorStrategy):
         if not self.connection:
             self.connect()
 
-        # Busca no servidor
-        status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
+        # Busca no servidor - se filtro vazio ou "*", busca TODOS
+        if not subject_filter or subject_filter == "*":
+            status, messages = self.connection.search(None, 'ALL')
+        else:
+            status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
 
         results = []
         count = 0
@@ -348,7 +356,7 @@ class ImapIngestor(EmailIngestorStrategy):
             return results
 
         for num in messages[0].split():
-            if count >= limit:
+            if limit > 0 and count >= limit:
                 break
 
             try:

@@ -10,6 +10,8 @@ REFATORADO para usar a nova estrutura de lotes (Batch Processing):
 - Correlação entre documentos do mesmo lote (DANFE + Boleto)
 - Enriquecimento de dados via contexto do e-mail
 - Limpeza automática de lotes antigos (opcional)
+- Ingestão unificada de e-mails COM e SEM anexos
+- Checkpointing para resume após interrupções
 
 Princípios SOLID aplicados:
 - SRP: Responsabilidades separadas em serviços específicos
@@ -17,8 +19,17 @@ Princípios SOLID aplicados:
 - DIP: Injeção de dependências via factory
 
 Usage:
-    # Modo padrão (ingestão de e-mails)
+    # Modo padrão (ingestão unificada COM e SEM anexos)
     python run_ingestion.py
+
+    # Ingestão apenas de e-mails COM anexos (modo legado)
+    python run_ingestion.py --only-attachments
+
+    # Ingestão apenas de e-mails SEM anexos (links/códigos)
+    python run_ingestion.py --only-links
+
+    # Forçar nova ingestão (ignorar checkpoint)
+    python run_ingestion.py --fresh
 
     # Reprocessar lotes existentes
     python run_ingestion.py --reprocess
@@ -31,13 +42,16 @@ Usage:
 
     # Filtro customizado + correlação desabilitada
     python run_ingestion.py --subject "Nota Fiscal" --no-correlation
+
+    # Ver status do checkpoint atual
+    python run_ingestion.py --status
 """
 
 import argparse
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from config import settings
 from core.batch_processor import BatchProcessor, process_email_batch
@@ -46,8 +60,19 @@ from core.correlation_service import CorrelationService
 from core.exporters import CsvExporter, FileSystemManager
 from core.interfaces import EmailIngestorStrategy
 from core.metadata import EmailMetadata
+from core.models import EmailAvisoData
 from ingestors.imap import ImapIngestor
+from services.email_ingestion_orchestrator import (
+    EmailIngestionOrchestrator,
+    IngestionResult,
+    IngestionStatus,
+    create_orchestrator_from_config,
+)
 from services.ingestion_service import IngestionService
+
+# Flag global para sinalizar interrupção
+_interrupted = False
+_current_orchestrator: Optional[EmailIngestionOrchestrator] = None
 
 # Configurar logging estruturado
 logging.basicConfig(
@@ -198,6 +223,194 @@ def export_batch_results(
             logger.info(f"✅ {pares_gerados} lotes -> {output_lotes.name} (AUDITORIA)")
 
 
+def export_avisos_to_csv(
+    avisos: List[EmailAvisoData],
+    output_dir: Path
+) -> None:
+    """
+    Exporta avisos de e-mails sem anexo para CSV.
+
+    Gera dois arquivos:
+    - avisos_emails_sem_anexo_latest.csv: Formato completo para integração Google Sheets
+    - relatorio_avisos_links.csv: Formato resumido para leitura rápida
+
+    Args:
+        avisos: Lista de EmailAvisoData
+        output_dir: Diretório de saída
+    """
+    import pandas as pd
+
+    if not avisos:
+        return
+
+    # Formato completo usando to_dict() - compatível com export_to_sheets.py
+    avisos_dicts_full = [aviso.to_dict() for aviso in avisos]
+
+    # CSV principal para integração com Google Sheets
+    output_path_sheets = output_dir / "avisos_emails_sem_anexo_latest.csv"
+    df_full = pd.DataFrame(avisos_dicts_full)
+    df_full.to_csv(output_path_sheets, index=False, sep=';', encoding='utf-8-sig')
+    logger.info(f"✅ {len(avisos)} aviso(s) -> {output_path_sheets.name} (Google Sheets)")
+
+    # Formato resumido para leitura humana rápida
+    avisos_dicts_simple = []
+    for aviso in avisos:
+        avisos_dicts_simple.append({
+            'email_id': aviso.email_id,
+            'subject': aviso.subject,
+            'sender_name': aviso.sender_name,
+            'sender_address': aviso.sender_address,
+            'received_date': aviso.received_date,
+            'link_nfe': aviso.link_nfe,
+            'codigo_verificacao': aviso.codigo_verificacao,
+            'empresa': aviso.empresa,
+            'status': 'PENDENTE_DOWNLOAD',
+        })
+
+    output_path_simple = output_dir / "relatorio_avisos_links.csv"
+    df_simple = pd.DataFrame(avisos_dicts_simple)
+    df_simple.to_csv(output_path_simple, index=False, sep=';', encoding='utf-8-sig')
+    logger.info(f"✅ {len(avisos)} aviso(s) -> {output_path_simple.name} (relatório)")
+
+
+def ingest_unified(
+    subject_filter: str = "*",
+    apply_correlation: bool = True,
+    process_with_attachments: bool = True,
+    process_without_attachments: bool = True,
+    resume: bool = True,
+    timeout_seconds: int = 300,
+    max_emails: Optional[int] = None,
+    links_first: bool = False,
+) -> Tuple[IngestionResult, Optional[EmailIngestionOrchestrator]]:
+    """
+    Executa ingestão UNIFICADA de e-mails COM e SEM anexos.
+
+    Esta é a nova função principal que usa o EmailIngestionOrchestrator
+    para processar ambos os tipos de e-mail em uma única execução.
+
+    Features:
+    - Checkpointing automático para resume após interrupções
+    - Tratamento graceful de Ctrl+C
+    - Filtro inteligente para evitar falsos positivos
+    - Processamento com timeout por lote
+
+    Args:
+        subject_filter: Filtro de assunto para busca
+        apply_correlation: Se True, aplica correlação entre documentos
+        process_with_attachments: Processar e-mails COM anexos
+        process_without_attachments: Processar e-mails SEM anexos
+        resume: Se True, resume de checkpoint existente
+        timeout_seconds: Timeout por lote em segundos
+        max_emails: Limite máximo de e-mails a processar (None = sem limite)
+        links_first: Se True, processa e-mails SEM anexo ANTES dos COM anexo
+
+    Returns:
+        Tupla (IngestionResult, orchestrator) - orchestrator para acesso a dados parciais
+    """
+    global _current_orchestrator
+
+    try:
+        orchestrator = create_orchestrator_from_config(
+            temp_dir=settings.DIR_TEMP,
+            batch_timeout_seconds=timeout_seconds,
+        )
+
+        _current_orchestrator = orchestrator
+
+        # Define callback de progresso
+        def progress_callback(phase: str, current: int, total: int):
+            percent = (current / total * 100) if total > 0 else 0
+            logger.info(f"   {phase}: {current}/{total} ({percent:.0f}%)")
+
+        orchestrator.set_progress_callback(progress_callback)
+
+        # Executa ingestão
+        result = orchestrator.run(
+            subject_filter=subject_filter,
+            process_with_attachments=process_with_attachments,
+            process_without_attachments=process_without_attachments,
+            apply_filter=True,
+            apply_correlation=apply_correlation,
+            resume=resume,
+            limit_emails=max_emails,
+            links_first=links_first,
+        )
+
+        return result, orchestrator
+
+    except ValueError as e:
+        logger.error(f"❌ Erro de configuração: {e}")
+        return IngestionResult(status=IngestionStatus.FAILED), None
+
+    except KeyboardInterrupt:
+        logger.warning("\n⚠️ Ingestão interrompida pelo usuário")
+        # Retorna orchestrator para permitir exportação de dados parciais
+        return IngestionResult(status=IngestionStatus.INTERRUPTED), _current_orchestrator
+
+
+def show_ingestion_status() -> None:
+    """Exibe status atual do checkpoint de ingestão."""
+    try:
+        orchestrator = create_orchestrator_from_config()
+        status = orchestrator.get_status()
+
+        logger.info("\n" + "=" * 60)
+        logger.info("📊 STATUS DA INGESTÃO")
+        logger.info("=" * 60)
+        logger.info(f"   Status: {status['status']}")
+        logger.info(f"   Iniciado em: {status['started_at'] or 'N/A'}")
+        logger.info(f"   Última atualização: {status['last_updated'] or 'N/A'}")
+        logger.info(f"   E-mails processados: {status['total_processed']}")
+        logger.info(f"   Lotes criados: {status['batches_created']}")
+        logger.info(f"   Avisos criados: {status['avisos_created']}")
+        logger.info(f"   Erros: {status['total_errors']}")
+        logger.info("=" * 60)
+        logger.info("📦 DADOS PARCIAIS SALVOS:")
+        logger.info(f"   Lotes salvos: {status.get('partial_batches_saved', 0)}")
+        logger.info(f"   Avisos salvos: {status.get('partial_avisos_saved', 0)}")
+        logger.info(f"   Trabalho pendente: {'Sim' if status['has_pending_work'] else 'Não'}")
+        logger.info("=" * 60)
+
+        if status['has_pending_work']:
+            logger.info("\n💡 Execute 'python run_ingestion.py' para continuar de onde parou")
+            logger.info("   ou 'python run_ingestion.py --fresh' para iniciar do zero")
+
+        if status.get('partial_batches_saved', 0) > 0 or status.get('partial_avisos_saved', 0) > 0:
+            logger.info("\n📁 Para exportar dados parciais:")
+            logger.info("   python run_ingestion.py --export-partial")
+
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter status: {e}")
+
+
+def export_partial_data() -> None:
+    """Exporta dados parciais salvos de execuções anteriores."""
+    try:
+        orchestrator = create_orchestrator_from_config()
+        batches, avisos = orchestrator.get_partial_results_count()
+
+        if batches == 0 and avisos == 0:
+            logger.info("ℹ️ Não há dados parciais para exportar.")
+            return
+
+        logger.info(f"📦 Exportando {batches} lotes e {avisos} avisos parciais...")
+        exported_batches, exported_avisos = orchestrator.export_partial_results_to_csv(
+            settings.DIR_SAIDA
+        )
+
+        logger.info("\n" + "=" * 60)
+        logger.info("✅ EXPORTAÇÃO DE DADOS PARCIAIS CONCLUÍDA")
+        logger.info("=" * 60)
+        logger.info(f"   Lotes exportados: {exported_batches}")
+        logger.info(f"   Avisos exportados: {exported_avisos}")
+        logger.info(f"   Diretório: {settings.DIR_SAIDA}")
+        logger.info("=" * 60)
+
+    except Exception as e:
+        logger.error(f"❌ Erro ao exportar dados parciais: {e}")
+
+
 def ingest_and_process(
     ingestor: Optional[EmailIngestorStrategy] = None,
     subject_filter: str = "ENC",
@@ -319,7 +532,7 @@ def reprocess_existing_batches(
     ok_count = sum(1 for r in results if r.status == "OK")
     timeout_count = sum(1 for r in results if r.status == "TIMEOUT")
     error_count = sum(1 for r in results if r.status == "ERROR")
-    
+
     logger.info(f"📦 {len(results)} lote(s) reprocessado(s): {ok_count} OK, {timeout_count} TIMEOUT, {error_count} ERRO")
 
     return results
@@ -345,7 +558,7 @@ def reprocess_timeout_batches(
         Lista de BatchResult com documentos reprocessados
     """
     import json
-    
+
     root_folder = root_folder or settings.DIR_TEMP
     timeout_log_path = root_folder / "_timeouts.json"
 
@@ -373,19 +586,20 @@ def reprocess_timeout_batches(
 
     for idx, batch_id in enumerate(batch_ids, 1):
         batch_folder = root_folder / batch_id
-        
+
         if not batch_folder.exists():
             logger.warning(f"⚠️ Pasta não encontrada: {batch_folder}")
             continue
-        
+
         logger.info(f"   [{idx}/{len(batch_ids)}] {batch_id}...")
-        
+
         try:
-            from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
             import time
-            
+            from concurrent.futures import ThreadPoolExecutor
+            from concurrent.futures import TimeoutError as FuturesTimeoutError
+
             batch_start = time.time()
-            
+
             with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(batch_processor.process_batch, batch_folder, apply_correlation)
                 result = future.result(timeout=timeout_seconds)
@@ -393,7 +607,7 @@ def reprocess_timeout_batches(
                 result.status = "OK"
                 results.append(result)
                 logger.info(f"   ✅ {batch_id}: OK ({result.processing_time:.1f}s)")
-                
+
         except FuturesTimeoutError:
             logger.error(f"   ⏱️ {batch_id}: TIMEOUT novamente!")
             result = BatchResult(
@@ -404,7 +618,7 @@ def reprocess_timeout_batches(
                 timeout_error=f"TIMEOUT na segunda tentativa ({timeout_seconds}s)"
             )
             results.append(result)
-            
+
         except Exception as e:
             logger.error(f"   ❌ {batch_id}: ERRO - {e}")
             result = BatchResult(
@@ -481,8 +695,23 @@ def main(ingestor: Optional[EmailIngestorStrategy] = None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemplos:
-  # Ingestão padrão
+  # Ingestão unificada de TODOS os e-mails (COM e SEM anexos)
   python run_ingestion.py
+
+  # Filtrar apenas e-mails com "ENC" no assunto
+  python run_ingestion.py --subject "ENC"
+
+  # Apenas e-mails COM anexos (modo legado)
+  python run_ingestion.py --only-attachments
+
+  # Apenas e-mails SEM anexos (links/códigos)
+  python run_ingestion.py --only-links
+
+  # Forçar nova ingestão (ignorar checkpoint)
+  python run_ingestion.py --fresh
+
+  # Ver status do checkpoint
+  python run_ingestion.py --status
 
   # Reprocessar lotes existentes (com timeout de 5 min)
   python run_ingestion.py --reprocess
@@ -523,8 +752,8 @@ Exemplos:
     parser.add_argument(
         '--subject',
         type=str,
-        default='ENC',
-        help='Filtro de assunto para busca (default: ENC)'
+        default='*',
+        help='Filtro de assunto para busca (default: * = TODOS)'
     )
     parser.add_argument(
         '--no-correlation',
@@ -547,10 +776,61 @@ Exemplos:
         default=300,
         help='Timeout por lote em segundos (default: 300 = 5 min)'
     )
+    parser.add_argument(
+        '--only-attachments',
+        action='store_true',
+        help='Processar apenas e-mails COM anexos (modo legado)'
+    )
+    parser.add_argument(
+        '--only-links',
+        action='store_true',
+        help='Processar apenas e-mails SEM anexos (links/códigos)'
+    )
+    parser.add_argument(
+        '--fresh',
+        action='store_true',
+        help='Forçar nova ingestão (ignorar checkpoint existente)'
+    )
+    parser.add_argument(
+        '--status',
+        action='store_true',
+        help='Exibir status do checkpoint de ingestão'
+    )
+    parser.add_argument(
+        '--export-partial',
+        action='store_true',
+        help='Exportar dados parciais de execuções anteriores'
+    )
+    parser.add_argument(
+        '--max-emails',
+        type=int,
+        default=None,
+        help='Limite máximo de e-mails a processar por execução (default: sem limite)'
+    )
+    parser.add_argument(
+        '--links-first',
+        action='store_true',
+        help='Processar e-mails SEM anexo (links/códigos) ANTES dos COM anexo'
+    )
+    parser.add_argument(
+        '--export-metrics',
+        action='store_true',
+        help='Exportar métricas de telemetria para arquivo JSON'
+    )
 
     args = parser.parse_args()
 
     apply_correlation = not args.no_correlation
+
+    # 0. Modo status: apenas exibe status e sai
+    if args.status:
+        show_ingestion_status()
+        return
+
+    # 0.1 Modo export-partial: exporta dados parciais e sai
+    if args.export_partial:
+        export_partial_data()
+        return
 
     # 1. Verificação de configuração
     try:
@@ -562,6 +842,9 @@ Exemplos:
 
     # 2. Executa modo apropriado
     results: List[BatchResult] = []
+    avisos: List[EmailAvisoData] = []
+    ingestion_result: Optional[IngestionResult] = None
+    orchestrator: Optional[EmailIngestionOrchestrator] = None
 
     if args.reprocess_timeouts:
         # Modo: Reprocessar apenas timeouts
@@ -591,25 +874,63 @@ Exemplos:
             timeout_seconds=args.timeout
         )
 
-    else:
-        # Modo: Ingestão padrão
-        logger.info(f"📧 Iniciando ingestão (filtro: '{args.subject}')...")
+    elif args.only_attachments:
+        # Modo: Apenas e-mails COM anexos (legado)
+        filter_msg = "TODOS" if args.subject == "*" else f"'{args.subject}'"
+        logger.info(f"📧 Iniciando ingestão apenas COM anexos (filtro: {filter_msg})...")
         results = ingest_and_process(
             ingestor=ingestor,
             subject_filter=args.subject,
             apply_correlation=apply_correlation
         )
 
+    else:
+        # Modo: Ingestão UNIFICADA (COM e SEM anexos)
+        filter_msg = "TODOS os e-mails" if args.subject == "*" else f"filtro: '{args.subject}'"
+        logger.info(f"📧 Iniciando ingestão UNIFICADA ({filter_msg})...")
+
+        # Determina o que processar
+        process_attachments = not args.only_links
+        process_links = not args.only_attachments
+
+        ingestion_result, orchestrator = ingest_unified(
+            subject_filter=args.subject,
+            apply_correlation=apply_correlation,
+            process_with_attachments=process_attachments,
+            process_without_attachments=process_links,
+            resume=not args.fresh,
+            timeout_seconds=args.timeout,
+            max_emails=args.max_emails,
+            links_first=args.links_first,
+        )
+
+        # Extrai resultados
+        results = ingestion_result.batch_results
+        avisos = ingestion_result.avisos
+
+        # Log do resumo da ingestão unificada
+        logger.info(f"\n📊 {ingestion_result.summary()}")
+
+        # Se foi interrompido, exporta dados parciais automaticamente
+        if ingestion_result.status == IngestionStatus.INTERRUPTED and orchestrator:
+            logger.info("\n💾 Exportando dados parciais salvos...")
+            orchestrator.export_partial_results_to_csv(settings.DIR_SAIDA)
+
     # 3. Exportação de resultados
-    if results:
+    if results or avisos:
         logger.info("\n📊 Exportando resultados...")
-        export_batch_results(results, settings.DIR_SAIDA)
+
+        if results:
+            export_batch_results(results, settings.DIR_SAIDA)
+
+        if avisos:
+            export_avisos_to_csv(avisos, settings.DIR_SAIDA)
 
         # Resumo final
         total_docs = sum(r.total_documents for r in results)
         total_erros = sum(r.total_errors for r in results)
         valor_total = sum(r.get_valor_compra() for r in results)
-        
+
         # Contagem de status
         ok_count = sum(1 for r in results if r.status == "OK")
         timeout_count = sum(1 for r in results if r.status == "TIMEOUT")
@@ -628,15 +949,44 @@ Exemplos:
         logger.info(f"   Total de erros: {total_erros}")
         logger.info(f"   Valor total: R$ {valor_total:,.2f}")
         logger.info("=" * 60)
-        
+
+        # Exibe avisos de links/códigos se houver
+        if avisos:
+            logger.info(f"\n📋 AVISOS (e-mails sem anexo com links/códigos):")
+            logger.info(f"   Total de avisos: {len(avisos)}")
+            for aviso in avisos[:5]:  # Mostra apenas os 5 primeiros
+                logger.info(f"      • {aviso.subject[:50]}... -> {aviso.link_nfe or aviso.codigo_verificacao}")
+            if len(avisos) > 5:
+                logger.info(f"      ... e mais {len(avisos) - 5} aviso(s)")
+
         # Aviso se teve timeouts
         if timeout_count > 0:
             logger.warning(f"\n⚠️  {timeout_count} lote(s) deram timeout!")
             logger.warning("   Execute 'python run_ingestion.py --reprocess-timeouts' para tentar novamente")
+
+        # Aviso sobre checkpoint se foi interrompido
+        if ingestion_result and ingestion_result.status == IngestionStatus.INTERRUPTED:
+            logger.warning("\n⚠️ Ingestão foi interrompida!")
+            logger.warning("   ✅ Dados parciais foram salvos automaticamente")
+            logger.warning("   Execute 'python run_ingestion.py' para continuar de onde parou")
+            logger.warning("   ou 'python run_ingestion.py --fresh' para iniciar do zero")
+            logger.warning("   Para exportar apenas os parciais: 'python run_ingestion.py --export-partial'")
+
     else:
         logger.warning("⚠️ Nenhum resultado para exportar.")
 
-    # 4. Limpeza opcional
+    # 4. Exportação de métricas (opcional)
+    if args.export_metrics and orchestrator:
+        logger.info("\n📊 Exportando métricas de telemetria...")
+        metrics_path = orchestrator.export_metrics(settings.DIR_SAIDA)
+        if metrics_path:
+            logger.info(f"   Métricas salvas em: {metrics_path}")
+
+    # Sempre mostra resumo de métricas se houver orchestrator
+    if orchestrator:
+        orchestrator.log_metrics_summary()
+
+    # 5. Limpeza opcional
     if args.cleanup:
         logger.info("\n🧹 Limpando lotes antigos...")
         ingestion_service = IngestionService(

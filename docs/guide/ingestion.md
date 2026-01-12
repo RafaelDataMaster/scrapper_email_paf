@@ -70,13 +70,20 @@ Este comando:
 
 ### Flags Disponíveis (CLI)
 
-| Flag               | Descrição                                            | Exemplo                                                       |
-| :----------------- | :--------------------------------------------------- | :------------------------------------------------------------ |
-| `--reprocess`      | Reprocessa lotes existentes sem baixar novos e-mails | `python run_ingestion.py --reprocess`                         |
-| `--batch-folder`   | Processa uma pasta de lote específica                | `python run_ingestion.py --batch-folder temp_email/email_123` |
-| `--subject`        | Filtro de assunto customizado                        | `python run_ingestion.py --subject "NF-e"`                    |
-| `--no-correlation` | Desabilita correlação entre documentos               | `python run_ingestion.py --no-correlation`                    |
-| `--cleanup`        | Remove lotes antigos após processamento              | `python run_ingestion.py --cleanup`                           |
+| Flag                 | Descrição                                            | Exemplo                                                       |
+| :------------------- | :--------------------------------------------------- | :------------------------------------------------------------ |
+| `--reprocess`        | Reprocessa lotes existentes sem baixar novos e-mails | `python run_ingestion.py --reprocess`                         |
+| `--batch-folder`     | Processa uma pasta de lote específica                | `python run_ingestion.py --batch-folder temp_email/email_123` |
+| `--subject`          | Filtro de assunto customizado                        | `python run_ingestion.py --subject "NF-e"`                    |
+| `--no-correlation`   | Desabilita correlação entre documentos               | `python run_ingestion.py --no-correlation`                    |
+| `--cleanup`          | Remove lotes antigos após processamento              | `python run_ingestion.py --cleanup`                           |
+| `--only-attachments` | Processa apenas e-mails COM anexos                   | `python run_ingestion.py --only-attachments`                  |
+| `--only-links`       | Processa apenas e-mails SEM anexos (links)           | `python run_ingestion.py --only-links`                        |
+| `--links-first`      | Processa e-mails SEM anexo antes dos COM anexo       | `python run_ingestion.py --links-first`                       |
+| `--fresh`            | Ignora checkpoint e reprocessa tudo                  | `python run_ingestion.py --fresh`                             |
+| `--status`           | Mostra status do checkpoint atual                    | `python run_ingestion.py --status`                            |
+| `--export-partial`   | Exporta dados parciais para CSV                      | `python run_ingestion.py --export-partial`                    |
+| `--max-emails`       | Limita quantidade de e-mails processados             | `python run_ingestion.py --max-emails 100`                    |
 
 ### Exemplos de Uso
 
@@ -98,6 +105,24 @@ python run_ingestion.py --no-correlation
 
 # Ingestão com limpeza automática de lotes antigos
 python run_ingestion.py --cleanup
+
+# Processar apenas e-mails SEM anexo (links de NF-e)
+python run_ingestion.py --only-links
+
+# Processar e-mails SEM anexo primeiro, depois COM anexo
+python run_ingestion.py --links-first
+
+# Ignorar checkpoint e reprocessar tudo do zero
+python run_ingestion.py --fresh
+
+# Ver status do processamento atual
+python run_ingestion.py --status
+
+# Exportar dados parciais salvos para CSV
+python run_ingestion.py --export-partial
+
+# Limitar a 50 e-mails por execução
+python run_ingestion.py --max-emails 50
 ```
 
 ## Estrutura de um Lote
@@ -267,9 +292,36 @@ Se boletos não estão sendo vinculados às notas:
 find temp_email -type d -mtime +7 -exec rm -rf {} +
 ```
 
+## Integração com Google Sheets
+
+Após a ingestão, exporte os dados para o Google Sheets:
+
+```bash
+# Exportar para Google Sheets (usa relatorio_lotes.csv por padrão)
+python scripts/export_to_sheets.py
+
+# Testar sem enviar dados (dry-run)
+python scripts/export_to_sheets.py --dry-run
+
+# Usar modo detalhado (relatorio_consolidado.csv)
+python scripts/export_to_sheets.py --use-consolidado
+```
+
+### CSVs Gerados pela Ingestão
+
+| Arquivo                              | Descrição                              | Uso                        |
+| :----------------------------------- | :------------------------------------- | :------------------------- |
+| `relatorio_lotes.csv`                | 1 linha por e-mail/lote                | **Padrão** para Sheets     |
+| `relatorio_consolidado.csv`          | 1 linha por documento extraído         | Modo detalhado             |
+| `avisos_emails_sem_anexo_latest.csv` | E-mails sem anexo (links)              | Aba `sem_anexos` no Sheets |
+| `relatorio_avisos_links.csv`         | Relatório simples de e-mails sem anexo | Leitura rápida             |
+
+Veja o [Guia de Exportação para Google Sheets](google_sheets_export.md) para configuração completa.
+
 ## Próximos Passos
 
 - [Guia de Uso](usage.md) - Processar PDFs locais
 - [Quick Start Boletos](quickstart_boletos.md) - Extrair boletos rapidamente
+- [Exportação Google Sheets](google_sheets_export.md) - Enviar dados para planilha
 - [Migração Batch](../MIGRATION_BATCH_PROCESSING.md) - Migrar do v0.1.x para v0.2.x
 - [API Reference](../api/overview.md) - Documentação técnica

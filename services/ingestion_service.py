@@ -28,10 +28,16 @@ from email.header import decode_header
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from core.empresa_matcher_email import find_empresa_in_email
+from core.filters import (
+    EmailFilter,
+    FilterResult,
+    get_default_filter,
+    should_process_email,
+)
 from core.interfaces import EmailIngestorStrategy
 from core.metadata import EmailMetadata
 from core.models import EmailAvisoData
-from core.empresa_matcher_email import find_empresa_in_email
 
 
 class IngestionService:
@@ -75,6 +81,7 @@ class IngestionService:
         ingestor: EmailIngestorStrategy,
         temp_dir: Union[str, Path],
         ignored_extensions: Optional[set] = None,
+        email_filter: Optional[EmailFilter] = None,
     ):
         """
         Inicializa o serviço de ingestão.
@@ -83,10 +90,12 @@ class IngestionService:
             ingestor: Estratégia de ingestão de e-mail (IMAP, Graph API, etc.)
             temp_dir: Diretório raiz para criar pastas de lote
             ignored_extensions: Extensões de arquivo a ignorar (opcional)
+            email_filter: Filtro de e-mails customizado (opcional)
         """
         self.ingestor = ingestor
         self.temp_dir = Path(temp_dir)
         self.ignored_extensions = ignored_extensions or self.DEFAULT_IGNORED_EXTENSIONS
+        self.email_filter = email_filter or get_default_filter()
 
     def ingest_emails(
         self,
@@ -371,8 +380,9 @@ class IngestionService:
 
     def ingest_emails_without_attachments(
         self,
-        subject_filter: str = "Nota Fiscal",
-        limit: int = 100,
+        subject_filter: str = "*",
+        limit: int = 0,
+        apply_filter: bool = True,
     ) -> List[EmailAvisoData]:
         """
         Ingere e-mails SEM anexos PDF/XML e cria registros de aviso.
@@ -380,9 +390,14 @@ class IngestionService:
         Para cada e-mail sem anexo que contenha link de NF-e ou código
         de verificação, cria um EmailAvisoData com os dados extraídos.
 
+        IMPORTANTE: Usa o módulo de filtros (core/filters.py) para decidir
+        se cada e-mail deve ser processado, evitando falsos positivos como
+        e-mails com código de verificação no rodapé mas assunto de SPAM.
+
         Args:
-            subject_filter: Filtro de assunto para busca
-            limit: Máximo de e-mails a processar
+            subject_filter: Filtro de assunto para busca IMAP ("*" = todos)
+            limit: Máximo de e-mails a processar (0 = sem limite)
+            apply_filter: Se True, aplica regras de filtragem inteligente
 
         Returns:
             Lista de EmailAvisoData com links/códigos extraídos
@@ -406,8 +421,19 @@ class IngestionService:
             return []
 
         avisos: List[EmailAvisoData] = []
+        skipped_count = 0
 
         for email_data in raw_emails:
+            # ================================================================
+            # FILTRO INTELIGENTE: Decide se o e-mail deve ser processado
+            # ================================================================
+            if apply_filter:
+                filter_metadata = self._build_filter_metadata(email_data)
+                filter_result = self.email_filter.should_process_email(filter_metadata)
+
+                if not filter_result.should_process:
+                    skipped_count += 1
+                    continue
             # Cria metadata temporário para extração
             metadata = EmailMetadata.create_for_batch(
                 batch_id=email_data.get('email_id', 'unknown'),
@@ -444,7 +470,163 @@ class IngestionService:
 
             avisos.append(aviso)
 
+        if skipped_count > 0:
+            import logging
+            logging.getLogger(__name__).info(
+                f"Filtro ignorou {skipped_count} e-mails sem conteúdo fiscal relevante"
+            )
+
         return avisos
+
+    def _build_filter_metadata(self, email_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Constrói metadados para o filtro de e-mail.
+
+        Extrai indicadores do corpo do e-mail para alimentar o filtro
+        de decisão inteligente.
+
+        Args:
+            email_data: Dados brutos do e-mail
+
+        Returns:
+            Dicionário formatado para EmailFilter.should_process_email()
+        """
+        body_text = email_data.get('body_text', '') or ''
+        subject = email_data.get('subject', '') or ''
+
+        # Detecta links de NF-e no corpo
+        has_links_nfe = self._detect_nfe_links(body_text)
+
+        # Detecta códigos de verificação no corpo
+        has_verification_code = self._detect_verification_codes(body_text)
+
+        # Verifica se há anexos válidos (PDF/XML)
+        attachments = email_data.get('attachments', [])
+        has_attachment = any(
+            att.get('filename', '').lower().endswith(('.pdf', '.xml'))
+            for att in attachments
+        ) if attachments else False
+
+        return {
+            'subject': subject,
+            'has_attachment': has_attachment,
+            'has_links_nfe': has_links_nfe,
+            'has_verification_code': has_verification_code,
+            'sender_address': email_data.get('sender_address', ''),
+            'attachments': [att.get('filename', '') for att in attachments] if attachments else [],
+        }
+
+    def _detect_nfe_links(self, body_text: str) -> bool:
+        """
+        Detecta links de NF-e no corpo do e-mail.
+
+        Procura por URLs que contenham padrões típicos de portais
+        de nota fiscal eletrônica.
+
+        Args:
+            body_text: Corpo do e-mail em texto
+
+        Returns:
+            True se encontrar links de NF-e
+        """
+        if not body_text:
+            return False
+
+        # Padrões de URLs de NF-e (simplificados para performance)
+        nfe_url_patterns = [
+            # === PORTAIS DE NF-e DIRETOS ===
+            r'https?://[^\s]*nf[es]?\.',           # nfe., nfs., nfse.
+            r'https?://[^\s]*nota[^\s]*fiscal',    # notafiscal, nota-fiscal
+            r'https?://[^\s]*danfe',               # danfe
+            r'https?://[^\s]*sefaz',               # sefaz (estadual)
+
+            # === PREFEITURAS E PORTAIS MUNICIPAIS ===
+            r'https?://[^\s]*prefeitura',          # qualquer link de prefeitura
+            r'https?://[^\s]*\.gov\.br',           # qualquer .gov.br
+            r'https?://[^\s]*pmf\.',               # pmf. (prefeitura municipal)
+            r'https?://[^\s]*issqn',               # ISSQN (imposto municipal)
+            r'https?://[^\s]*iss[.\-]',            # iss. ou iss- (imposto sobre serviços)
+            r'https?://[^\s]*nfse',                # nfse (nota fiscal de serviço)
+            r'https?://[^\s]*ginfes',              # GINFES (sistema de NFS-e)
+            r'https?://[^\s]*abrasf',              # ABRASF (padrão nacional)
+            r'https?://[^\s]*webiss',              # WebISS (sistema comum)
+            r'https?://[^\s]*tributosmunicipais',  # tributos municipais
+            r'https?://[^\s]*tributos\.',          # tributos.cidade.gov.br
+
+            # === REDIRECIONADORES DE SISTEMAS ERP/CRM ===
+            # Esses sistemas enviam e-mails com links de tracking que redirecionam para NF
+            r'https?://[^\s]*\.omie\.com',         # Omie ERP
+            r'https?://[^\s]*\.bling\.com',        # Bling ERP
+            r'https?://[^\s]*\.tiny\.com',         # Tiny ERP
+            r'https?://[^\s]*\.conta\.azul',       # ContaAzul
+            r'https?://[^\s]*\.nibo\.com',         # Nibo
+            r'https?://[^\s]*\.enotas\.com',       # eNotas
+            r'https?://[^\s]*\.nfe\.io',           # NFe.io
+            r'https?://[^\s]*\.focusnfe\.com',     # Focus NFe
+            r'https?://[^\s]*\.webmaniabr\.com',   # WebmaniaBR
+            r'https?://[^\s]*\.plugnotas\.com',    # PlugNotas
+            r'https?://[^\s]*\.tecnospeed\.com',   # TecnoSpeed
+            r'https?://[^\s]*\.senior\.com',       # Senior Sistemas
+            r'https?://[^\s]*\.totvs\.com',        # TOTVS
+            r'https?://[^\s]*\.sankhya\.com',      # Sankhya
+
+            # === REDIRECIONADORES DE EMAIL MARKETING ===
+            # Links de tracking que podem conter NF no destino
+            r'https?://[^\s]*click\.[^\s]+/track', # Padrão genérico de tracking
+            r'https?://[^\s]*\.rdstation\.com',    # RD Station
+            r'https?://[^\s]*\.mailchimp\.com',    # Mailchimp (raro, mas possível)
+            r'https?://[^\s]*sendgrid\.',          # SendGrid
+
+            # === CONSULTAS E DOWNLOADS ===
+            r'https?://[^\s]*/consulta[^\s]*nf',   # consulta de NF
+            r'https?://[^\s]*/download[^\s]*xml',  # download de XML
+            r'https?://[^\s]*/validar',            # validar NF
+            r'https?://[^\s]*/verificar',          # verificar autenticidade
+
+            # === CONCESSIONÁRIAS E UTILITIES ===
+            r'https?://[^\s]*2via',                # segunda via (comum em contas)
+            r'https?://[^\s]*fatura',              # fatura online
+            r'https?://[^\s]*conta[^\s]*digital',  # conta digital
+            r'https?://[^\s]*boleto',              # boleto online
+        ]
+
+        for pattern in nfe_url_patterns:
+            if re.search(pattern, body_text, re.IGNORECASE):
+                return True
+
+        return False
+
+    def _detect_verification_codes(self, body_text: str) -> bool:
+        """
+        Detecta códigos de verificação no corpo do e-mail.
+
+        Procura por padrões típicos de códigos de verificação
+        de notas fiscais (44 dígitos, códigos alfanuméricos, etc.)
+
+        Args:
+            body_text: Corpo do e-mail em texto
+
+        Returns:
+            True se encontrar código de verificação
+        """
+        if not body_text:
+            return False
+
+        # Padrões de códigos de verificação
+        code_patterns = [
+            # Chave NFe: 44 dígitos
+            r'\b\d{44}\b',
+            # Código de verificação alfanumérico (8-12 chars)
+            r'(?:código|codigo|chave)[^\n]{0,30}[:=]\s*([A-Z0-9]{8,12})',
+            # Padrão "Verificação: XXXX-XXXX"
+            r'verifica[çc][aã]o[^\n]{0,20}[:=]\s*[A-Z0-9\-]{6,}',
+        ]
+
+        for pattern in code_patterns:
+            if re.search(pattern, body_text, re.IGNORECASE):
+                return True
+
+        return False
 
     def cleanup_old_batches(self, max_age_hours: int = 48) -> int:
         """

@@ -2,11 +2,69 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from core.metadata import EmailMetadata
+
+
+def _calcular_situacao_vencimento(vencimento_str: Optional[str], valor: Optional[float], numero_nf: Optional[str]) -> tuple[str, str]:
+    """
+    Calcula a situação e avisos baseado em campos obrigatórios e proximidade do vencimento.
+
+    Retorna:
+        tuple: (situacao, avisos)
+        - situacao: 'OK', 'DIVERGENTE', 'CONFERIR', 'VENCIMENTO_PROXIMO', 'VENCIDO'
+        - avisos: string com descrição dos problemas encontrados
+    """
+    avisos_list = []
+    situacao = "OK"
+
+    # Verifica campos obrigatórios faltando
+    campos_faltando = []
+    if not numero_nf or numero_nf.strip() == "":
+        campos_faltando.append("NF")
+    if valor is None or valor == 0.0:
+        campos_faltando.append("VALOR")
+
+    if campos_faltando:
+        situacao = "DIVERGENTE"
+        avisos_list.append(f"[DIVERGENTE] Campos faltando: {', '.join(campos_faltando)}")
+
+    # Verifica vencimento
+    if vencimento_str:
+        try:
+            # Tenta parsear a data de vencimento
+            venc_date = datetime.strptime(vencimento_str, '%Y-%m-%d').date()
+            hoje = date.today()
+
+            # Importa calendário de SP para calcular dias úteis
+            try:
+                from config.feriados_sp import SPBusinessCalendar
+                calendario = SPBusinessCalendar()
+                dias_uteis = calendario.get_working_days_delta(hoje, venc_date)
+            except ImportError:
+                # Fallback: conta dias corridos se calendário não disponível
+                dias_uteis = (venc_date - hoje).days
+
+            if venc_date < hoje:
+                situacao = "VENCIDO" if situacao == "OK" else situacao
+                avisos_list.append(f"[VENCIDO] Vencimento em {venc_date.strftime('%d/%m/%Y')}")
+            elif dias_uteis <= 4:
+                # Menos de 4 dias úteis - conformidade POP 4.10
+                if situacao == "OK":
+                    situacao = "VENCIMENTO_PROXIMO"
+                avisos_list.append(f"[URGENTE] Apenas {dias_uteis} dias úteis até vencimento")
+        except (ValueError, TypeError):
+            pass  # Data inválida, ignora
+    else:
+        # Sem vencimento definido
+        if situacao == "OK":
+            situacao = "CONFERIR"
+        avisos_list.append("[CONFERIR] Vencimento não informado")
+
+    return situacao, " | ".join(avisos_list) if avisos_list else ""
 
 
 @dataclass
@@ -73,6 +131,48 @@ class DocumentData(ABC):
             list: Lista com 18 elementos para inserção direta no Google Sheets
         """
         pass
+
+    def to_anexos_row(self) -> list:
+        """
+        Converte documento para linha da aba 'anexos' do Google Sheets.
+
+        Colunas na ordem:
+        1. DATA (data_processamento)
+        2. ASSUNTO (source_email_subject)
+        3. N_PEDIDO (vazio por enquanto)
+        4. EMPRESA (empresa)
+        5. VENCIMENTO (vencimento)
+        6. FORNECEDOR (fornecedor_nome)
+        7. NF (numero_nota ou numero_documento)
+        8. VALOR (valor_total ou valor_documento)
+        9. SITUACAO (status calculado)
+        10. AVISOS (concatenação de status + divergência + observações)
+
+        Returns:
+            list: Lista com 10 elementos para aba 'anexos'
+        """
+        # Implementação padrão - subclasses devem sobrescrever
+        return []
+
+    def to_sem_anexos_row(self) -> list:
+        """
+        Converte documento para linha da aba 'sem_anexos' do Google Sheets.
+
+        Colunas na ordem:
+        1. DATA (data_processamento)
+        2. ASSUNTO (source_email_subject ou email_subject_full)
+        3. N_PEDIDO (vazio por enquanto)
+        4. EMPRESA (empresa)
+        5. FORNECEDOR (fornecedor_nome)
+        6. NF (numero_nota)
+        7. LINK (link_nfe)
+        8. CÓDIGO (codigo_verificacao)
+
+        Returns:
+            list: Lista com 8 elementos para aba 'sem_anexos'
+        """
+        # Implementação padrão - subclasses devem sobrescrever
+        return []
 
 @dataclass
 class InvoiceData(DocumentData):
@@ -287,6 +387,69 @@ class InvoiceData(DocumentData):
             fmt_str(self.obs_interna),            # 18. OBS INTERNA
         ]
 
+    def to_anexos_row(self) -> list:
+        """
+        Converte InvoiceData para linha da aba 'anexos'.
+
+        Mapeamento:
+        - DATA: data_processamento
+        - ASSUNTO: source_email_subject
+        - N_PEDIDO: "" (vazio)
+        - EMPRESA: empresa
+        - VENCIMENTO: vencimento
+        - FORNECEDOR: fornecedor_nome
+        - NF: numero_nota
+        - VALOR: valor_total
+        - SITUACAO: status calculado
+        - AVISOS: concatenação de status + divergência + observações
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+
+        def fmt_str(value: Optional[str]) -> str:
+            return value if value is not None else ""
+
+        def fmt_num(value: Optional[float]) -> float:
+            return value if value is not None else 0.0
+
+        # Calcula situação e avisos
+        situacao_calc, avisos_calc = _calcular_situacao_vencimento(
+            self.vencimento, self.valor_total, self.numero_nota
+        )
+
+        # Usa status_conciliacao existente se disponível, senão usa calculado
+        situacao_final = self.status_conciliacao if self.status_conciliacao else situacao_calc
+
+        # Monta avisos concatenados
+        avisos_parts = []
+        if situacao_final:
+            avisos_parts.append(f"[{situacao_final}]")
+        if avisos_calc and situacao_final != situacao_calc:
+            avisos_parts.append(avisos_calc)
+        if self.observacoes:
+            avisos_parts.append(self.observacoes)
+
+        avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
+
+        return [
+            fmt_date(self.data_processamento),   # 1. DATA
+            fmt_str(self.source_email_subject),  # 2. ASSUNTO
+            "",                                   # 3. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 4. EMPRESA
+            fmt_date(self.vencimento),           # 5. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
+            fmt_str(self.numero_nota),           # 7. NF
+            fmt_num(self.valor_total),           # 8. VALOR
+            fmt_str(situacao_final),             # 9. SITUACAO
+            fmt_str(avisos_final),               # 10. AVISOS
+        ]
+
 
 @dataclass
 class DanfeData(DocumentData):
@@ -391,6 +554,55 @@ class DanfeData(DocumentData):
             fmt_str(self.obs_interna),           # 18. OBS INTERNA
         ]
 
+    def to_anexos_row(self) -> list:
+        """
+        Converte DanfeData para linha da aba 'anexos'.
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+
+        def fmt_str(value: Optional[str]) -> str:
+            return value if value is not None else ""
+
+        def fmt_num(value: Optional[float]) -> float:
+            return value if value is not None else 0.0
+
+        # Calcula situação e avisos
+        situacao_calc, avisos_calc = _calcular_situacao_vencimento(
+            self.vencimento, self.valor_total, self.numero_nota
+        )
+
+        situacao_final = self.status_conciliacao if self.status_conciliacao else situacao_calc
+
+        avisos_parts = []
+        if situacao_final:
+            avisos_parts.append(f"[{situacao_final}]")
+        if avisos_calc and situacao_final != situacao_calc:
+            avisos_parts.append(avisos_calc)
+        if self.observacoes:
+            avisos_parts.append(self.observacoes)
+
+        avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
+
+        return [
+            fmt_date(self.data_processamento),   # 1. DATA
+            fmt_str(self.source_email_subject),  # 2. ASSUNTO
+            "",                                   # 3. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 4. EMPRESA
+            fmt_date(self.vencimento),           # 5. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
+            fmt_str(self.numero_nota),           # 7. NF
+            fmt_num(self.valor_total),           # 8. VALOR
+            fmt_str(situacao_final),             # 9. SITUACAO
+            fmt_str(avisos_final),               # 10. AVISOS
+        ]
+
 
 @dataclass
 class OtherDocumentData(DocumentData):
@@ -477,6 +689,56 @@ class OtherDocumentData(DocumentData):
             fmt_str(self.obs_interna),           # 18. OBS INTERNA
         ]
 
+    def to_anexos_row(self) -> list:
+        """
+        Converte OtherDocumentData para linha da aba 'anexos'.
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+
+        def fmt_str(value: Optional[str]) -> str:
+            return value if value is not None else ""
+
+        def fmt_num(value: Optional[float]) -> float:
+            return value if value is not None else 0.0
+
+        # Calcula situação e avisos
+        situacao_calc, avisos_calc = _calcular_situacao_vencimento(
+            self.vencimento, self.valor_total, self.numero_documento
+        )
+
+        situacao_final = self.status_conciliacao if self.status_conciliacao else situacao_calc
+
+        avisos_parts = []
+        if situacao_final:
+            avisos_parts.append(f"[{situacao_final}]")
+        if avisos_calc and situacao_final != situacao_calc:
+            avisos_parts.append(avisos_calc)
+        if self.observacoes:
+            avisos_parts.append(self.observacoes)
+
+        avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
+
+        return [
+            fmt_date(self.data_processamento),   # 1. DATA
+            fmt_str(self.source_email_subject),  # 2. ASSUNTO
+            "",                                   # 3. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 4. EMPRESA
+            fmt_date(self.vencimento),           # 5. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
+            fmt_str(self.numero_documento),      # 7. NF
+            fmt_num(self.valor_total),           # 8. VALOR
+            fmt_str(situacao_final),             # 9. SITUACAO
+            fmt_str(avisos_final),               # 10. AVISOS
+        ]
+
+
 @dataclass
 class EmailAvisoData(DocumentData):
     """
@@ -516,6 +778,31 @@ class EmailAvisoData(DocumentData):
     @property
     def doc_type(self) -> str:
         return 'AVISO'
+
+    @property
+    def email_id(self) -> str:
+        """Retorna o identificador do e-mail (alias para arquivo_origem)."""
+        return self.arquivo_origem
+
+    @property
+    def subject(self) -> str:
+        """Retorna o assunto do e-mail."""
+        return self.email_subject_full or self.source_email_subject or ""
+
+    @property
+    def sender_name(self) -> Optional[str]:
+        """Retorna o nome do remetente."""
+        return self.fornecedor_nome
+
+    @property
+    def sender_address(self) -> Optional[str]:
+        """Retorna o endereço do remetente."""
+        return self.source_email_sender
+
+    @property
+    def received_date(self) -> Optional[str]:
+        """Retorna a data de recebimento (usa data_processamento como fallback)."""
+        return self.data_processamento
 
     def to_dict(self) -> dict:
         return {
@@ -592,6 +879,46 @@ class EmailAvisoData(DocumentData):
             fmt_str(self.lanc_sistema),          # 16. LANC SISTEMA
             fmt_str(observacao_final),           # 17. OBSERVAÇÕES
             fmt_str(self.obs_interna),           # 18. OBS INTERNA
+        ]
+
+    def to_sem_anexos_row(self) -> list:
+        """
+        Converte EmailAvisoData para linha da aba 'sem_anexos'.
+
+        Mapeamento:
+        - DATA: data_processamento
+        - ASSUNTO: source_email_subject ou email_subject_full
+        - N_PEDIDO: "" (vazio)
+        - EMPRESA: empresa
+        - FORNECEDOR: fornecedor_nome
+        - NF: numero_nota
+        - LINK: link_nfe
+        - CÓDIGO: codigo_verificacao
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+
+        def fmt_str(value: Optional[str]) -> str:
+            return value if value is not None else ""
+
+        # Usa source_email_subject se disponível, senão email_subject_full
+        assunto = self.source_email_subject or self.email_subject_full or ""
+
+        return [
+            fmt_date(self.data_processamento),   # 1. DATA
+            fmt_str(assunto),                    # 2. ASSUNTO
+            "",                                   # 3. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 4. EMPRESA
+            fmt_str(self.fornecedor_nome),       # 5. FORNECEDOR
+            fmt_str(self.numero_nota),           # 6. NF
+            fmt_str(self.link_nfe),              # 7. LINK
+            fmt_str(self.codigo_verificacao),    # 8. CÓDIGO
         ]
 
     @classmethod
@@ -820,4 +1147,65 @@ class BoletoData(DocumentData):
             fmt_str(self.lanc_sistema),          # 16. LANC SISTEMA
             fmt_str(self.observacoes),           # 17. OBSERVAÇÕES
             fmt_str(self.obs_interna),           # 18. OBS INTERNA
+        ]
+
+    def to_anexos_row(self) -> list:
+        """
+        Converte BoletoData para linha da aba 'anexos'.
+
+        Mapeamento:
+        - DATA: data_processamento
+        - ASSUNTO: source_email_subject
+        - N_PEDIDO: "" (vazio)
+        - EMPRESA: empresa
+        - VENCIMENTO: vencimento
+        - FORNECEDOR: fornecedor_nome
+        - NF: numero_documento (boletos usam numero_documento)
+        - VALOR: valor_documento
+        - SITUACAO: status calculado
+        - AVISOS: concatenação de status + divergência + observações
+        """
+        def fmt_date(iso_date: Optional[str]) -> str:
+            if not iso_date:
+                return ""
+            try:
+                dt = datetime.strptime(iso_date, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+            except (ValueError, TypeError):
+                return ""
+
+        def fmt_str(value: Optional[str]) -> str:
+            return value if value is not None else ""
+
+        def fmt_num(value: Optional[float]) -> float:
+            return value if value is not None else 0.0
+
+        # Calcula situação e avisos
+        situacao_calc, avisos_calc = _calcular_situacao_vencimento(
+            self.vencimento, self.valor_documento, self.numero_documento
+        )
+
+        situacao_final = self.status_conciliacao if self.status_conciliacao else situacao_calc
+
+        avisos_parts = []
+        if situacao_final:
+            avisos_parts.append(f"[{situacao_final}]")
+        if avisos_calc and situacao_final != situacao_calc:
+            avisos_parts.append(avisos_calc)
+        if self.observacoes:
+            avisos_parts.append(self.observacoes)
+
+        avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
+
+        return [
+            fmt_date(self.data_processamento),   # 1. DATA
+            fmt_str(self.source_email_subject),  # 2. ASSUNTO
+            "",                                   # 3. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 4. EMPRESA
+            fmt_date(self.vencimento),           # 5. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
+            fmt_str(self.numero_documento),      # 7. NF (numero_documento para boletos)
+            fmt_num(self.valor_documento),       # 8. VALOR
+            fmt_str(situacao_final),             # 9. SITUACAO
+            fmt_str(avisos_final),               # 10. AVISOS
         ]

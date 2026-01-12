@@ -93,6 +93,24 @@ A estratégia de correlação foi implementada nos seguintes módulos:
 
 ## Done
 
+### 12/01/2026
+
+- [x] script de limpeza dos arquivos.
+- [x] integração com o google sheets.
+- [x] script para analise dos emails durante a ingestão
+- [x] implementação no run ingestion mais robusto aplicando filtro criado com base na analise dos emails em inbox.
+- [x] **Refatoração do `export_to_sheets.py`**: Fonte de dados padrão alterada para `relatorio_lotes.csv`
+    - **ANTES**: Usava `relatorio_consolidado.csv` (1 linha por documento extraído)
+    - **AGORA**: Usa `relatorio_lotes.csv` (1 linha por e-mail/lote) - mais simples para usuário final
+    - Nova função `load_lotes_from_csv()` para carregar do relatório de lotes
+    - Nova flag `--use-consolidado` para usar o modo detalhado anterior
+    - Nova flag `--csv-lotes` para especificar CSV de lotes customizado
+- [x] **Fix integração CSVs ↔ Google Sheets**: Corrigido mapeamento de colunas
+    - `export_avisos_to_csv()` agora gera 2 CSVs: formato Sheets + relatório simples
+    - `_save_partial_aviso()` salva mais campos para reconstrução completa
+    - `_merge_partial_results_into_result()` reconstrói com todos os campos
+    - `export_partial_results_to_csv()` gera CSV compatível com `load_avisos_from_csv()`
+
 ### 09/01/2026
 
 - [x] **Extrator específico para boletos REPROMAQ/Bradesco** (`extractors/boleto_repromaq.py`)
@@ -124,7 +142,7 @@ A estratégia de correlação foi implementada nos seguintes módulos:
     - E-mails sem anexo agora detectam empresa corretamente (100% de taxa)
 - [x] **Módulo `empresa_matcher_email.py`**: Detector otimizado para e-mails encaminhados
     - Remove domínios internos (soumaster.com.br, gmail.com)
-    - Remove URLs de tracking (click.*, track.*)
+    - Remove URLs de tracking (click._, track._)
     - Prioriza contexto seguro sobre contexto de senha/segurança
 
 ### 07/01/2026

@@ -1,5 +1,76 @@
 # Histórico de Refatorações e Melhorias
 
+## ✅ Fase 6: Integração Google Sheets e CSVs (Janeiro 2026)
+
+### Contexto
+
+Refatoração do pipeline de exportação para Google Sheets, alterando a fonte de dados padrão e corrigindo incompatibilidades de mapeamento de colunas entre CSVs e o script de exportação.
+
+### Mudanças Implementadas
+
+#### 1. **Fonte de Dados Padrão Alterada** ✅
+
+**Arquivos:** `scripts/export_to_sheets.py`
+
+**Problema:** O script usava `relatorio_consolidado.csv` (1 linha por documento) como padrão, gerando confusão para usuários finais que preferem uma visão por e-mail/lote.
+
+**Solução:**
+
+- Nova fonte padrão: `relatorio_lotes.csv` (1 linha por e-mail/lote)
+- Nova função `load_lotes_from_csv()` para carregar do relatório de lotes
+- Flag `--use-consolidado` para usar o modo detalhado anterior
+- Flag `--csv-lotes` para especificar CSV de lotes customizado
+
+**Resultado:** Exportação mais simples e intuitiva para usuário final.
+
+---
+
+#### 2. **Fix Mapeamento de Colunas CSV ↔ Sheets** ✅
+
+**Arquivos:** `run_ingestion.py`, `services/email_ingestion_orchestrator.py`
+
+**Problema:** As colunas do CSV de avisos gerado por `export_avisos_to_csv()` não batiam com o que `load_avisos_from_csv()` esperava:
+
+| CSV Gerado      | Esperado pelo Sheets |
+| :-------------- | :------------------- |
+| `email_id`      | `arquivo_origem`     |
+| `subject`       | `email_subject`      |
+| `sender_name`   | `fornecedor_nome`    |
+| `received_date` | `data_processamento` |
+| `status`        | `status_conciliacao` |
+
+**Solução:**
+
+- `export_avisos_to_csv()` agora gera 2 CSVs:
+    - `avisos_emails_sem_anexo_latest.csv` (formato Sheets via `to_dict()`)
+    - `relatorio_avisos_links.csv` (formato simples para leitura)
+- `_save_partial_aviso()` salva mais campos para reconstrução completa
+- `_merge_partial_results_into_result()` reconstrói com todos os campos
+- `export_partial_results_to_csv()` gera CSV compatível
+
+**Resultado:** Integração completa funcionando entre ingestão e exportação.
+
+---
+
+#### 3. **Campos Adicionais nos Parciais** ✅
+
+**Arquivos:** `services/email_ingestion_orchestrator.py`
+
+**Campos adicionados ao `_save_partial_aviso()`:**
+
+- `data_processamento`
+- `numero_nota`
+- `dominio_portal`
+- `vencimento`
+- `observacoes`
+- `email_subject_full`
+- `source_email_subject`
+- `status_conciliacao`
+
+**Resultado:** Parciais podem ser reconstruídos completamente para exportação.
+
+---
+
 ## ✅ Fase 5: Batch Processing e Correlação (Janeiro de 2025)
 
 ### Contexto

@@ -8,7 +8,8 @@ O pacote `core` é responsável por:
 
 - **Orquestração**: Coordenação do pipeline completo de extração
 - **Modelos de Dados**: Estruturas padronizadas (InvoiceData, BoletoData, DanfeData)
-- **Batch Processing**: 🆕 Processamento em lote com correlação (v0.2.x)
+- **Batch Processing**: Processamento em lote com correlação (v0.2.x)
+- **Google Sheets Export**: 🆕 Exportação para planilhas com duas abas (v0.3.x)
 - **Interfaces**: Contratos para extensibilidade (Strategy Pattern)
 - **Diagnósticos**: Sistema de análise de qualidade
 - **Exceções**: Tratamento de erros customizado
@@ -61,7 +62,12 @@ Classe abstrata base para todos os tipos de documento. Introduzida na v0.2.x par
 
 - `doc_type` - Retorna tipo do documento (`NFSE`, `BOLETO`, `DANFE`, `OUTROS`)
 - `to_dict()` - Converte para dicionário
-- `to_sheets_row()` - Converte para linha da planilha PAF
+- `to_sheets_row()` - Converte para linha da planilha PAF (18 colunas)
+
+**Métodos de Exportação (v0.3.x):**
+
+- `to_anexos_row()` - 🆕 Converte para linha da aba 'anexos' (10 colunas)
+- `to_sem_anexos_row()` - 🆕 Converte para linha da aba 'sem_anexos' (8 colunas)
 
 #### InvoiceData
 
@@ -89,6 +95,43 @@ Modelo para Notas Fiscais de Serviço Eletrônica (NFSe).
 options:
 show_root_heading: true
 members_order: source
+
+##### Método `to_anexos_row()` 🆕
+
+Converte InvoiceData para linha da aba 'anexos' do Google Sheets.
+
+```python
+from core.models import InvoiceData
+
+invoice = InvoiceData(
+    arquivo_origem="nota.pdf",
+    data_processamento="2026-01-09",
+    empresa="CSC",
+    fornecedor_nome="ACME LTDA",
+    numero_nota="12345",
+    valor_total=1500.50,
+    vencimento="2026-01-15",
+    source_email_subject="[FATURA] Nota Fiscal",
+)
+
+row = invoice.to_anexos_row()
+# ['09/01/2026', '[FATURA] Nota Fiscal', '', 'CSC', '15/01/2026', 'ACME LTDA', '12345', 1500.5, 'OK', '[OK] | [URGENTE] Apenas 3 dias úteis até vencimento']
+```
+
+**Colunas retornadas (10):**
+
+| Índice | Coluna     | Origem                            |
+| :----- | :--------- | :-------------------------------- |
+| 0      | DATA       | `data_processamento` (DD/MM/YYYY) |
+| 1      | ASSUNTO    | `source_email_subject`            |
+| 2      | N_PEDIDO   | Vazio (reservado)                 |
+| 3      | EMPRESA    | `empresa`                         |
+| 4      | VENCIMENTO | `vencimento` (DD/MM/YYYY)         |
+| 5      | FORNECEDOR | `fornecedor_nome`                 |
+| 6      | NF         | `numero_nota`                     |
+| 7      | VALOR      | `valor_total`                     |
+| 8      | SITUACAO   | Calculado automaticamente         |
+| 9      | AVISOS     | Alertas concatenados              |
 
 #### BoletoData
 
@@ -122,9 +165,105 @@ options:
 show_root_heading: true
 members_order: source
 
+##### Método `to_anexos_row()` 🆕
+
+Converte BoletoData para linha da aba 'anexos' do Google Sheets.
+
+```python
+from core.models import BoletoData
+
+boleto = BoletoData(
+    arquivo_origem="boleto.pdf",
+    data_processamento="2026-01-09",
+    empresa="MASTER",
+    fornecedor_nome="FORNECEDOR LTDA",
+    numero_documento="54321",
+    valor_documento=750.00,
+    vencimento="2026-01-10",
+    source_email_subject="[URGENTE] Boleto vence amanha",
+)
+
+row = boleto.to_anexos_row()
+# ['09/01/2026', '[URGENTE] Boleto vence amanha', '', 'MASTER', '10/01/2026', 'FORNECEDOR LTDA', '54321', 750.0, 'VENCIMENTO_PROXIMO', '[VENCIMENTO_PROXIMO] | [URGENTE] Apenas 1 dias úteis até vencimento']
+```
+
+**Nota:** Para boletos, `numero_documento` é usado na coluna NF e `valor_documento` na coluna VALOR.
+
 ---
 
-### Módulos de Batch Processing 🆕
+### EmailAvisoData e Método `to_sem_anexos_row()` 🆕
+
+O modelo `EmailAvisoData` representa e-mails sem anexo que contêm links para NF-e.
+
+##### Método `to_sem_anexos_row()`
+
+Converte EmailAvisoData para linha da aba 'sem_anexos' do Google Sheets.
+
+```python
+from core.models import EmailAvisoData
+
+aviso = EmailAvisoData(
+    arquivo_origem="email_123",
+    data_processamento="2026-01-09",
+    empresa="RBC",
+    fornecedor_nome="Movidesk",
+    numero_nota="193866",
+    link_nfe="https://nfe.prefeitura.sp.gov.br/nfe.aspx?ccm=1234",
+    codigo_verificacao="ABC123",
+    email_subject_full="ENC: Movidesk - NFS-e + Boleto",
+)
+
+row = aviso.to_sem_anexos_row()
+# ['09/01/2026', 'ENC: Movidesk - NFS-e + Boleto', '', 'RBC', 'Movidesk', '193866', 'https://nfe.prefeitura.sp.gov.br/nfe.aspx?ccm=1234', 'ABC123']
+```
+
+**Colunas retornadas (8):**
+
+| Índice | Coluna     | Origem                                         |
+| :----- | :--------- | :--------------------------------------------- |
+| 0      | DATA       | `data_processamento` (DD/MM/YYYY)              |
+| 1      | ASSUNTO    | `source_email_subject` ou `email_subject_full` |
+| 2      | N_PEDIDO   | Vazio (reservado)                              |
+| 3      | EMPRESA    | `empresa`                                      |
+| 4      | FORNECEDOR | `fornecedor_nome`                              |
+| 5      | NF         | `numero_nota`                                  |
+| 6      | LINK       | `link_nfe`                                     |
+| 7      | CÓDIGO     | `codigo_verificacao`                           |
+
+---
+
+### Função Auxiliar: `_calcular_situacao_vencimento()` 🆕
+
+Função interna que calcula automaticamente a situação e avisos de um documento.
+
+```python
+from core.models import _calcular_situacao_vencimento
+
+situacao, avisos = _calcular_situacao_vencimento(
+    vencimento_str="2026-01-10",
+    valor=1500.50,
+    numero_nf="12345"
+)
+# situacao: "OK" ou "DIVERGENTE" ou "VENCIDO" ou "VENCIMENTO_PROXIMO" ou "CONFERIR"
+# avisos: "[URGENTE] Apenas 2 dias úteis até vencimento"
+```
+
+**Regras de cálculo:**
+
+| Condição                 | Situação             | Aviso                                          |
+| :----------------------- | :------------------- | :--------------------------------------------- |
+| NF ou VALOR faltando     | `DIVERGENTE`         | `[DIVERGENTE] Campos faltando: NF, VALOR`      |
+| Vencimento passado       | `VENCIDO`            | `[VENCIDO] Vencimento em DD/MM/YYYY`           |
+| Menos de 4 dias úteis    | `VENCIMENTO_PROXIMO` | `[URGENTE] Apenas X dias úteis até vencimento` |
+| Vencimento não informado | `CONFERIR`           | `[CONFERIR] Vencimento não informado`          |
+| Tudo OK                  | `OK`                 | -                                              |
+
+!!! note "Cálculo de Dias Úteis"
+Usa o calendário de São Paulo (`config/feriados_sp.py`) considerando feriados nacionais, estaduais e municipais.
+
+---
+
+### Módulos de Batch Processing
 
 Introduzidos na v0.2.x para suportar processamento em lote com correlação.
 
@@ -373,9 +512,10 @@ print(f"Valor Total Lote: R$ {boleto.valor_total_lote:.2f}")
 
 ## Ver Também
 
-- [Batch Processing](batch.md) - 🆕 Documentação completa de batch processing
-- [Services](services.md) - 🆕 IngestionService
+- [Batch Processing](batch.md) - Documentação completa de batch processing
+- [Services](services.md) - IngestionService
 - [Extractors](extractors.md) - Implementações de extratores
 - [Strategies](strategies.md) - Estratégias de extração de texto
 - [Diagnostics](diagnostics.md) - Sistema de análise de qualidade
 - [Migração Batch](../MIGRATION_BATCH_PROCESSING.md) - Guia de migração v0.1.x → v0.2.x
+- [Exportação Google Sheets](../guide/google_sheets_export.md) - 🆕 Guia de exportação para planilhas (v0.3.x)

@@ -63,6 +63,7 @@ nav:
           - Processamento de Boletos: guide/boletos.md
           - Quick Start Boletos: guide/quickstart_boletos.md
           - Ingestão de E-mails: guide/ingestion.md
+          - Exportação Google Sheets: guide/google_sheets_export.md
           - Testes Automatizados: guide/testing.md
           - Como Estender (Plugins): guide/extending.md
           - Padrões de Documentação: guide/documentation_standards.md

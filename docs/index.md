@@ -3,6 +3,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Status](https://img.shields.io/badge/status-active-success)
 ![Documentation](https://img.shields.io/badge/docs-mkdocs-material)
+![Version](https://img.shields.io/badge/version-0.3.x-orange)
 
 Bem-vindo à documentação oficial do projeto de automação fiscal. Este sistema foi projetado para eliminar o gargalo manual no recebimento e lançamento de Notas Fiscais, DANFEs e Boletos, garantindo integridade de dados e integração direta com o ERP.
 
@@ -35,6 +36,11 @@ Comece a processar documentos em menos de 5 minutos.
 
     Detalhes técnicos das classes e métodos internos.
     [API Reference](api/overview.md)
+
+- :material-google-spreadsheet: **Exportação Google Sheets** 🆕
+
+    Exporte documentos processados para planilhas com separação automática.
+    [Guia de Exportação](guide/google_sheets_export.md)
 
 </div>
 
@@ -145,7 +151,9 @@ Dados enriquecidos e validados prontos para integração:
 
 - **CSV Consolidado** em `data/output/`
 - **Debug CSVs** em `data/debug_output/` (separados por tipo: danfe, boleto, nfse, outros)
-- **Google Sheets** (futuro) com atualização em tempo real
+- **Google Sheets** 🆕 com exportação para duas abas:
+    - `anexos`: Documentos com anexo (NFs, Boletos, DANFEs)
+    - `sem_anexos`: E-mails com links (sem PDF anexado)
 
 ---
 
@@ -237,6 +245,7 @@ scrapper/
 │   ├── debug_batch.py          # 🆕 Debug de lotes
 │   ├── demo_pairing.py
 │   ├── example_batch_processing.py
+│   ├── export_to_sheets.py     # 🆕 Exportação para Google Sheets (v0.3.x)
 │   ├── ingest_emails_no_attachment.py
 │   ├── inspect_pdf.py          # 🆕 Inspeção rápida de PDFs
 │   ├── test_docker_setup.py
@@ -249,19 +258,24 @@ scrapper/
 
 ---
 
-## 🆕 Novidades da v0.2.x (Batch Processing)
+## 🆕 Novidades da v0.3.x (Google Sheets Export)
 
-| Feature                         | v0.1.x | v0.2.x     |
-| ------------------------------- | ------ | ---------- |
-| Processar arquivo individual    | ✅     | ✅         |
-| Processar pasta de arquivos     | ✅     | ✅         |
-| **Processar lote com metadata** | ❌     | ✅         |
-| **Correlação DANFE/Boleto**     | ❌     | ✅         |
-| **Contexto do e-mail**          | ❌     | ✅         |
-| **Limpeza automática**          | Manual | Automática |
-| **Status de conciliação**       | ❌     | ✅         |
+| Feature                                | v0.1.x | v0.2.x     | v0.3.x     |
+| -------------------------------------- | ------ | ---------- | ---------- |
+| Processar arquivo individual           | ✅     | ✅         | ✅         |
+| Processar pasta de arquivos            | ✅     | ✅         | ✅         |
+| Processar lote com metadata            | ❌     | ✅         | ✅         |
+| Correlação DANFE/Boleto                | ❌     | ✅         | ✅         |
+| Contexto do e-mail                     | ❌     | ✅         | ✅         |
+| Limpeza automática                     | Manual | Automática | Automática |
+| Status de conciliação                  | ❌     | ✅         | ✅         |
+| **Exportação Google Sheets (2 abas)**  | ❌     | ❌         | ✅         |
+| **Cálculo automático de situação**     | ❌     | ❌         | ✅         |
+| **Alertas de vencimento (dias úteis)** | ❌     | ❌         | ✅         |
 
 Para migrar do v0.1.x para v0.2.x, consulte o [Guia de Migração](MIGRATION_BATCH_PROCESSING.md).
+
+Para configurar a exportação para Google Sheets, consulte o [Guia de Exportação](guide/google_sheets_export.md).
 
 ---
 
@@ -279,29 +293,30 @@ Para migrar do v0.1.x para v0.2.x, consulte o [Guia de Migração](MIGRATION_BAT
 
 ### Campos de Nota Fiscal
 
-| Campo            | Descrição                                | Tipo     |
-| :--------------- | :--------------------------------------- | :------- |
-| `cnpj_prestador` | Identificação fiscal do fornecedor       | `string` |
-| `numero_nota`    | Número da NFS-e/DANFE                    | `string` |
-| `data_emissao`   | Data de competência (ISO 8601)           | `date`   |
-| `valor_total`    | Valor líquido da nota                    | `float`  |
-| `vencimento`     | 🆕 Herdado do boleto (se correlacionado) | `date`   |
+| Campo            | Descrição                             | Tipo     |
+| :--------------- | :------------------------------------ | :------- |
+| `cnpj_prestador` | Identificação fiscal do fornecedor    | `string` |
+| `numero_nota`    | Número da NFS-e/DANFE                 | `string` |
+| `data_emissao`   | Data de competência (ISO 8601)        | `date`   |
+| `valor_total`    | Valor líquido da nota                 | `float`  |
+| `vencimento`     | Herdado do boleto (se correlacionado) | `date`   |
 
 ### Campos de Boleto
 
-| Campo               | Descrição                 | Tipo     |
-| :------------------ | :------------------------ | :------- |
-| `cnpj_beneficiario` | CNPJ do beneficiário      | `string` |
-| `valor_documento`   | Valor nominal do boleto   | `float`  |
-| `vencimento`        | Data de vencimento        | `date`   |
-| `linha_digitavel`   | Código de barras          | `string` |
-| `referencia_nfse`   | 🆕 Número da NF vinculada | `string` |
+| Campo               | Descrição               | Tipo     |
+| :------------------ | :---------------------- | :------- |
+| `cnpj_beneficiario` | CNPJ do beneficiário    | `string` |
+| `valor_documento`   | Valor nominal do boleto | `float`  |
+| `vencimento`        | Data de vencimento      | `date`   |
+| `linha_digitavel`   | Código de barras        | `string` |
+| `referencia_nfse`   | Número da NF vinculada  | `string` |
 
 ---
 
 ## 🔗 Links Rápidos
 
 - [📧 Guia de Ingestão](guide/ingestion.md) - Configurar e-mail e processar lotes
+- [📤 Exportação Google Sheets](guide/google_sheets_export.md) - 🆕 Exportar para planilhas
 - [🔄 Migração Batch](MIGRATION_BATCH_PROCESSING.md) - Migrar do v0.1.x para v0.2.x
 - [🧪 Guia de Testes](guide/testing.md) - Validar regras de extração
 - [📊 API Reference](api/overview.md) - Documentação técnica completa

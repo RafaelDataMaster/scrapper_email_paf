@@ -1,6 +1,6 @@
 # API Reference - Visão Geral
 
-## Arquitetura de Módulos (v0.2.x)
+## Arquitetura de Módulos (v0.3.x)
 
 O projeto está organizado em camadas modulares seguindo princípios de Clean Architecture e SOLID:
 
@@ -44,10 +44,15 @@ scrapper/
 │
 ├── ingestors/                  # Conectores de entrada
 │   ├── imap.py                 # Ingestão via e-mail IMAP
-│   └── utils.py                # 🆕 Utilitários de ingestão
+│   └── utils.py                # Utilitários de ingestão
+│
+├── scripts/                    # Scripts utilitários
+│   ├── export_to_sheets.py     # 🆕 Exportação para Google Sheets (v0.3.x)
+│   └── ...                     # Outros scripts de diagnóstico
 │
 └── config/                     # Configurações
-    └── settings.py             # Variáveis de ambiente e paths
+    ├── settings.py             # Variáveis de ambiente e paths
+    └── feriados_sp.py          # 🆕 Calendário de dias úteis SP
 ```
 
 ## Módulos por Camada
@@ -63,16 +68,16 @@ scrapper/
 | `BoletoData`             | Modelo para Boletos Bancários                        |          |
 | `DanfeData`              | Modelo para DANFE (NF-e)                             |          |
 | `OtherDocumentData`      | Modelo para outros documentos (faturas, etc.)        |          |
-| `EmailMetadata`          | Contexto do e-mail de origem (assunto, remetente)    |    🆕    |
-| `BatchProcessor`         | Processador de lotes (pasta por e-mail)              |    🆕    |
-| `BatchResult`            | Resultado agregado do processamento de um lote       |    🆕    |
-| `CorrelationService`     | Vinculação e enriquecimento entre documentos do lote |    🆕    |
+| `EmailMetadata`          | Contexto do e-mail de origem (assunto, remetente)    |          |
+| `BatchProcessor`         | Processador de lotes (pasta por e-mail)              |          |
+| `BatchResult`            | Resultado agregado do processamento de um lote       |          |
+| `CorrelationService`     | Vinculação e enriquecimento entre documentos do lote |          |
 | `ExtractionDiagnostics`  | Sistema de análise de qualidade                      |          |
 | `BaseExtractor`          | Classe abstrata base para todos os extratores        |          |
 | `TextExtractionStrategy` | Interface para estratégias de extração de texto      |          |
 | `EmailIngestorStrategy`  | Interface para conectores de entrada                 |          |
 
-### Services (`services/`) 🆕
+### Services (`services/`)
 
 **Serviços de alto nível que orquestram múltiplos módulos:**
 
@@ -80,22 +85,33 @@ scrapper/
 | :----------------- | :----------------------------------------------------- |
 | `IngestionService` | Orquestra ingestão completa: e-mail → lote → resultado |
 
+### Scripts (`scripts/`) 🆕
+
+**Scripts de linha de comando para operações específicas:**
+
+| Script                        | Descrição                                              | Novidade |
+| :---------------------------- | :----------------------------------------------------- | :------: |
+| `export_to_sheets.py`         | Exporta documentos para Google Sheets em duas abas     |    🆕    |
+| `GoogleSheetsExporterDualTab` | Classe que separa anexos vs sem_anexos automaticamente |    🆕    |
+| `load_documents_from_csv()`   | Carrega documentos de CSV consolidado                  |    🆕    |
+| `load_avisos_from_csv()`      | Carrega avisos (e-mails sem anexo) de CSV              |    🆕    |
+
 ### Extractors (`extractors/`)
 
 **Implementações especializadas para diferentes tipos de documentos:**
 
-| Módulo                          | Descrição                                          |
-| :------------------------------ | :------------------------------------------------- |
-| `NfseGenericExtractor`          | Fallback baseado em regex para NFSe                |
-| `BoletoExtractor`               | Extrator especializado em boletos bancários        |
-| `DanfeExtractor`                | Extrator para DANFE (NF-e)                         |
-| `XmlExtractor`                  | Extração de XML de NF-e e NFS-e (alta precisão)    |
-| `OutrosExtractor`               | Documentos auxiliares (faturas, locações)          |
-| `EmcFaturaExtractor`            | Faturas EMC Tecnologia (layout específico)         |
-| `NetCenterExtractor`            | Boletos Net Center Unaí (correção de nome)         |
-| `SicoobExtractor`               | Boletos SICOOB/BANCOOB (código 756)                |
-| `NfseCustomVilaVelhaExtractor`  | NFS-e Vila Velha - ES (layout específico)          |
-| `NfseCustomMontesClarosExtractor` | NFS-e Montes Claros - MG (número longo)          |
+| Módulo                            | Descrição                                       |
+| :-------------------------------- | :---------------------------------------------- |
+| `NfseGenericExtractor`            | Fallback baseado em regex para NFSe             |
+| `BoletoExtractor`                 | Extrator especializado em boletos bancários     |
+| `DanfeExtractor`                  | Extrator para DANFE (NF-e)                      |
+| `XmlExtractor`                    | Extração de XML de NF-e e NFS-e (alta precisão) |
+| `OutrosExtractor`                 | Documentos auxiliares (faturas, locações)       |
+| `EmcFaturaExtractor`              | Faturas EMC Tecnologia (layout específico)      |
+| `NetCenterExtractor`              | Boletos Net Center Unaí (correção de nome)      |
+| `SicoobExtractor`                 | Boletos SICOOB/BANCOOB (código 756)             |
+| `NfseCustomVilaVelhaExtractor`    | NFS-e Vila Velha - ES (layout específico)       |
+| `NfseCustomMontesClarosExtractor` | NFS-e Montes Claros - MG (número longo)         |
 
 ### Strategies (`strategies/`)
 
@@ -330,23 +346,55 @@ show_root_heading: true
 
 Ferramentas de linha de comando para diagnóstico e manutenção:
 
-| Script                         | Descrição                                     | Modo           |
-| :----------------------------- | :-------------------------------------------- | :------------- |
-| `validate_extraction_rules.py` | Valida regras de extração em PDFs de teste    | Legacy + Batch |
-| `example_batch_processing.py`  | 🆕 Exemplos de processamento em lote          | Batch          |
-| `inspect_pdf.py`               | 🆕 Inspeção rápida de PDFs (busca automática) | Legacy + Batch |
-| `test_docker_setup.py`         | Testa setup Docker/Tesseract                  | Setup          |
+| Script                         | Descrição                                  | Modo           |
+| :----------------------------- | :----------------------------------------- | :------------- |
+| `export_to_sheets.py`          | 🆕 Exporta para Google Sheets (2 abas)     | Exportação     |
+| `validate_extraction_rules.py` | Valida regras de extração em PDFs de teste | Legacy + Batch |
+| `example_batch_processing.py`  | Exemplos de processamento em lote          | Batch          |
+| `inspect_pdf.py`               | Inspeção rápida de PDFs (busca automática) | Legacy + Batch |
+| `test_docker_setup.py`         | Testa setup Docker/Tesseract               | Setup          |
+
+### Script `export_to_sheets.py` 🆕
+
+Exporta documentos processados para Google Sheets, separando em duas abas:
+
+- **`anexos`**: Documentos com anexo (InvoiceData, DanfeData, BoletoData, OtherDocumentData)
+- **`sem_anexos`**: E-mails sem anexo com links (EmailAvisoData)
+
+**Uso:**
+
+```bash
+# Modo dry-run (simula sem enviar)
+python scripts/export_to_sheets.py --dry-run
+
+# Exportar para Google Sheets
+python scripts/export_to_sheets.py
+
+# Especificar ID da planilha
+python scripts/export_to_sheets.py --spreadsheet-id "1ABC..."
+```
+
+**Configuração necessária:**
+
+```bash
+# No arquivo .env
+GOOGLE_SPREADSHEET_ID=sua_spreadsheet_id_aqui
+GOOGLE_CREDENTIALS_PATH=credentials.json
+```
+
+Para mais detalhes, veja o [Guia de Exportação Google Sheets](../guide/google_sheets_export.md).
 
 ---
 
 ## Quick Links
 
 - [🏗️ Core (Núcleo)](core.md) - Processor, Models, Interfaces
-- [📦 Batch Processing](batch.md) - 🆕 BatchProcessor, CorrelationService
-- [⚙️ Services](services.md) - 🆕 IngestionService
+- [📦 Batch Processing](batch.md) - BatchProcessor, CorrelationService
+- [⚙️ Services](services.md) - IngestionService
 - [⛏️ Extractors](extractors.md) - Extratores especializados
 - [📖 Strategies](strategies.md) - Estratégias de extração
 - [📊 Diagnostics](diagnostics.md) - Sistema de qualidade
+- [📤 Google Sheets Export](../guide/google_sheets_export.md) - 🆕 Exportação para planilhas
 
 ---
 
@@ -421,6 +469,7 @@ if correlation.divergencia:
 
 - [🚀 Guia de Uso](../guide/usage.md)
 - [📧 Ingestão de E-mails](../guide/ingestion.md)
+- [📤 Exportação Google Sheets](../guide/google_sheets_export.md) - 🆕 Guia completo
 - [🔄 Migração Batch](../MIGRATION_BATCH_PROCESSING.md)
 - [🧪 Testes Automatizados](../guide/testing.md)
 - [🏗️ Arquitetura PDF Extraction](../research/architecture_pdf_extraction.md)

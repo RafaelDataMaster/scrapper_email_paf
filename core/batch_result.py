@@ -427,6 +427,126 @@ class BatchResult:
                 total_notas += 1
         return total_notas > 1
 
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serializa o BatchResult para dicionário.
+
+        Returns:
+            Dicionário serializável em JSON
+        """
+        return {
+            "batch_id": self.batch_id,
+            "email_subject": self.email_subject,
+            "email_sender": self.email_sender,
+            "source_folder": self.source_folder,
+            "status": self.status,
+            "processing_time": self.processing_time,
+            "documents": [doc.to_dict() for doc in self.documents],
+            "errors": self.errors,
+            "metadata_path": self.metadata_path,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "BatchResult":
+        """
+        Reconstrói um BatchResult a partir de um dicionário.
+
+        Usado para carregar resultados parciais salvos em JSONL.
+
+        Args:
+            data: Dicionário com dados do batch
+
+        Returns:
+            Instância de BatchResult
+        """
+        # Cria instância básica
+        batch = cls(
+            batch_id=data.get("batch_id", "unknown"),
+            email_subject=data.get("email_subject"),
+            email_sender=data.get("email_sender"),
+            source_folder=data.get("source_folder"),
+            status=data.get("status", "OK"),
+            processing_time=data.get("processing_time", 0.0),
+            metadata_path=data.get("metadata_path"),
+            errors=data.get("errors", []),
+        )
+
+        # Reconstrói documentos a partir dos dicts
+        for doc_dict in data.get("documents", []):
+            doc = cls._document_from_dict(doc_dict)
+            if doc:
+                batch.documents.append(doc)
+
+        return batch
+
+    @staticmethod
+    def _document_from_dict(doc_dict: Dict[str, Any]) -> Optional[DocumentData]:
+        """
+        Reconstrói um DocumentData a partir de um dicionário.
+
+        Args:
+            doc_dict: Dicionário com dados do documento
+
+        Returns:
+            Instância do tipo correto de DocumentData ou None
+        """
+        doc_type = doc_dict.get("tipo_documento") or doc_dict.get("doc_type", "")
+
+        try:
+            if doc_type == "BOLETO":
+                return BoletoData(
+                    arquivo_origem=doc_dict.get("arquivo_origem", ""),
+                    fornecedor_nome=doc_dict.get("fornecedor_nome"),
+                    valor_documento=doc_dict.get("valor_documento"),
+                    vencimento=doc_dict.get("vencimento"),
+                    numero_documento=doc_dict.get("numero_documento"),
+                    linha_digitavel=doc_dict.get("linha_digitavel"),
+                    codigo_barras=doc_dict.get("codigo_barras"),
+                    banco=doc_dict.get("banco"),
+                    empresa=doc_dict.get("empresa"),
+                )
+            elif doc_type == "DANFE":
+                return DanfeData(
+                    arquivo_origem=doc_dict.get("arquivo_origem", ""),
+                    fornecedor_nome=doc_dict.get("fornecedor_nome"),
+                    fornecedor_cnpj=doc_dict.get("fornecedor_cnpj"),
+                    valor_total=doc_dict.get("valor_total"),
+                    numero_nota=doc_dict.get("numero_nota"),
+                    chave_acesso=doc_dict.get("chave_acesso"),
+                    data_emissao=doc_dict.get("data_emissao"),
+                    empresa=doc_dict.get("empresa"),
+                )
+            elif doc_type == "NFSE":
+                return InvoiceData(
+                    arquivo_origem=doc_dict.get("arquivo_origem", ""),
+                    fornecedor_nome=doc_dict.get("fornecedor_nome"),
+                    fornecedor_cnpj=doc_dict.get("fornecedor_cnpj"),
+                    valor_total=doc_dict.get("valor_total"),
+                    numero_nota=doc_dict.get("numero_nota"),
+                    data_emissao=doc_dict.get("data_emissao"),
+                    vencimento=doc_dict.get("vencimento"),
+                    empresa=doc_dict.get("empresa"),
+                )
+            elif doc_type == "AVISO":
+                return EmailAvisoData(
+                    arquivo_origem=doc_dict.get("arquivo_origem", ""),
+                    link_nfe=doc_dict.get("link_nfe"),
+                    codigo_verificacao=doc_dict.get("codigo_verificacao"),
+                    email_subject_full=doc_dict.get("email_subject"),
+                    fornecedor_nome=doc_dict.get("fornecedor_nome"),
+                    empresa=doc_dict.get("empresa"),
+                )
+            else:
+                # Tipo desconhecido, usa OtherDocumentData
+                return OtherDocumentData(
+                    arquivo_origem=doc_dict.get("arquivo_origem", ""),
+                    fornecedor_nome=doc_dict.get("fornecedor_nome"),
+                    valor_total=doc_dict.get("valor_total"),
+                    empresa=doc_dict.get("empresa"),
+                )
+        except Exception:
+            return None
+
 
 @dataclass
 class CorrelationResult:

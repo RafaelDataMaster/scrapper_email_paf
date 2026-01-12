@@ -70,6 +70,17 @@ if not all([EMAIL_HOST, EMAIL_USER, EMAIL_PASS]):
 # Responsável pela classificação que aparecerá na coluna 15 (TRAT PAF) da planilha
 TRAT_PAF_RESPONSAVEL = os.getenv('TRAT_PAF_RESPONSAVEL', 'SISTEMA_AUTO')
 
+# --- Configurações do Google Sheets ---
+# ID da planilha do Google Sheets (extraído da URL)
+# Exemplo: https://docs.google.com/spreadsheets/d/1ABC.../edit -> ID = 1ABC...
+GOOGLE_SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '')
+
+# Caminho para o arquivo de credenciais da Service Account
+GOOGLE_CREDENTIALS_PATH = os.getenv('GOOGLE_CREDENTIALS_PATH', 'credentials.json')
+
+if not GOOGLE_SPREADSHEET_ID:
+    print("⚠️ AVISO: GOOGLE_SPREADSHEET_ID não configurado no .env (necessário para exportação)")
+
 # --- Configuração de Exportação NF ---
 # Controla se a coluna NF (5) e Nº FAT (13) são preenchidas na exportação PAF.
 #

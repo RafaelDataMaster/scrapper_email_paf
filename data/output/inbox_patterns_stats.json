@@ -1,0 +1,90 @@
+{
+  "total_analisado": 1121,
+  "erros": 0,
+  "por_tipo": {
+    "COM_ANEXO": 396,
+    "LINK_COM_CODIGO": 8,
+    "LINK_DOWNLOAD": 45,
+    "APENAS_CODIGO": 124,
+    "IRRELEVANTE": 548
+  },
+  "com_anexo": 396,
+  "com_links_nfe": 68,
+  "com_codigo_verificacao": 174,
+  "keywords_frequentes": {
+    "pagamento": 615,
+    "fatura": 589,
+    "iss": 499,
+    "xml": 486,
+    "vencimento": 431,
+    "boleto": 317,
+    "sistema": 305,
+    "acesse": 256,
+    "site": 208,
+    "acesso": 193,
+    "nota fiscal": 192,
+    "cobrança": 187,
+    "download": 185,
+    "visualizar": 153,
+    "portal": 146,
+    "clique": 134,
+    "acessar": 125,
+    "clique aqui": 86,
+    "nfe": 81,
+    "nfs-e": 62
+  },
+  "remetentes_frequentes": {
+    "pagamentos@cemig.com.br": 150,
+    "fatura@cemig.com.br": 77,
+    "isabellydesouzaxavier.providersolucoestecnologicas@edp.com": 47,
+    "contasapagar@soumaster.com.br": 35,
+    "eva@economia.evoluaenergia.com.br": 35,
+    "vitor.fernandes@soumaster.com.br": 32,
+    "noreply@omie.com.br": 32,
+    "pagamentos@contaazul.com": 30,
+    "ana.barbosa@soumaster.com.br": 23,
+    "boleto@cycluss.com.br": 21,
+    "nao-responda@gox.com.br": 20,
+    "senilia.barcellos@soumaster.com.br": 20,
+    "larissa.sbampato@soumaster.com.br": 17,
+    "fatura@sempreinternet.com.br": 16,
+    "maycon.mata@soumaster.com.br": 14
+  },
+  "exemplos_subjects_por_tipo": {
+    "LINK_COM_CODIGO": [
+      "Agora com Pix - Nota Fiscal Eletronica - Faturamento - RPS No - 000003962 - 001 - Cliente - TEZB76-00 - 00001000100",
+      "Agora com Pix - Nota Fiscal Eletronica - Faturamento - RPS No - 000003943 - 001 - Cliente - TEZB76-00 - 00001000100",
+      "ENC: Comunicação de emissão de Nota Fiscal de Serviços Eletrônica.",
+      "RES: Nfe Nacional : 078422",
+      "ENC: Nota Fiscal Eletrônica",
+      "RES: [AMERICAN TOWER] Faturamento 12/2025 ITACOLOMI COMUNICACAO LTDA.",
+      "Re: [AMERICAN TOWER] Faturamento 12/2025 ITACOLOMI COMUNICACAO LTDA.",
+      "RBC REDE BRASILEIRA DE COMUNICACAO SA Confirme seu pagamento TOTVS"
+    ],
+    "LINK_DOWNLOAD": [
+      "ENC: Renovação de Escritório Virtual - Lembrete de Cortesia",
+      "Posição da(s) Cobrança(s) para esta semana",
+      "Posição da(s) Cobrança(s) para esta semana",
+      "Posição da(s) Cobrança(s) para esta semana",
+      "Posição da(s) Cobrança(s) para esta semana",
+      "RES: [TOTVS Interno] Solicitação atualizada nº 26094135 (Esclarecimento de Valores NFs 04338742 e 04338724)",
+      "ENC: [TOTVS Interno] Solicitação atualizada nº 26094135 (Esclarecimento de Valores NFs 04338742 e 04338724)",
+      "Cobrança(s) vencendo no dia de hoje",
+      "Cobrança(s) vencendo no dia de hoje",
+      "Sua ordem Equinix n.º 1-255756176620 foi concluída  "
+    ],
+    "APENAS_CODIGO": [
+      "RES: Notas -  TCF TELECOM",
+      "Boleto para pagamento Geogridmaps",
+      "Re: Fwd: RE: Notas",
+      "Evolua | Lembrete: Seu boleto vence hoje!",
+      "Evolua | Você corre o risco de negativação",
+      "Evolua | Regularize a sua situação",
+      "Evolua | Lembrete: Falta pouco para o seu boleto vencer",
+      "Evolua | Sua conta de luz de Dezembro está disponível!",
+      "RES: RES: AJUSTE DE NOTA",
+      "RES: RES: AJUSTE DE NOTA"
+    ]
+  },
+  "potenciais_nfs_sem_anexo": 53
+}
