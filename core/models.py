@@ -106,6 +106,7 @@ class DocumentData(ABC):
     source_email_sender: Optional[str] = None
     valor_compra: Optional[float] = None
     status_conciliacao: Optional[str] = None
+    email_date: Optional[str] = None  # Data de recebimento do email (ISO format)
 
     @property
     @abstractmethod
@@ -137,19 +138,20 @@ class DocumentData(ABC):
         Converte documento para linha da aba 'anexos' do Google Sheets.
 
         Colunas na ordem:
-        1. DATA (data_processamento)
-        2. ASSUNTO (source_email_subject)
-        3. N_PEDIDO (vazio por enquanto)
-        4. EMPRESA (empresa)
-        5. VENCIMENTO (vencimento)
-        6. FORNECEDOR (fornecedor_nome)
-        7. NF (numero_nota ou numero_documento)
-        8. VALOR (valor_total ou valor_documento)
-        9. SITUACAO (status calculado)
-        10. AVISOS (concatenação de status + divergência + observações)
+        1. PROCESSADO (data_processamento)
+        2. RECEBIDO (email_date - data do email)
+        3. ASSUNTO (source_email_subject)
+        4. N_PEDIDO (vazio por enquanto)
+        5. EMPRESA (empresa)
+        6. VENCIMENTO (vencimento)
+        7. FORNECEDOR (fornecedor_nome)
+        8. NF (numero_nota ou numero_documento)
+        9. VALOR (valor_total ou valor_documento)
+        10. SITUACAO (status calculado)
+        11. AVISOS (concatenação de status + divergência + observações)
 
         Returns:
-            list: Lista com 10 elementos para aba 'anexos'
+            list: Lista com 11 elementos para aba 'anexos'
         """
         # Implementação padrão - subclasses devem sobrescrever
         return []
@@ -159,17 +161,18 @@ class DocumentData(ABC):
         Converte documento para linha da aba 'sem_anexos' do Google Sheets.
 
         Colunas na ordem:
-        1. DATA (data_processamento)
-        2. ASSUNTO (source_email_subject ou email_subject_full)
-        3. N_PEDIDO (vazio por enquanto)
-        4. EMPRESA (empresa)
-        5. FORNECEDOR (fornecedor_nome)
-        6. NF (numero_nota)
-        7. LINK (link_nfe)
-        8. CÓDIGO (codigo_verificacao)
+        1. PROCESSADO (data_processamento)
+        2. RECEBIDO (email_date - data do email)
+        3. ASSUNTO (source_email_subject ou email_subject_full)
+        4. N_PEDIDO (vazio por enquanto)
+        5. EMPRESA (empresa)
+        6. FORNECEDOR (fornecedor_nome)
+        7. NF (numero_nota)
+        8. LINK (link_nfe)
+        9. CODIGO (codigo_verificacao)
 
         Returns:
-            list: Lista com 8 elementos para aba 'sem_anexos'
+            list: Lista com 9 elementos para aba 'sem_anexos'
         """
         # Implementação padrão - subclasses devem sobrescrever
         return []
@@ -392,16 +395,17 @@ class InvoiceData(DocumentData):
         Converte InvoiceData para linha da aba 'anexos'.
 
         Mapeamento:
-        - DATA: data_processamento
-        - ASSUNTO: source_email_subject
-        - N_PEDIDO: "" (vazio)
-        - EMPRESA: empresa
-        - VENCIMENTO: vencimento
-        - FORNECEDOR: fornecedor_nome
-        - NF: numero_nota
-        - VALOR: valor_total
-        - SITUACAO: status calculado
-        - AVISOS: concatenação de status + divergência + observações
+        1. PROCESSADO: data_processamento
+        2. RECEBIDO: email_date (data do email)
+        3. ASSUNTO: source_email_subject
+        4. N_PEDIDO: "" (vazio)
+        5. EMPRESA: empresa
+        6. VENCIMENTO: vencimento
+        7. FORNECEDOR: fornecedor_nome
+        8. NF: numero_nota
+        9. VALOR: valor_total
+        10. SITUACAO: status calculado
+        11. AVISOS: concatenação de status + divergência + observações
         """
         def fmt_date(iso_date: Optional[str]) -> str:
             if not iso_date:
@@ -438,16 +442,17 @@ class InvoiceData(DocumentData):
         avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
 
         return [
-            fmt_date(self.data_processamento),   # 1. DATA
-            fmt_str(self.source_email_subject),  # 2. ASSUNTO
-            "",                                   # 3. N_PEDIDO (vazio)
-            fmt_str(self.empresa),               # 4. EMPRESA
-            fmt_date(self.vencimento),           # 5. VENCIMENTO
-            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
-            fmt_str(self.numero_nota),           # 7. NF
-            fmt_num(self.valor_total),           # 8. VALOR
-            fmt_str(situacao_final),             # 9. SITUACAO
-            fmt_str(avisos_final),               # 10. AVISOS
+            fmt_date(self.data_processamento),   # 1. PROCESSADO
+            fmt_date(self.email_date),           # 2. RECEBIDO (data do email)
+            fmt_str(self.source_email_subject),  # 3. ASSUNTO
+            "",                                   # 4. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 5. EMPRESA
+            fmt_date(self.vencimento),           # 6. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 7. FORNECEDOR
+            fmt_str(self.numero_nota),           # 8. NF
+            fmt_num(self.valor_total),           # 9. VALOR
+            fmt_str(situacao_final),             # 10. SITUACAO
+            fmt_str(avisos_final),               # 11. AVISOS
         ]
 
 
@@ -557,6 +562,19 @@ class DanfeData(DocumentData):
     def to_anexos_row(self) -> list:
         """
         Converte DanfeData para linha da aba 'anexos'.
+
+        Mapeamento:
+        1. PROCESSADO: data_processamento
+        2. RECEBIDO: email_date (data do email)
+        3. ASSUNTO: source_email_subject
+        4. N_PEDIDO: "" (vazio)
+        5. EMPRESA: empresa
+        6. VENCIMENTO: vencimento
+        7. FORNECEDOR: fornecedor_nome
+        8. NF: numero_nota
+        9. VALOR: valor_total
+        10. SITUACAO: status calculado
+        11. AVISOS: concatenação de status + divergência + observações
         """
         def fmt_date(iso_date: Optional[str]) -> str:
             if not iso_date:
@@ -591,16 +609,17 @@ class DanfeData(DocumentData):
         avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
 
         return [
-            fmt_date(self.data_processamento),   # 1. DATA
-            fmt_str(self.source_email_subject),  # 2. ASSUNTO
-            "",                                   # 3. N_PEDIDO (vazio)
-            fmt_str(self.empresa),               # 4. EMPRESA
-            fmt_date(self.vencimento),           # 5. VENCIMENTO
-            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
-            fmt_str(self.numero_nota),           # 7. NF
-            fmt_num(self.valor_total),           # 8. VALOR
-            fmt_str(situacao_final),             # 9. SITUACAO
-            fmt_str(avisos_final),               # 10. AVISOS
+            fmt_date(self.data_processamento),   # 1. PROCESSADO
+            fmt_date(self.email_date),           # 2. RECEBIDO (data do email)
+            fmt_str(self.source_email_subject),  # 3. ASSUNTO
+            "",                                   # 4. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 5. EMPRESA
+            fmt_date(self.vencimento),           # 6. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 7. FORNECEDOR
+            fmt_str(self.numero_nota),           # 8. NF
+            fmt_num(self.valor_total),           # 9. VALOR
+            fmt_str(situacao_final),             # 10. SITUACAO
+            fmt_str(avisos_final),               # 11. AVISOS
         ]
 
 
@@ -692,6 +711,19 @@ class OtherDocumentData(DocumentData):
     def to_anexos_row(self) -> list:
         """
         Converte OtherDocumentData para linha da aba 'anexos'.
+
+        Colunas na ordem:
+        1. PROCESSADO (data_processamento)
+        2. RECEBIDO (email_date - data do email)
+        3. ASSUNTO
+        4. N_PEDIDO
+        5. EMPRESA
+        6. VENCIMENTO
+        7. FORNECEDOR
+        8. NF
+        9. VALOR
+        10. SITUACAO
+        11. AVISOS
         """
         def fmt_date(iso_date: Optional[str]) -> str:
             if not iso_date:
@@ -726,16 +758,17 @@ class OtherDocumentData(DocumentData):
         avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
 
         return [
-            fmt_date(self.data_processamento),   # 1. DATA
-            fmt_str(self.source_email_subject),  # 2. ASSUNTO
-            "",                                   # 3. N_PEDIDO (vazio)
-            fmt_str(self.empresa),               # 4. EMPRESA
-            fmt_date(self.vencimento),           # 5. VENCIMENTO
-            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
-            fmt_str(self.numero_documento),      # 7. NF
-            fmt_num(self.valor_total),           # 8. VALOR
-            fmt_str(situacao_final),             # 9. SITUACAO
-            fmt_str(avisos_final),               # 10. AVISOS
+            fmt_date(self.data_processamento),   # 1. PROCESSADO
+            fmt_date(self.email_date),           # 2. RECEBIDO (data do email)
+            fmt_str(self.source_email_subject),  # 3. ASSUNTO
+            "",                                   # 4. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 5. EMPRESA
+            fmt_date(self.vencimento),           # 6. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 7. FORNECEDOR
+            fmt_str(self.numero_documento),      # 8. NF
+            fmt_num(self.valor_total),           # 9. VALOR
+            fmt_str(situacao_final),             # 10. SITUACAO
+            fmt_str(avisos_final),               # 11. AVISOS
         ]
 
 
@@ -769,6 +802,7 @@ class EmailAvisoData(DocumentData):
     email_body_preview: Optional[str] = None
     dominio_portal: Optional[str] = None
     vencimento: Optional[str] = None
+    email_date: Optional[str] = None  # Data de recebimento do email (ISO format)
 
     tipo_doc_paf: str = "AV"  # Aviso
     dt_classificacao: Optional[str] = None
@@ -801,14 +835,15 @@ class EmailAvisoData(DocumentData):
 
     @property
     def received_date(self) -> Optional[str]:
-        """Retorna a data de recebimento (usa data_processamento como fallback)."""
-        return self.data_processamento
+        """Retorna a data de recebimento do email (usa data_processamento como fallback)."""
+        return self.email_date or self.data_processamento
 
     def to_dict(self) -> dict:
         return {
             'tipo_documento': self.doc_type,
             'arquivo_origem': self.arquivo_origem,
             'data_processamento': self.data_processamento,
+            'email_date': self.email_date,  # Data do email (não do processamento)
             'setor': self.setor,
             'empresa': self.empresa,
             'link_nfe': self.link_nfe,
@@ -886,14 +921,15 @@ class EmailAvisoData(DocumentData):
         Converte EmailAvisoData para linha da aba 'sem_anexos'.
 
         Mapeamento:
-        - DATA: data_processamento
-        - ASSUNTO: source_email_subject ou email_subject_full
-        - N_PEDIDO: "" (vazio)
-        - EMPRESA: empresa
-        - FORNECEDOR: fornecedor_nome
-        - NF: numero_nota
-        - LINK: link_nfe
-        - CÓDIGO: codigo_verificacao
+        1. PROCESSADO: data_processamento
+        2. RECEBIDO: email_date (data do email)
+        3. ASSUNTO: source_email_subject ou email_subject_full
+        4. N_PEDIDO: "" (vazio)
+        5. EMPRESA: empresa
+        6. FORNECEDOR: fornecedor_nome
+        7. NF: numero_nota
+        8. LINK: link_nfe
+        9. CODIGO: codigo_verificacao
         """
         def fmt_date(iso_date: Optional[str]) -> str:
             if not iso_date:
@@ -911,14 +947,15 @@ class EmailAvisoData(DocumentData):
         assunto = self.source_email_subject or self.email_subject_full or ""
 
         return [
-            fmt_date(self.data_processamento),   # 1. DATA
-            fmt_str(assunto),                    # 2. ASSUNTO
-            "",                                   # 3. N_PEDIDO (vazio)
-            fmt_str(self.empresa),               # 4. EMPRESA
-            fmt_str(self.fornecedor_nome),       # 5. FORNECEDOR
-            fmt_str(self.numero_nota),           # 6. NF
-            fmt_str(self.link_nfe),              # 7. LINK
-            fmt_str(self.codigo_verificacao),    # 8. CÓDIGO
+            fmt_date(self.data_processamento),   # 1. PROCESSADO
+            fmt_date(self.email_date),           # 2. RECEBIDO (data do email)
+            fmt_str(assunto),                    # 3. ASSUNTO
+            "",                                   # 4. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 5. EMPRESA
+            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
+            fmt_str(self.numero_nota),           # 7. NF
+            fmt_str(self.link_nfe),              # 8. LINK
+            fmt_str(self.codigo_verificacao),    # 9. CODIGO
         ]
 
     @classmethod
@@ -950,9 +987,13 @@ class EmailAvisoData(DocumentData):
         # Extrai fornecedor do assunto ou remetente (filtrando empresas próprias)
         fornecedor = metadata.extract_fornecedor_from_context()
 
+        # Parseia a data do email (received_date) para formato ISO
+        email_date = cls._parse_email_date_static(metadata.received_date)
+
         return cls(
             arquivo_origem=email_id,
             data_processamento=date.today().isoformat(),
+            email_date=email_date,  # Data do email (não do processamento)
             link_nfe=link,
             codigo_verificacao=codigo,
             numero_nota=numero_nf,
@@ -963,6 +1004,67 @@ class EmailAvisoData(DocumentData):
             source_email_subject=metadata.email_subject,
             source_email_sender=metadata.email_sender_name or metadata.email_sender_address,
         )
+
+    @staticmethod
+    def _parse_email_date_static(date_str: Optional[str]) -> Optional[str]:
+        """
+        Converte a data do email para formato ISO (YYYY-MM-DD).
+
+        O campo received_date do metadata pode vir em diversos formatos:
+        - RFC 2822: "Tue, 14 Jan 2025 10:30:00 -0300"
+        - ISO: "2025-01-14T10:30:00"
+        - Simples: "14/01/2025"
+
+        Args:
+            date_str: String com a data do email
+
+        Returns:
+            Data em formato ISO (YYYY-MM-DD) ou None se não puder parsear
+        """
+        if not date_str:
+            return None
+
+        date_str = date_str.strip()
+
+        # Tenta formato RFC 2822 (padrão de e-mail)
+        try:
+            from email.utils import parsedate_to_datetime
+            dt = parsedate_to_datetime(date_str)
+            return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        # Tenta formato ISO com timezone
+        try:
+            from datetime import datetime
+            # Remove timezone info se presente
+            if '+' in date_str:
+                date_str_clean = date_str.split('+')[0].strip()
+            else:
+                date_str_clean = date_str
+            if 'T' in date_str_clean:
+                dt = datetime.fromisoformat(date_str_clean.replace('Z', ''))
+                return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        # Tenta formato brasileiro (DD/MM/YYYY)
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_str[:10], '%d/%m/%Y')
+            return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        # Tenta formato ISO simples (YYYY-MM-DD)
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_str[:10], '%Y-%m-%d')
+            return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        return None
 
 
 @dataclass
@@ -1154,16 +1256,17 @@ class BoletoData(DocumentData):
         Converte BoletoData para linha da aba 'anexos'.
 
         Mapeamento:
-        - DATA: data_processamento
-        - ASSUNTO: source_email_subject
-        - N_PEDIDO: "" (vazio)
-        - EMPRESA: empresa
-        - VENCIMENTO: vencimento
-        - FORNECEDOR: fornecedor_nome
-        - NF: numero_documento (boletos usam numero_documento)
-        - VALOR: valor_documento
-        - SITUACAO: status calculado
-        - AVISOS: concatenação de status + divergência + observações
+        1. PROCESSADO: data_processamento
+        2. RECEBIDO: email_date (data do email)
+        3. ASSUNTO: source_email_subject
+        4. N_PEDIDO: "" (vazio)
+        5. EMPRESA: empresa
+        6. VENCIMENTO: vencimento
+        7. FORNECEDOR: fornecedor_nome
+        8. NF: numero_documento (boletos usam numero_documento)
+        9. VALOR: valor_documento
+        10. SITUACAO: status calculado
+        11. AVISOS: concatenação de status + divergência + observações
         """
         def fmt_date(iso_date: Optional[str]) -> str:
             if not iso_date:
@@ -1198,14 +1301,15 @@ class BoletoData(DocumentData):
         avisos_final = " | ".join(avisos_parts) if avisos_parts else ""
 
         return [
-            fmt_date(self.data_processamento),   # 1. DATA
-            fmt_str(self.source_email_subject),  # 2. ASSUNTO
-            "",                                   # 3. N_PEDIDO (vazio)
-            fmt_str(self.empresa),               # 4. EMPRESA
-            fmt_date(self.vencimento),           # 5. VENCIMENTO
-            fmt_str(self.fornecedor_nome),       # 6. FORNECEDOR
-            fmt_str(self.numero_documento),      # 7. NF (numero_documento para boletos)
-            fmt_num(self.valor_documento),       # 8. VALOR
-            fmt_str(situacao_final),             # 9. SITUACAO
-            fmt_str(avisos_final),               # 10. AVISOS
+            fmt_date(self.data_processamento),   # 1. PROCESSADO
+            fmt_date(self.email_date),           # 2. RECEBIDO (data do email)
+            fmt_str(self.source_email_subject),  # 3. ASSUNTO
+            "",                                   # 4. N_PEDIDO (vazio)
+            fmt_str(self.empresa),               # 5. EMPRESA
+            fmt_date(self.vencimento),           # 6. VENCIMENTO
+            fmt_str(self.fornecedor_nome),       # 7. FORNECEDOR
+            fmt_str(self.numero_documento),      # 8. NF (numero_documento para boletos)
+            fmt_num(self.valor_documento),       # 9. VALOR
+            fmt_str(situacao_final),             # 10. SITUACAO
+            fmt_str(avisos_final),               # 11. AVISOS
         ]

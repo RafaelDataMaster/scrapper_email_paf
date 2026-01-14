@@ -450,6 +450,7 @@ class EmailIngestionOrchestrator:
                 "saved_at": datetime.now().isoformat(),
                 # Campos adicionais para integração Google Sheets
                 "data_processamento": aviso.data_processamento,
+                "email_date": aviso.email_date,  # Data do email (não do processamento)
                 "numero_nota": aviso.numero_nota,
                 "dominio_portal": aviso.dominio_portal,
                 "vencimento": aviso.vencimento,
@@ -1086,6 +1087,7 @@ class EmailIngestionOrchestrator:
                             source_email_sender=aviso_dict.get("sender_address"),
                             # Campos adicionais para compatibilidade Google Sheets
                             data_processamento=aviso_dict.get("data_processamento"),
+                            email_date=aviso_dict.get("email_date"),  # Data do email (não do processamento)
                             numero_nota=aviso_dict.get("numero_nota"),
                             dominio_portal=aviso_dict.get("dominio_portal"),
                             vencimento=aviso_dict.get("vencimento"),
@@ -1196,6 +1198,7 @@ class EmailIngestionOrchestrator:
                             'tipo_documento': 'AVISO',
                             'arquivo_origem': aviso_dict.get('email_id', ''),
                             'data_processamento': aviso_dict.get('data_processamento'),
+                            'email_date': aviso_dict.get('email_date'),  # Data do email (não do processamento)
                             'empresa': aviso_dict.get('empresa'),
                             'fornecedor_nome': aviso_dict.get('sender_name'),
                             'numero_nota': aviso_dict.get('numero_nota'),

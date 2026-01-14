@@ -104,9 +104,11 @@ LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / "scrapper.log"
 
-# Configuração do logger raiz
-logger = logging.getLogger('scrapper')
-logger.setLevel(logging.INFO)
+# Formato detalhado para auditoria
+log_formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # Handler com rotação: 10MB por arquivo, mantém 5 backups
 rotating_handler = RotatingFileHandler(
@@ -115,16 +117,25 @@ rotating_handler = RotatingFileHandler(
     backupCount=5,
     encoding='utf-8'
 )
-
-# Formato detalhado para auditoria
-log_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 rotating_handler.setFormatter(log_formatter)
-logger.addHandler(rotating_handler)
 
-# Também envia para console
+# Console handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
-logger.addHandler(console_handler)
+
+# Configura o logger RAIZ para que todos os módulos herdem a configuração
+# Isso garante que logging.getLogger(__name__) em qualquer módulo
+# automaticamente salve logs em arquivo + console
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+# Remove handlers existentes para evitar duplicação
+for handler in root_logger.handlers[:]:
+    root_logger.removeHandler(handler)
+
+# Adiciona os handlers ao logger raiz
+root_logger.addHandler(rotating_handler)
+root_logger.addHandler(console_handler)
+
+# Logger específico do scrapper (para uso direto quando importado)
+logger = logging.getLogger('scrapper')

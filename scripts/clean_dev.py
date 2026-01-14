@@ -26,6 +26,7 @@ PRESERVE_FILES = {
     ".gitkeep",
     "inbox_patterns.json",
     "inbox_patterns_stats.json",
+    "inbox_body.json"
 }
 
 

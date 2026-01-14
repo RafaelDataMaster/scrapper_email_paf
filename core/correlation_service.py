@@ -363,7 +363,7 @@ class CorrelationService:
         if batch.has_boleto:
             # Tem boleto - compara valores
             if abs(result.diferenca) <= self.TOLERANCIA_VALOR:
-                result.status = "OK"
+                result.status = "CONCILIADO"
                 if aviso_duplicata:
                     result.divergencia = aviso_duplicata.strip(" []")
             else:
@@ -387,13 +387,11 @@ class CorrelationService:
         Aplica alerta de vencimento não encontrado.
 
         Se nenhum documento tem vencimento após toda herança,
-        adiciona aviso e define data de processamento como alerta.
+        adiciona aviso na divergência mas deixa vencimento vazio/nulo.
         """
         if not result.sem_vencimento:
             return
 
-        from datetime import date
-        data_alerta = date.today().isoformat()  # YYYY-MM-DD
         aviso_vencimento = " [VENCIMENTO NÃO ENCONTRADO - verificar urgente]"
 
         if result.divergencia:
@@ -401,16 +399,9 @@ class CorrelationService:
         else:
             result.divergencia = aviso_vencimento.strip()
 
-        # Define data de alerta como vencimento para priorizar conferência
-        result.vencimento_alerta = data_alerta
-
-        # Propaga data de alerta para documentos sem vencimento
-        for doc in batch.documents:
-            if not self._has_vencimento(doc):
-                self._set_vencimento(doc, data_alerta)
-
-        # Atualiza vencimento herdado com a data de alerta
-        result.vencimento_herdado = data_alerta
+        # Não propaga data de alerta - deixa vencimento vazio/nulo
+        # result.vencimento_alerta permanece None
+        # result.vencimento_herdado permanece None
 
     def _find_numero_pedido_in_batch(self, batch: BatchResult) -> Optional[str]:
         """Procura numero_pedido em qualquer documento do lote."""

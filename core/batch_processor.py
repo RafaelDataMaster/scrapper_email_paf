@@ -15,6 +15,11 @@ Lógica de priorização XML:
 - Se XML incompleto, processa PDFs para completar os dados
 - Cada lote representa UMA compra/locação única
 
+NOVO: Extração de dados do corpo do e-mail:
+- Quando NF não é anexo (apenas link), extrai valor do corpo HTML/texto
+- Usa EmailBodyExtractor para extrair valores monetários, vencimentos, etc.
+- Cria documento sintético (InvoiceData) com dados extraídos do corpo
+
 Princípios SOLID aplicados:
 - SRP: Classe focada apenas em orquestrar processamento de lotes
 - OCP: Extensível via composição (injeção de processor/correlation_service)
@@ -69,6 +74,65 @@ class BatchProcessor:
     # Campos obrigatórios para considerar XML completo
     CAMPOS_OBRIGATORIOS_XML = {'fornecedor_nome', 'vencimento', 'numero_nota', 'valor_total'}
 
+    def _parse_email_date(self, date_str: Optional[str]) -> Optional[str]:
+        """
+        Converte a data do email para formato ISO (YYYY-MM-DD).
+
+        O campo received_date do metadata pode vir em diversos formatos:
+        - RFC 2822: "Tue, 14 Jan 2025 10:30:00 -0300"
+        - ISO: "2025-01-14T10:30:00"
+        - Simples: "14/01/2025"
+
+        Args:
+            date_str: String com a data do email
+
+        Returns:
+            Data em formato ISO (YYYY-MM-DD) ou None se não puder parsear
+        """
+        if not date_str:
+            return None
+
+        date_str = date_str.strip()
+
+        # Tenta formato RFC 2822 (padrão de e-mail)
+        try:
+            from email.utils import parsedate_to_datetime
+            dt = parsedate_to_datetime(date_str)
+            return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        # Tenta formato ISO com timezone
+        try:
+            from datetime import datetime
+            # Remove timezone info se presente
+            if '+' in date_str:
+                date_str = date_str.split('+')[0].strip()
+            if 'T' in date_str:
+                dt = datetime.fromisoformat(date_str.replace('Z', ''))
+                return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        # Tenta formato brasileiro (DD/MM/YYYY)
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_str[:10], '%d/%m/%Y')
+            return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        # Tenta formato ISO simples (YYYY-MM-DD)
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_str[:10], '%Y-%m-%d')
+            return dt.strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
+        logger.warning(f"Não foi possível parsear data do email: {date_str}")
+        return None
+
     def __init__(
         self,
         processor: Optional[BaseInvoiceProcessor] = None,
@@ -122,6 +186,8 @@ class BatchProcessor:
             result.email_subject = metadata.email_subject
             # Usa email_sender_name, com fallback para email_sender_address se vazio
             result.email_sender = metadata.email_sender_name or metadata.email_sender_address
+            # Extrai data do email do metadata (received_date)
+            result.email_date = self._parse_email_date(metadata.received_date)
 
         # 2. Lista arquivos processáveis (separados por tipo)
         xml_files, pdf_files = self._list_files_by_type(folder_path)
@@ -163,12 +229,113 @@ class BatchProcessor:
         for doc in final_docs:
             result.add_document(doc)
 
-        # 6. Aplica correlação entre documentos (se habilitado)
+        # 6. NOVO: Extrai dados do corpo do e-mail se não há NF anexada
+        # Útil para e-mails onde a NF é um link (Omie, prefeituras)
+        if metadata and not self._has_nota_with_valor(final_docs):
+            email_body_doc = self._extract_from_email_body(metadata, batch_id)
+            if email_body_doc:
+                result.add_document(email_body_doc)
+                logger.info(f"📧 Dados extraídos do corpo do e-mail: valor={getattr(email_body_doc, 'valor_total', 0)}")
+
+        # 7. Aplica correlação entre documentos (se habilitado)
         if apply_correlation and result.total_documents > 0:
             correlation_result = self.correlation_service.correlate(result, metadata)
             result.correlation_result = correlation_result
 
         return result
+
+    def _has_nota_with_valor(self, docs: List[DocumentData]) -> bool:
+        """
+        Verifica se há alguma nota fiscal com valor > 0 na lista.
+
+        Args:
+            docs: Lista de documentos processados
+
+        Returns:
+            True se existe NF/DANFE com valor_total > 0
+        """
+        from core.models import BoletoData
+
+        for doc in docs:
+            # Ignora boletos
+            if isinstance(doc, BoletoData):
+                continue
+
+            # Verifica se tem valor
+            valor = getattr(doc, 'valor_total', 0) or 0
+            if valor > 0:
+                return True
+
+        return False
+
+    def _extract_from_email_body(
+        self,
+        metadata: 'EmailMetadata',
+        batch_id: str
+    ) -> Optional[DocumentData]:
+        """
+        Extrai dados do corpo do e-mail quando não há NF anexada.
+
+        Cria um InvoiceData sintético com os dados extraídos do corpo.
+        Útil para e-mails da Omie, prefeituras, etc.
+
+        Args:
+            metadata: Metadados do e-mail
+            batch_id: ID do lote
+
+        Returns:
+            InvoiceData com dados extraídos ou None
+        """
+        try:
+            from extractors.email_body_extractor import EmailBodyExtractor
+
+            # Verifica se tem corpo de e-mail
+            if not metadata.email_body_text:
+                return None
+
+            # Extrai dados do corpo
+            extractor = EmailBodyExtractor()
+            result = extractor.extract(
+                body_text=metadata.email_body_text,
+                subject=metadata.email_subject
+            )
+
+            # Só cria documento se encontrou algo útil
+            if not result.has_valor() and not result.numero_nota and not result.link_nfe:
+                return None
+
+            # Cria InvoiceData sintético
+            from datetime import datetime
+
+            doc = InvoiceData(
+                arquivo_origem=f"{batch_id}_email_body",
+                texto_bruto=f"[Extraído do corpo do e-mail] {(metadata.email_body_text or '')[:300]}",
+                data_processamento=datetime.now().strftime('%Y-%m-%d'),
+                # Campos extraídos
+                valor_total=result.valor_total,
+                numero_nota=result.numero_nota,
+                vencimento=result.vencimento,
+                fornecedor_nome=result.fornecedor_nome or metadata.email_sender_name,
+                # Metadados
+                source_email_subject=metadata.email_subject,
+                source_email_sender=metadata.email_sender_name or metadata.email_sender_address,
+                # Campos extras
+                observacoes=f"[EXTRAÍDO DO E-MAIL] Link: {result.link_nfe or 'N/A'}" if result.link_nfe else None,
+            )
+
+            logger.debug(
+                f"EmailBody extraction: valor={result.valor_total}, "
+                f"numero={result.numero_nota}, venc={result.vencimento}"
+            )
+
+            return doc
+
+        except ImportError as e:
+            logger.warning(f"EmailBodyExtractor não disponível: {e}")
+            return None
+        except Exception as e:
+            logger.warning(f"Erro ao extrair do corpo do e-mail: {e}")
+            return None
 
     def _is_xml_complete(self, doc: DocumentData) -> bool:
         """
@@ -463,15 +630,16 @@ class BatchProcessor:
         Returns:
             Lista de BatchResult, um para cada lote
         """
-        import time
         import json
         import logging
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+        import time
+        from concurrent.futures import ThreadPoolExecutor
+        from concurrent.futures import TimeoutError as FuturesTimeoutError
         from datetime import datetime
-        
+
         logger = logging.getLogger(__name__)
         timeout = timeout_seconds or self.BATCH_TIMEOUT_SECONDS
-        
+
         root_folder = Path(root_folder)
         results = []
         timeouts = []  # Lista de batches que deram timeout
@@ -480,18 +648,18 @@ class BatchProcessor:
             return results
 
         # Lista lotes para processar
-        batch_folders = [item for item in sorted(root_folder.iterdir()) 
+        batch_folders = [item for item in sorted(root_folder.iterdir())
                          if item.is_dir() and not item.name.startswith('.')]
         total_batches = len(batch_folders)
-        
+
         logger.info(f"⏳ Iniciando processamento de {total_batches} lotes (timeout: {timeout}s)...")
         overall_start = time.time()
-        
+
         # Processa cada subpasta como um lote com timeout
         for idx, item in enumerate(batch_folders, 1):
             batch_start = time.time()
             batch_result = None
-            
+
             try:
                 # Executa com timeout usando ThreadPoolExecutor
                 with ThreadPoolExecutor(max_workers=1) as executor:
@@ -499,12 +667,12 @@ class BatchProcessor:
                     batch_result = future.result(timeout=timeout)
                     batch_result.processing_time = time.time() - batch_start
                     batch_result.status = "OK"
-                    
+
             except FuturesTimeoutError:
                 # Timeout! Cria resultado vazio com status TIMEOUT
                 batch_elapsed = time.time() - batch_start
                 logger.error(f"⏱️ [{idx}/{total_batches}] TIMEOUT: {item.name} excedeu {timeout}s!")
-                
+
                 batch_result = BatchResult(
                     batch_id=item.name,
                     source_folder=str(item),
@@ -513,7 +681,7 @@ class BatchProcessor:
                     timeout_error=f"Processamento excedeu {timeout}s"
                 )
                 batch_result.add_error(str(item), f"TIMEOUT após {batch_elapsed:.1f}s")
-                
+
                 # Registra para log de timeouts
                 timeouts.append({
                     "batch_id": item.name,
@@ -521,12 +689,12 @@ class BatchProcessor:
                     "timeout_seconds": timeout,
                     "timestamp": datetime.now().isoformat()
                 })
-                
+
             except Exception as e:
                 # Erro genérico
                 batch_elapsed = time.time() - batch_start
                 logger.error(f"❌ [{idx}/{total_batches}] ERRO: {item.name}: {e}")
-                
+
                 batch_result = BatchResult(
                     batch_id=item.name,
                     source_folder=str(item),
@@ -535,10 +703,10 @@ class BatchProcessor:
                     timeout_error=str(e)
                 )
                 batch_result.add_error(str(item), str(e))
-            
+
             results.append(batch_result)
             batch_elapsed = batch_result.processing_time
-            
+
             # Log de progresso
             if batch_result.status == "TIMEOUT":
                 pass  # Já logou acima
@@ -548,10 +716,10 @@ class BatchProcessor:
                 logger.warning(f"🐢 [{idx}/{total_batches}] {item.name}: {batch_elapsed:.1f}s (LENTO!)")
             else:
                 logger.debug(f"✅ [{idx}/{total_batches}] {item.name}: {batch_elapsed:.1f}s")
-        
+
         overall_elapsed = time.time() - overall_start
         logger.info(f"⏱️ Tempo total de processamento: {overall_elapsed:.1f}s ({overall_elapsed/60:.1f} min)")
-        
+
         # Salva log de timeouts para reprocessamento posterior
         if timeouts:
             timeout_log_path = root_folder / "_timeouts.json"
@@ -560,7 +728,7 @@ class BatchProcessor:
                 existing_timeouts = []
                 if timeout_log_path.exists():
                     existing_timeouts = json.loads(timeout_log_path.read_text(encoding='utf-8'))
-                
+
                 # Adiciona novos timeouts
                 all_timeouts = existing_timeouts + timeouts
                 timeout_log_path.write_text(
@@ -663,7 +831,7 @@ class BatchProcessor:
 
             if result.success and result.document:
                 doc = result.document
-                
+
                 # Detecta empresa no conteúdo do XML
                 # Tenta múltiplos encodings pois alguns XMLs usam Latin-1
                 xml_content = None
@@ -673,7 +841,7 @@ class BatchProcessor:
                         break
                     except UnicodeDecodeError:
                         continue
-                
+
                 if xml_content:
                     try:
                         empresa_match = find_empresa_no_texto(xml_content)
@@ -681,7 +849,7 @@ class BatchProcessor:
                             doc.empresa = empresa_match.codigo
                     except Exception:
                         pass  # Ignora erros de detecção
-                
+
                 return doc
             else:
                 logger.debug(f"Erro ao processar XML {file_path.name}: {result.error}")

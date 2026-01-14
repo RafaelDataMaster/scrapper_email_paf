@@ -499,7 +499,7 @@ class InboxDiagnosticAnalyzer:
             date=date,
         )
 
-    def iter_emails(self, limit: int = 200, skip_ids: Set[str] = None) -> Iterator[Tuple[EmailPattern, int, int]]:
+    def iter_emails(self, limit: int = 200, skip_ids: Set[str] = None) -> Iterator[Tuple[EmailPattern, int, int, Message]]:
         """
         Itera sobre os e-mails como um generator (não carrega tudo em memória).
 
@@ -508,7 +508,7 @@ class InboxDiagnosticAnalyzer:
             skip_ids: Set de IDs de e-mails já processados (para resume)
 
         Yields:
-            Tupla (EmailPattern, índice_atual, total_a_processar)
+            Tupla (EmailPattern, índice_atual, total_a_processar, msg)
         """
         if not self.connection:
             self.connect()
@@ -565,7 +565,7 @@ class InboxDiagnosticAnalyzer:
 
                 # Analisa o e-mail e retorna imediatamente (não acumula)
                 pattern = self._analyze_email(msg, email_id_str)
-                yield pattern, idx + 1 - skipped_resume, total_to_process - len(skip_ids)
+                yield pattern, idx + 1 - skipped_resume, total_to_process - len(skip_ids), msg
 
                 # Libera referência explicitamente
                 del msg
@@ -573,7 +573,7 @@ class InboxDiagnosticAnalyzer:
 
             except Exception as e:
                 # Yield None para indicar erro (estatísticas contabilizam)
-                yield None, idx + 1 - skipped_resume, total_to_process - len(skip_ids)
+                yield None, idx + 1 - skipped_resume, total_to_process - len(skip_ids), None
 
     def fetch_and_diagnose_streaming(
         self,
@@ -593,9 +593,14 @@ class InboxDiagnosticAnalyzer:
         Returns:
             Estatísticas consolidadas
         """
+        import json
+
         stats = StreamingStats()
         skip_ids: Set[str] = set()
         existing_patterns: List[Dict] = []
+
+        # Para armazenar corpos e anexos dos e-mails
+        email_bodies = []
 
         # Se resume, carrega IDs já processados
         if resume and output_path.exists():
@@ -659,9 +664,9 @@ class InboxDiagnosticAnalyzer:
             # Processa novos e-mails
             new_count = 0
             for result in self.iter_emails(limit=limit, skip_ids=skip_ids):
-                pattern, current, total = result
+                pattern, current, total, msg = result
 
-                if pattern is None:
+                if pattern is None or msg is None:
                     stats.errors += 1
                     continue
 
@@ -677,6 +682,27 @@ class InboxDiagnosticAnalyzer:
                 json_line = json.dumps(pattern.to_dict(), ensure_ascii=False)
                 f.write('  ' + json_line)
 
+                # --------- NOVO: Salva corpo e anexos ----------
+                # Extrai corpo
+                body_text, body_html = self._extract_body(msg)
+                # Conta anexos
+                attachment_count = sum(
+                    1 for part in msg.walk()
+                    if part.get_content_maintype() != 'multipart'
+                    and part.get('Content-Disposition') is not None
+                    and 'attachment' in part.get('Content-Disposition', '').lower()
+                )
+                email_bodies.append({
+                    "uid": pattern.email_id,
+                    "subject": self._decode_text(msg.get("Subject")),
+                    "from": self._decode_text(msg.get("From")),
+                    "date": self._decode_text(msg.get("Date")),
+                    "body_text": body_text,
+                    "body_html": body_html,
+                    "quantidade_anexos": attachment_count,
+                })
+                # ------------------------------------------------
+
                 # Flush periódico para garantir escrita e permitir resume
                 if new_count % 50 == 0:
                     f.flush()
@@ -688,6 +714,10 @@ class InboxDiagnosticAnalyzer:
                           f"🥈{stats.count_link_download})")
 
             f.write('\n]')  # Fim do array JSON
+
+        # Salva o corpo dos e-mails analisados em inbox_body.json
+        with open("data/output/inbox_body.json", "w", encoding="utf-8") as fbody:
+            json.dump(email_bodies, fbody, ensure_ascii=False, indent=2)
 
         print(f"\n✅ Análise concluída:")
         print(f"   - E-mails analisados (total): {stats.total_processed}")

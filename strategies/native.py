@@ -9,6 +9,7 @@ Características:
     - Extração rápida: ~90% dos PDFs são resolvidos aqui
     - Layout preservado: Mantém estrutura tabular quando necessário
     - Fallback automático: Retorna string vazia para acionar próxima estratégia
+    - Suporte a PDFs protegidos: Tenta desbloquear com CNPJs cadastrados
 
 Modos de operação:
     1. Extração simples (rápida): Texto linear, suficiente para maioria
@@ -21,8 +22,14 @@ Example:
     >>> if texto:
     ...     print("PDF vetorial extraído com sucesso")
 """
-import pdfplumber
+import logging
+
 from core.interfaces import TextExtractionStrategy
+
+from .pdf_utils import abrir_pdfplumber_com_senha
+
+logger = logging.getLogger(__name__)
+
 
 class NativePdfStrategy(TextExtractionStrategy):
     """
@@ -30,13 +37,19 @@ class NativePdfStrategy(TextExtractionStrategy):
 
     Utiliza a biblioteca `pdfplumber` para acessar a camada de texto do PDF diretamente.
     É a estratégia preferencial por ser mais rápida e precisa que o OCR.
+
+    Inclui suporte a PDFs protegidos por senha, tentando desbloquear
+    automaticamente usando CNPJs das empresas cadastradas.
     """
     def extract(self, file_path: str) -> str:
         """
         Extrai texto de um PDF vetorial com múltiplas estratégias.
-        
+
         Tenta primeiro com layout preservado (melhor para documentos tabulares),
         depois com extração simples como fallback.
+
+        Implementa desbloqueio automático de PDFs protegidos usando CNPJs
+        das empresas cadastradas como candidatos a senha.
 
         Args:
             file_path (str): Caminho absoluto ou relativo do arquivo PDF.
@@ -45,7 +58,14 @@ class NativePdfStrategy(TextExtractionStrategy):
             str: Texto extraído ou string vazia se a extração falhar/for insuficiente.
         """
         try:
-            with pdfplumber.open(file_path) as pdf:
+            # Usa função utilitária que tenta desbloquear PDFs protegidos
+            pdf = abrir_pdfplumber_com_senha(file_path)
+
+            if pdf is None:
+                logger.debug(f"Não foi possível abrir PDF: {file_path}")
+                return ""
+
+            try:
                 if not pdf.pages:
                     return ""
 
@@ -75,6 +95,9 @@ class NativePdfStrategy(TextExtractionStrategy):
                     return text_layout
 
                 return text_simple
+            finally:
+                pdf.close()
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Erro na extração nativa de {file_path}: {e}")
             return ""

@@ -11,11 +11,20 @@ Casos tratados:
 4. 0 NF + 1 Boleto → 1 par sem NF (usa valor do boleto)
 5. Documentos duplicados (XML + PDF da mesma nota) → agrupados em 1 par
 6. Documentos auxiliares (demonstrativos, atestados) → ignorados no pareamento
+7. NOVO: Pareamento forçado por lote (1 NF zerada + 1 Boleto no mesmo email)
 
 Estratégias de pareamento (em ordem de prioridade):
 1. Número da nota normalizado (ex: "202500000000119" e "2025/119" → mesmo par)
 2. Valor exato quando não há número da nota identificável (caso Locaweb)
 3. Agrupamento por valor para documentos duplicados
+4. NOVO: Fallback por lote - força pareamento se sobrar 1 nota + 1 boleto
+
+Status de pareamento:
+- OK: Valores conferem dentro da tolerância
+- DIVERGENTE: Valores diferentes mas pareados por número
+- CONFERIR: Sem boleto para comparação
+- PAREADO_FORCADO: Pareamento forçado por lote (mesma origem de e-mail)
+- DIVERGENTE_VALOR: Pareamento forçado com valores divergentes
 """
 from __future__ import annotations
 
@@ -75,6 +84,7 @@ class DocumentPair:
     documentos_boleto: List[str] = field(default_factory=list)
     email_subject: Optional[str] = None
     email_sender: Optional[str] = None
+    email_date: Optional[str] = None  # Data de recebimento do email (ISO format)
     source_folder: Optional[str] = None
 
     # Empresa (CSC, RBC, MASTER, etc.)
@@ -89,6 +99,9 @@ class DocumentPair:
     outros: int = 0
     avisos: int = 0
 
+    # Flag para indicar pareamento forçado
+    pareamento_forcado: bool = False
+
     def to_summary(self) -> Dict[str, Any]:
         """
         Converte o par para dicionário de resumo (formato do relatório de lotes).
@@ -98,6 +111,7 @@ class DocumentPair:
         """
         return {
             'batch_id': self.pair_id,
+            'data': self.email_date,  # Data do email (não data de processamento)
             'status_conciliacao': self.status,
             'divergencia': self.divergencia,
             'diferenca_valor': self.diferenca,
@@ -163,6 +177,10 @@ class DocumentPairingService:
         """
         Analisa o lote e retorna lista de pares NF↔Boleto.
 
+        Implementa pareamento flexível com fallback por lote:
+        - Se sobrar 1 nota (mesmo zerada) e 1 boleto, força pareamento
+        - Marca como PAREADO_FORCADO ou DIVERGENTE_VALOR
+
         Args:
             batch: Resultado do processamento em lote
 
@@ -175,7 +193,7 @@ class DocumentPairingService:
         notas_raw: List[Tuple[Optional[str], float, Any]] = []  # (numero_nota, valor, documento)
         boletos_raw: List[Tuple[Optional[str], float, Any]] = []  # (numero_ref, valor, documento)
 
-        # Coleta notas (NFSE, DANFE)
+        # Coleta notas (NFSE, DANFE) - AGORA ACEITA VALOR ZERO TAMBÉM
         for doc in batch.documents:
             if isinstance(doc, (InvoiceData, DanfeData)):
                 # Verifica se é documento auxiliar (demonstrativo, etc)
@@ -183,15 +201,14 @@ class DocumentPairingService:
                     continue
                 numero = self._extract_numero_nota(doc)
                 valor = doc.valor_total or 0.0
-                if valor > 0:  # Só considera documentos com valor
-                    notas_raw.append((numero, valor, doc))
+                # Mudança: aceita notas com valor 0 para pareamento por lote
+                notas_raw.append((numero, valor, doc))
             elif isinstance(doc, OtherDocumentData):
                 # Outros documentos: verifica se é auxiliar
                 if not self._is_documento_auxiliar(doc):
                     valor = doc.valor_total or 0.0
-                    if valor > 0:
-                        numero = self._extract_numero_nota(doc)
-                        notas_raw.append((numero, valor, doc))
+                    numero = self._extract_numero_nota(doc)
+                    notas_raw.append((numero, valor, doc))
             elif isinstance(doc, BoletoData):
                 numero = self._extract_numero_boleto(doc)
                 valor = doc.valor_documento or 0.0
@@ -202,12 +219,27 @@ class DocumentPairingService:
         if not notas_raw and not boletos_raw:
             return [self._create_empty_pair(batch)]
 
+        # NOVO: Tenta pareamento forçado por lote ANTES do agrupamento
+        # Se temos exatamente 1 nota e 1 boleto no mesmo lote, força o pareamento
+        forced_pair = self._try_forced_pairing(notas_raw, boletos_raw, batch)
+        if forced_pair:
+            self._update_document_counts(forced_pair, batch)
+            return forced_pair
+
         # Agrupa documentos duplicados (mesmo valor = provavelmente mesma nota)
-        notas_agrupadas = self._agrupar_por_valor_e_numero(notas_raw)
+        # Filtra notas com valor > 0 para agrupamento normal
+        notas_com_valor = [(n, v, d) for n, v, d in notas_raw if v > 0]
+        notas_agrupadas = self._agrupar_por_valor_e_numero(notas_com_valor) if notas_com_valor else {}
         boletos_agrupados = self._agrupar_boletos(boletos_raw)
 
         # Pareia notas com boletos
         pairs = self._parear_notas_boletos(notas_agrupadas, boletos_agrupados, batch)
+
+        # NOVO: Se tem boletos órfãos e notas zeradas, tenta pareamento forçado
+        if not pairs or self._has_orphan_documents(pairs, notas_raw, boletos_raw):
+            forced = self._try_forced_pairing_orphans(pairs, notas_raw, boletos_raw, batch)
+            if forced:
+                pairs = forced
 
         # Se não tem pares, cria par com tudo
         if not pairs:
@@ -217,6 +249,156 @@ class DocumentPairingService:
         self._update_document_counts(pairs, batch)
 
         return pairs
+
+    def _try_forced_pairing(
+        self,
+        notas: List[Tuple[Optional[str], float, Any]],
+        boletos: List[Tuple[Optional[str], float, Any]],
+        batch: 'BatchResult'
+    ) -> Optional[List[DocumentPair]]:
+        """
+        Tenta pareamento forçado por lote.
+
+        Condição: 1 nota COM VALOR ZERO + 1 boleto = força pareamento.
+        Útil para e-mails onde a NF veio como link e o boleto como PDF.
+
+        IMPORTANTE: Só força pareamento quando a nota tem valor 0.
+        Se a nota tem valor > 0, deixa o pareamento normal decidir.
+
+        Returns:
+            Lista com 1 DocumentPair se forçado, None caso contrário
+        """
+        # Condição: exatamente 1 nota e 1 boleto
+        if len(notas) != 1 or len(boletos) != 1:
+            return None
+
+        numero_nota, valor_nf, doc_nota = notas[0]
+        numero_bol, valor_boleto, doc_boleto = boletos[0]
+
+        # Se valores conferem, não precisa forçar - pareamento normal funciona
+        if abs(valor_nf - valor_boleto) <= self.TOLERANCIA_VALOR and valor_nf > 0:
+            return None
+
+        # MUDANÇA: Só força pareamento se a nota tem valor ZERO
+        # Se nota tem valor > 0, deixa o pareamento normal decidir (mesmo divergente)
+        if valor_nf > 0:
+            return None
+
+        # Pareamento forçado: nota sem valor, usa valor do boleto como referência
+        status = "PAREADO_FORCADO"
+        divergencia = f"Nota sem valor (R$ 0,00) pareada com boleto (R$ {valor_boleto:.2f}) por lote"
+
+        # Extrai dados do boleto como principal (mais confiável)
+        fornecedor = getattr(doc_boleto, 'fornecedor_nome', None) or getattr(doc_nota, 'fornecedor_nome', None)
+        vencimento = getattr(doc_boleto, 'vencimento', None) or getattr(doc_nota, 'vencimento', None)
+        data_emissao = getattr(doc_nota, 'data_emissao', None) or getattr(doc_boleto, 'data_emissao', None)
+
+        # Usa número da nota ou referência do boleto
+        numero_final = numero_nota or numero_bol
+
+        # Calcula diferença
+        diferenca = valor_nf - valor_boleto if valor_nf > 0 else -valor_boleto
+
+        # Identifica empresa
+        empresa = self._extract_empresa(batch, [doc_nota, doc_boleto])
+
+        pair = DocumentPair(
+            pair_id=batch.batch_id,
+            batch_id=batch.batch_id,
+            numero_nota=numero_final,
+            valor_nf=valor_nf,
+            valor_boleto=valor_boleto,
+            vencimento=vencimento,
+            fornecedor=self._normalize_fornecedor(fornecedor) if fornecedor else None,
+            cnpj_fornecedor=getattr(doc_boleto, 'cnpj_beneficiario', None) or getattr(doc_nota, 'cnpj_prestador', None),
+            data_emissao=data_emissao,
+            status=status,
+            divergencia=divergencia,
+            diferenca=diferenca,
+            documentos_nf=[getattr(doc_nota, 'arquivo_origem', '')],
+            documentos_boleto=[getattr(doc_boleto, 'arquivo_origem', '')],
+            email_subject=batch.email_subject,
+            email_sender=batch.email_sender,
+            email_date=batch.email_date,
+            source_folder=batch.source_folder,
+            empresa=empresa,
+            pareamento_forcado=True,
+        )
+
+        return [pair]
+
+    def _has_orphan_documents(
+        self,
+        pairs: List[DocumentPair],
+        notas: List[Tuple[Optional[str], float, Any]],
+        boletos: List[Tuple[Optional[str], float, Any]]
+    ) -> bool:
+        """
+        Verifica se há documentos órfãos (não pareados).
+        """
+        # Conta documentos nos pares
+        docs_nf_pareados = sum(len(p.documentos_nf) for p in pairs)
+        docs_bol_pareados = sum(len(p.documentos_boleto) for p in pairs)
+
+        # Verifica se há órfãos
+        return docs_nf_pareados < len(notas) or docs_bol_pareados < len(boletos)
+
+    def _try_forced_pairing_orphans(
+        self,
+        pairs: List[DocumentPair],
+        notas: List[Tuple[Optional[str], float, Any]],
+        boletos: List[Tuple[Optional[str], float, Any]],
+        batch: 'BatchResult'
+    ) -> Optional[List[DocumentPair]]:
+        """
+        Tenta parear documentos órfãos de forma forçada.
+
+        Cenário: 1 nota sem valor + 1 boleto órfão → força pareamento
+        """
+        # Identifica notas zeradas
+        notas_zeradas = [(n, v, d) for n, v, d in notas if v == 0]
+
+        # Identifica boletos órfãos (não estão em nenhum par)
+        arquivos_boleto_pareados = set()
+        for pair in pairs:
+            arquivos_boleto_pareados.update(pair.documentos_boleto)
+
+        boletos_orfaos = [
+            (n, v, d) for n, v, d in boletos
+            if getattr(d, 'arquivo_origem', '') not in arquivos_boleto_pareados
+        ]
+
+        # Se tem exatamente 1 nota zerada e 1 boleto órfão, força
+        if len(notas_zeradas) == 1 and len(boletos_orfaos) == 1:
+            # Remove pares existentes que tenham a nota zerada ou boleto órfão
+            novo_pair = self._try_forced_pairing(notas_zeradas, boletos_orfaos, batch)
+            if novo_pair:
+                # Mantém outros pares válidos e adiciona o forçado
+                outros_pares = [
+                    p for p in pairs
+                    if p.valor_nf > 0 and p.valor_boleto > 0
+                ]
+                return outros_pares + novo_pair
+
+        return None
+
+    def _extract_empresa(self, batch: 'BatchResult', docs: List[Any]) -> Optional[str]:
+        """
+        Extrai código da empresa dos documentos ou do batch.
+        """
+        # Tenta do correlation_result
+        if batch.correlation_result:
+            empresa = getattr(batch.correlation_result, 'empresa', None)
+            if empresa:
+                return empresa
+
+        # Tenta dos documentos
+        for doc in docs:
+            empresa = getattr(doc, 'empresa', None)
+            if empresa:
+                return empresa
+
+        return None
 
     def _is_documento_auxiliar(self, doc: Any) -> bool:
         """
@@ -493,11 +675,11 @@ class DocumentPairingService:
         Cria par de fallback quando o pareamento normal falha.
         """
         # Pega o maior valor de nota como principal
-        valor_nf = max((n[1] for n in notas), default=0.0)
-        valor_boleto = sum(b[1] for b in boletos)
+        valor_nf = max((n[1] for n in notas_raw), default=0.0)
+        valor_boleto = sum(b[1] for b in boletos_raw)
 
         numero = None
-        for num, _, doc in notas:
+        for num, _, doc in notas_raw:
             if num:
                 numero = num
                 break
@@ -507,8 +689,8 @@ class DocumentPairingService:
             numero_nota=numero,
             valor_nf=valor_nf,
             valor_boleto=valor_boleto,
-            docs_nf=[n[2] for n in notas],
-            docs_boleto=[b[2] for b in boletos],
+            docs_nf=[n[2] for n in notas_raw],
+            docs_boleto=[b[2] for b in boletos_raw],
             suffix=""
         )
 
@@ -594,6 +776,7 @@ class DocumentPairingService:
             batch_id=batch.batch_id,
             email_subject=batch.email_subject,
             email_sender=batch.email_sender,
+            email_date=batch.email_date,
             source_folder=batch.source_folder,
             status="CONFERIR",
             divergencia="Nenhum documento com valor encontrado",
@@ -651,16 +834,14 @@ class DocumentPairingService:
         diferenca = round(valor_nf - valor_boleto, 2)
         status, divergencia = self._calculate_status(valor_nf, valor_boleto, diferenca, docs_boleto)
 
-        # Adiciona alerta de vencimento se não encontrado
+        # Adiciona alerta de vencimento se não encontrado (mas deixa vencimento vazio)
         if not vencimento:
             aviso = " [VENCIMENTO NÃO ENCONTRADO - verificar urgente]"
             if divergencia:
                 divergencia += aviso
             else:
                 divergencia = aviso.strip()
-            # Define data atual como vencimento de alerta
-            from datetime import date
-            vencimento = date.today().isoformat()
+            # Não define fallback - deixa vencimento vazio/nulo
 
         # Normaliza fornecedor
         if fornecedor:
@@ -683,6 +864,7 @@ class DocumentPairingService:
             documentos_boleto=[getattr(d, 'arquivo_origem', '') for d in docs_boleto],
             email_subject=batch.email_subject,
             email_sender=batch.email_sender,
+            email_date=batch.email_date,
             source_folder=batch.source_folder,
             empresa=empresa,
         )
@@ -692,10 +874,18 @@ class DocumentPairingService:
         valor_nf: float,
         valor_boleto: float,
         diferenca: float,
-        docs_boleto: List[Any]
+        docs_boleto: List[Any],
+        pareamento_forcado: bool = False
     ) -> Tuple[str, Optional[str]]:
         """
         Calcula status de conciliação e mensagem de divergência.
+
+        Status possíveis:
+        - CONCILIADO: NF e boleto encontrados, valores conferem
+        - DIVERGENTE: Valores diferentes
+        - CONFERIR: Sem boleto para comparação
+        - PAREADO_FORCADO: Pareamento forçado por lote (nota sem valor)
+        - DIVERGENTE_VALOR: Pareamento forçado com valores divergentes
 
         Returns:
             Tupla (status, divergencia)
@@ -704,7 +894,19 @@ class DocumentPairingService:
 
         if has_boleto:
             if abs(diferenca) <= self.TOLERANCIA_VALOR:
-                return "OK", None
+                return "CONCILIADO", None
+            elif pareamento_forcado:
+                if valor_nf == 0:
+                    return "PAREADO_FORCADO", (
+                        f"Nota sem valor pareada com boleto por lote | "
+                        f"Valor boleto: R$ {valor_boleto:.2f}"
+                    )
+                else:
+                    return "DIVERGENTE_VALOR", (
+                        f"Pareamento forçado | Valor NF: R$ {valor_nf:.2f} | "
+                        f"Valor boleto: R$ {valor_boleto:.2f} | "
+                        f"Diferença: R$ {diferenca:.2f}"
+                    )
             else:
                 return "DIVERGENTE", (
                     f"Valor compra: R$ {valor_nf:.2f} | "

@@ -33,14 +33,14 @@ class TestDocumentPair:
             valor_boleto=9290.71,
             vencimento="2025-08-18",
             fornecedor="MAIS CONSULTORIA",
-            status="OK",
+            status="CONCILIADO",
         )
 
         assert pair.pair_id == "batch_123"
         assert pair.numero_nota == "2025/119"
         assert pair.valor_nf == 9290.71
         assert pair.valor_boleto == 9290.71
-        assert pair.status == "OK"
+        assert pair.status == "CONCILIADO"
 
     def test_to_summary(self):
         """Testa conversão para dicionário de resumo."""
@@ -52,7 +52,7 @@ class TestDocumentPair:
             valor_boleto=9290.71,
             vencimento="2025-08-18",
             fornecedor="MAIS CONSULTORIA",
-            status="OK",
+            status="CONCILIADO",
             diferenca=0.0,
             email_subject="ENC: Fatura",
         )
@@ -63,7 +63,7 @@ class TestDocumentPair:
         assert summary['numero_nota'] == "2025/119"
         assert summary['valor_compra'] == 9290.71
         assert summary['valor_boleto'] == 9290.71
-        assert summary['status_conciliacao'] == "OK"
+        assert summary['status_conciliacao'] == "CONCILIADO"
         assert summary['diferenca_valor'] == 0.0
 
 
@@ -157,7 +157,7 @@ class TestDocumentPairingServiceSimple:
         pairs = service.pair_documents(batch)
 
         assert len(pairs) == 1
-        assert pairs[0].status == "OK"
+        assert pairs[0].status == "CONCILIADO"
         assert pairs[0].valor_nf == 1000.0
         assert pairs[0].valor_boleto == 1000.0
         assert pairs[0].diferenca == 0.0
@@ -269,9 +269,9 @@ class TestDocumentPairingServiceMultiple:
         # Deve gerar 2 pares separados
         assert len(pairs) == 2
 
-        # Verifica que ambos estão OK
+        # Verifica que ambos estão CONCILIADO
         statuses = [p.status for p in pairs]
-        assert all(s == "OK" for s in statuses)
+        assert all(s == "CONCILIADO" for s in statuses)
 
         # Verifica os valores de cada par
         valores_nf = sorted([p.valor_nf for p in pairs])
@@ -320,7 +320,7 @@ class TestDocumentPairingServiceMultiple:
         # Par 100 deve estar OK
         par_100 = next((p for p in pairs if p.numero_nota == "100"), None)
         assert par_100 is not None
-        assert par_100.status == "OK"
+        assert par_100.status == "CONCILIADO"
 
         # Par 200 deve estar CONFERIR
         par_200 = next((p for p in pairs if p.numero_nota == "200"), None)
@@ -360,7 +360,7 @@ class TestDocumentPairingServiceByValue:
         pairs = service.pair_documents(batch)
 
         assert len(pairs) == 1
-        assert pairs[0].status == "OK"
+        assert pairs[0].status == "CONCILIADO"
         assert pairs[0].valor_nf == 352.08
         assert pairs[0].valor_boleto == 352.08
 
@@ -402,7 +402,7 @@ class TestDocumentPairingServiceByValue:
         pairs = service.pair_documents(batch)
 
         assert len(pairs) == 2
-        assert all(p.status == "OK" for p in pairs)
+        assert all(p.status == "CONCILIADO" for p in pairs)
 
 
 class TestDocumentPairingServiceEdgeCases:
@@ -467,7 +467,7 @@ class TestDocumentPairingServiceEdgeCases:
         pairs = service.pair_documents(batch)
 
         assert len(pairs) == 1
-        assert pairs[0].status == "OK"
+        assert pairs[0].status == "CONCILIADO"
         assert pairs[0].numero_nota == "74970"
 
     def test_vencimento_nao_encontrado_adiciona_alerta(self, service):
@@ -488,8 +488,8 @@ class TestDocumentPairingServiceEdgeCases:
 
         assert len(pairs) == 1
         assert "VENCIMENTO NÃO ENCONTRADO" in pairs[0].divergencia
-        # Deve ter preenchido com data atual
-        assert pairs[0].vencimento is not None
+        # Vencimento deve ficar vazio/nulo (sem fallback para data atual)
+        assert pairs[0].vencimento is None
 
 
 class TestBatchResultToSummaries:
@@ -520,7 +520,7 @@ class TestBatchResultToSummaries:
         summaries = batch.to_summaries()
 
         assert len(summaries) == 1
-        assert summaries[0]['status_conciliacao'] == "OK"
+        assert summaries[0]['status_conciliacao'] == "CONCILIADO"
         assert summaries[0]['valor_compra'] == 1000.0
 
     def test_to_summaries_multiplos(self):
@@ -565,7 +565,7 @@ class TestBatchResultToSummaries:
         summaries = batch.to_summaries()
 
         assert len(summaries) == 2
-        assert all(s['status_conciliacao'] == "OK" for s in summaries)
+        assert all(s['status_conciliacao'] == "CONCILIADO" for s in summaries)
 
     def test_has_multiple_invoices(self):
         """Testa detecção de múltiplas notas."""

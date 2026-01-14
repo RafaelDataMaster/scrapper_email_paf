@@ -598,7 +598,7 @@ class TestCorrelationServicePropagation(unittest.TestCase):
 
         # Verifica propagação para todos os documentos
         for doc in batch.documents:
-            self.assertEqual(doc.status_conciliacao, "OK")
+            self.assertEqual(doc.status_conciliacao, "CONCILIADO")
             # valor_compra é o valor da nota (1000.0)
             self.assertEqual(doc.valor_compra, 1000.0)
 
@@ -657,7 +657,7 @@ class TestCorrelationServicePropagation(unittest.TestCase):
         summary = batch.to_summary()
 
         self.assertIn("status_conciliacao", summary)
-        self.assertEqual(summary["status_conciliacao"], "OK")
+        self.assertEqual(summary["status_conciliacao"], "CONCILIADO")
 
     def test_batch_result_stores_correlation_result(self):
         """Testa que BatchResult armazena CorrelationResult."""
@@ -671,7 +671,7 @@ class TestCorrelationServicePropagation(unittest.TestCase):
         batch.correlation_result = result
 
         self.assertIsNotNone(batch.correlation_result)
-        self.assertEqual(batch.correlation_result.status, "OK")
+        self.assertEqual(batch.correlation_result.status, "CONCILIADO")
 
 
 class TestCorrelationResult(unittest.TestCase):
@@ -681,7 +681,7 @@ class TestCorrelationResult(unittest.TestCase):
         """Testa criação de resultado OK."""
         result = CorrelationResult(
             batch_id="test",
-            status="OK",
+            status="CONCILIADO",
             valor_compra=1000.0,
             valor_boleto=1000.0,
             diferenca=0.0,
@@ -724,7 +724,7 @@ class TestCorrelationService(unittest.TestCase):
     """Testes para a classe CorrelationService."""
 
     def test_correlate_danfe_boleto_valores_iguais(self):
-        """Testa correlação com valores iguais (OK)."""
+        """Testa correlação com valores iguais (CONCILIADO)."""
         batch = BatchResult(batch_id="test")
         batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=1000.0))
         batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1000.0))
@@ -732,7 +732,7 @@ class TestCorrelationService(unittest.TestCase):
         service = CorrelationService()
         result = service.correlate(batch)
 
-        self.assertEqual(result.status, "OK")
+        self.assertEqual(result.status, "CONCILIADO")
         self.assertAlmostEqual(result.diferenca, 0.0, places=2)
 
     def test_correlate_danfe_boleto_valores_divergentes(self):

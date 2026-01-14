@@ -61,6 +61,7 @@ class BatchResult:
     # Campos de contexto enriquecido (vindos do metadata.json)
     email_subject: Optional[str] = None
     email_sender: Optional[str] = None
+    email_date: Optional[str] = None  # Data de recebimento do email (ISO format)
 
     # Resultado da correlação (preenchido após correlate())
     correlation_result: Optional[CorrelationResult] = None
@@ -355,13 +356,16 @@ class BatchResult:
         Returns:
             Dicionário com estatísticas do lote
         """
+        vencimento = self._get_primeiro_vencimento()
+        # Não aplica fallback - deixa vencimento vazio/nulo se não encontrado
+
         summary = {
             'batch_id': self.batch_id,
             'source_folder': self.source_folder,
             'email_subject': self.email_subject,
             'email_sender': self.email_sender,
             'fornecedor': self._get_primeiro_fornecedor(),
-            'vencimento': self._get_primeiro_vencimento(),
+            'vencimento': vencimento,
             'numero_nota': self._get_primeiro_numero_nota(),
             'total_documents': self.total_documents,
             'total_errors': self.total_errors,
@@ -569,7 +573,7 @@ class CorrelationResult:
         diferenca: Diferença entre valores
     """
     batch_id: str
-    status: str = "OK"
+    status: str = "CONCILIADO"
     divergencia: Optional[str] = None
     valor_compra: float = 0.0
     valor_boleto: float = 0.0
@@ -588,8 +592,8 @@ class CorrelationResult:
     vencimento_alerta: Optional[str] = None  # Data de alerta quando vencimento não encontrado
 
     def is_ok(self) -> bool:
-        """Verifica se a conciliação está OK."""
-        return self.status == "OK"
+        """Verifica se a conciliação está OK (CONCILIADO)."""
+        return self.status == "CONCILIADO"
 
     def is_divergente(self) -> bool:
         """Verifica se há divergência de valores."""

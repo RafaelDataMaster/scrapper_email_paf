@@ -74,12 +74,8 @@ from services.ingestion_service import IngestionService
 _interrupted = False
 _current_orchestrator: Optional[EmailIngestionOrchestrator] = None
 
-# Configurar logging estruturado
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+# Usa a configuração de logging do settings.py (já importado acima)
+# que configura RotatingFileHandler + console automaticamente
 logger = logging.getLogger(__name__)
 
 
@@ -200,7 +196,7 @@ def export_batch_results(
 
         # Reordena colunas do resumo
         colunas_lote = [
-            'batch_id', 'status_conciliacao', 'divergencia', 'diferenca_valor',
+            'batch_id', 'data', 'status_conciliacao', 'divergencia', 'diferenca_valor',
             'fornecedor', 'vencimento', 'numero_nota', 'valor_compra', 'valor_boleto',
             'total_documents', 'total_errors',
             'danfes', 'boletos', 'nfses', 'outros',

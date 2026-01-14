@@ -2,9 +2,16 @@
 # é definida pela ordem em que os módulos são importados.
 # REGRA: Extractors ESPECÍFICOS devem vir ANTES dos GENÉRICOS
 
-from .boleto_repromaq import BoletoRepromaqExtractor  # Específico: antes do genérico
 from .boleto import BoletoExtractor
+from .boleto_repromaq import BoletoRepromaqExtractor  # Específico: antes do genérico
 from .danfe import DanfeExtractor
+
+# Extrator de corpo de e-mail (não usa EXTRACTOR_REGISTRY, é chamado diretamente)
+from .email_body_extractor import (
+    EmailBodyExtractionResult,
+    EmailBodyExtractor,
+    extract_from_email_body,
+)
 from .emc_fatura import EmcFaturaExtractor
 from .net_center import NetCenterExtractor
 from .nfse_custom_montes_claros import NfseCustomMontesClarosExtractor
@@ -28,4 +35,8 @@ __all__ = [
 	"XmlExtractor",
 	"XmlExtractionResult",
 	"extract_xml",
+	# Extrator de corpo de e-mail
+	"EmailBodyExtractor",
+	"EmailBodyExtractionResult",
+	"extract_from_email_body",
 ]

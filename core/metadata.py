@@ -164,6 +164,117 @@ class EmailMetadata:
         """
         return self.email_sender_name
 
+    def extract_valor_from_body(self) -> float:
+        """
+        Extrai valor monetário do corpo do e-mail.
+
+        Útil para e-mails onde a NF é apenas um link mas o valor
+        está no corpo do e-mail (ex: Omie, prefeituras).
+
+        Returns:
+            Valor extraído (float) ou 0.0 se não encontrado
+        """
+        try:
+            from extractors.email_body_extractor import EmailBodyExtractor
+
+            extractor = EmailBodyExtractor()
+            result = extractor.extract(
+                body_text=self.email_body_text,
+                subject=self.email_subject
+            )
+
+            return result.valor_total
+        except ImportError:
+            # Fallback se o extrator não estiver disponível
+            return self._extract_valor_fallback()
+
+    def _extract_valor_fallback(self) -> float:
+        """
+        Extração simples de valor (fallback).
+
+        Usa regex básico para extrair valor R$ X.XXX,XX.
+        """
+        import re
+
+        text = f"{self.email_subject or ''} {self.email_body_text or ''}"
+        if not text.strip():
+            return 0.0
+
+        # Padrão simples: R$ 1.234,56
+        pattern = r'R\$\s*([\d]{1,3}(?:\.[\d]{3})*,[\d]{2})'
+        matches = re.findall(pattern, text)
+
+        if not matches:
+            return 0.0
+
+        # Converte e retorna o maior valor encontrado
+        valores = []
+        for match in matches:
+            try:
+                valor_str = match.replace('.', '').replace(',', '.')
+                valor = float(valor_str)
+                if 0.01 <= valor <= 10_000_000:
+                    valores.append(valor)
+            except ValueError:
+                continue
+
+        return max(valores) if valores else 0.0
+
+    def extract_vencimento_from_body(self) -> Optional[str]:
+        """
+        Extrai data de vencimento do corpo do e-mail.
+
+        Returns:
+            Data em formato ISO (YYYY-MM-DD) ou None
+        """
+        try:
+            from extractors.email_body_extractor import EmailBodyExtractor
+
+            extractor = EmailBodyExtractor()
+            result = extractor.extract(
+                body_text=self.email_body_text,
+                subject=self.email_subject
+            )
+
+            return result.vencimento
+        except ImportError:
+            return None
+
+    def extract_all_from_body(self) -> Dict[str, Any]:
+        """
+        Extrai todos os dados possíveis do corpo do e-mail.
+
+        Usa o EmailBodyExtractor para extrair:
+        - valor_total
+        - vencimento
+        - numero_nota
+        - link_nfe
+        - codigo_verificacao
+        - fornecedor_nome
+
+        Returns:
+            Dicionário com todos os dados extraídos
+        """
+        try:
+            from extractors.email_body_extractor import EmailBodyExtractor
+
+            extractor = EmailBodyExtractor()
+            result = extractor.extract(
+                body_text=self.email_body_text,
+                subject=self.email_subject
+            )
+
+            return result.to_dict()
+        except ImportError:
+            return {
+                'valor_total': self._extract_valor_fallback(),
+                'vencimento': None,
+                'numero_nota': self.extract_numero_nota_from_context(),
+                'link_nfe': self.extract_link_nfe_from_context(),
+                'codigo_verificacao': self.extract_codigo_verificacao_from_body(),
+                'fornecedor_nome': self.email_sender_name,
+            }
+
     def extract_cnpj_from_body(self) -> Optional[str]:
         """
         Tenta extrair CNPJ do corpo do e-mail.

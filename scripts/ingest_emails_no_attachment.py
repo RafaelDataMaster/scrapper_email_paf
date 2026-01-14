@@ -36,12 +36,8 @@ from core.models import EmailAvisoData
 from ingestors.imap import ImapIngestor
 from services.ingestion_service import IngestionService
 
-# Configurar logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+# Usa a configuração de logging do settings.py (importado acima)
+# que configura RotatingFileHandler + console automaticamente
 logger = logging.getLogger(__name__)
 
 

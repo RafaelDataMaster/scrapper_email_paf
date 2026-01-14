@@ -93,6 +93,41 @@ A estratégia de correlação foi implementada nos seguintes módulos:
 
 ## Done
 
+### 14/01/2026
+
+- [x] **Tratamento de PDF com senha em todas as estratégias de extração**: Centralizado código de desbloqueio de PDFs protegidos
+    - Novo módulo `strategies/pdf_utils.py` com funções compartilhadas:
+        - `gerar_candidatos_senha()`: Gera candidatos baseados em CNPJs (completo, 4, 5 e 8 primeiros dígitos)
+        - `abrir_pdfplumber_com_senha()`: Abre PDFs com pdfplumber tentando senhas automaticamente
+        - `abrir_pypdfium_com_senha()`: Abre PDFs com pypdfium2 tentando senhas automaticamente
+    - `NativePdfStrategy`: Agora desbloqueia PDFs protegidos antes da extração nativa (muito mais rápido que OCR)
+    - `TablePdfStrategy`: Agora desbloqueia PDFs protegidos antes da extração de tabelas
+    - `TesseractOcrStrategy`: Refatorado para usar funções compartilhadas
+    - Benefícios: PDFs vetoriais protegidos agora são extraídos nativamente (performance e precisão), casos híbridos continuam funcionando com `HYBRID_OCR_COMPLEMENT`
+- [x] **Nova coluna RECEBIDO nas planilhas Google Sheets**: Data de recebimento do email agora é exibida separada da data de processamento
+    - Aba `anexos`: PROCESSADO, RECEBIDO, ASSUNTO, N_PEDIDO, EMPRESA, VENCIMENTO, FORNECEDOR, NF, VALOR, SITUACAO, AVISOS (11 colunas)
+    - Aba `sem_anexos`: PROCESSADO, RECEBIDO, ASSUNTO, N_PEDIDO, EMPRESA, FORNECEDOR, NF, LINK, CODIGO (9 colunas)
+    - Campo `email_date` adicionado à classe base `DocumentData` e propagado para todos os tipos de documento
+    - `BatchProcessor._parse_email_date()`: Converte `received_date` do metadata (RFC 2822, ISO, BR) para formato ISO
+    - `DocumentPair.to_summary()`: Exporta coluna `data` no `relatorio_lotes.csv`
+    - `EmailAvisoData.from_metadata()`: Extrai `email_date` do metadata para avisos sem anexo
+    - Atualizado `to_anexos_row()` em `InvoiceData`, `DanfeData`, `BoletoData`, `OtherDocumentData`
+    - Atualizado `to_sem_anexos_row()` em `EmailAvisoData`
+    - `load_lotes_from_csv()` e `load_avisos_from_csv()` atualizados para carregar `email_date`
+- [x] **Status de conciliação "CONCILIADO"**: Trocado status "OK" por "CONCILIADO" quando NF e boleto são encontrados e valores conferem
+    - Mais descritivo para o usuário entender que os documentos foram pareados com sucesso
+    - Alterado em `DocumentPairingService._calculate_status()` e `CorrelationService._validate_cross_values()`
+    - `CorrelationResult.is_ok()` atualizado para verificar status "CONCILIADO"
+- [x] **Vencimento vazio quando não encontrado**: Removido fallback que colocava data de processamento quando vencimento não era encontrado
+    - Coluna VENCIMENTO fica vazia/nula se não encontrado
+    - Aviso `[VENCIMENTO NÃO ENCONTRADO - verificar urgente]` adicionado à coluna AVISOS
+    - Alterado em `DocumentPairingService._create_pair()`, `BatchResult.to_summary()` e `CorrelationService._apply_vencimento_alerta()`
+- [x] **Fix configuração de logging**: Logs agora são salvos corretamente em arquivo com rotação
+    - `config/settings.py`: Logger raiz configurado com `RotatingFileHandler` (10MB, 5 backups)
+    - Todos os módulos que usam `logging.getLogger(__name__)` agora herdam a configuração automaticamente
+    - Removido `logging.basicConfig()` de `run_ingestion.py`, `export_to_sheets.py` e `ingest_emails_no_attachment.py`
+    - Logs salvos em `logs/scrapper.log` com formato: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
+
 ### 12/01/2026
 
 - [x] script de limpeza dos arquivos.

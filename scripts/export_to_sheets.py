@@ -75,12 +75,8 @@ except ImportError:
     DEFAULT_SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '')
     DEFAULT_CREDENTIALS_PATH = os.getenv('GOOGLE_CREDENTIALS_PATH', 'credentials.json')
 
-# Configuração de logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+# Usa a configuração de logging do settings.py (importado acima)
+# que configura RotatingFileHandler + console automaticamente
 logger = logging.getLogger(__name__)
 
 # Constantes
@@ -89,7 +85,8 @@ SEM_ANEXOS_SHEET_NAME = "sem_anexos"
 
 # Headers das abas
 ANEXOS_HEADERS = [
-    "DATA",
+    "PROCESSADO",
+    "RECEBIDO",
     "ASSUNTO",
     "N_PEDIDO",
     "EMPRESA",
@@ -102,14 +99,15 @@ ANEXOS_HEADERS = [
 ]
 
 SEM_ANEXOS_HEADERS = [
-    "DATA",
+    "PROCESSADO",
+    "RECEBIDO",
     "ASSUNTO",
     "N_PEDIDO",
     "EMPRESA",
     "FORNECEDOR",
     "NF",
     "LINK",
-    "CÓDIGO",
+    "CODIGO",
 ]
 
 
@@ -505,6 +503,7 @@ def load_documents_from_csv(csv_path: Path) -> List[DocumentData]:
                 doc = EmailAvisoData(
                     arquivo_origem=row_dict.get('arquivo_origem', ''),
                     data_processamento=row_dict.get('data_processamento'),
+                    email_date=row_dict.get('email_date'),  # Data do email (não do processamento)
                     empresa=row_dict.get('empresa'),
                     fornecedor_nome=row_dict.get('fornecedor_nome'),
                     numero_nota=row_dict.get('numero_nota'),
@@ -555,8 +554,12 @@ def load_lotes_from_csv(csv_path: Path) -> List[DocumentData]:
             valor_compra = _parse_float_br(row_dict.get('valor_compra'))
             valor_final = valor_boleto if valor_boleto and valor_boleto > 0 else valor_compra
 
-            # Extrai data do batch_id ou usa data atual
             batch_id = row_dict.get('batch_id', '')
+
+            # email_date: data de recebimento do email (coluna 'data' do CSV)
+            email_date = row_dict.get('data')
+
+            # data_processamento: data que o lote foi processado (extraída do batch_id ou hoje)
             data_proc = None
             if batch_id and '_' in batch_id:
                 # Formato: email_YYYYMMDD_HHMMSS_xxx
@@ -582,6 +585,7 @@ def load_lotes_from_csv(csv_path: Path) -> List[DocumentData]:
             doc = OtherDocumentData(
                 arquivo_origem=batch_id,
                 data_processamento=data_proc,
+                email_date=email_date,  # Data do email (coluna 'data' do CSV)
                 empresa=row_dict.get('empresa'),
                 fornecedor_nome=row_dict.get('fornecedor'),
                 numero_documento=str(row_dict.get('numero_nota', '')) if row_dict.get('numero_nota') else None,
@@ -628,6 +632,7 @@ def load_avisos_from_csv(csv_path: Path) -> List[EmailAvisoData]:
             doc = EmailAvisoData(
                 arquivo_origem=row_dict.get('arquivo_origem', ''),
                 data_processamento=row_dict.get('data_processamento'),
+                email_date=row_dict.get('email_date'),  # Data do email (não do processamento)
                 empresa=row_dict.get('empresa'),
                 fornecedor_nome=row_dict.get('fornecedor_nome'),
                 numero_nota=row_dict.get('numero_nota'),

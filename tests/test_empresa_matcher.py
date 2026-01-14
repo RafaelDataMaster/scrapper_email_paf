@@ -13,10 +13,10 @@ def test_find_empresa_no_texto_by_cnpj_digits_or_spaced():
 
 def test_find_empresa_no_texto_by_email_domain_fallback_master():
     # Documento não contém CNPJ nosso, mas contém e-mail/dominio corporativo.
+    # Não deve associar domínio 'soumaster.com.br' à empresa MASTER (evita falso positivo).
     txt = "Login: courrier ti@soumaster.com.br VENCIMENTO TOTAL A PAGAR"
     m = find_empresa_no_texto(txt)
-    assert m is not None
-    assert m.codigo == "MASTER"
+    assert m is None
 
 
 def test_infer_fornecedor_prefers_labelled_line_and_excludes_our_company():
