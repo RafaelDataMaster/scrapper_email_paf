@@ -17,6 +17,7 @@ Princípios SOLID aplicados:
 - OCP: Novas regras podem ser adicionadas via métodos sem alterar existentes
 - DIP: Depende de abstrações (DocumentData), não de implementações concretas
 """
+import re
 from typing import Dict, List, Optional, Set, Tuple
 
 from core.batch_result import BatchResult, CorrelationResult
@@ -47,6 +48,67 @@ class CorrelationService:
     # Tolerância para comparação de valores (em reais)
     TOLERANCIA_VALOR = 0.01
 
+    # Padrões de assuntos que indicam documentos administrativos (não cobranças)
+    # Estes e-mails são processados, mas recebem aviso de que podem não ser cobranças
+    ADMIN_SUBJECT_PATTERNS: List[re.Pattern] = [
+        # Ordens de serviço e agendamentos (ex: Equinix)
+        re.compile(r'\b(sua\s+)?ordem\b.*\bagendad[ao]\b', re.IGNORECASE),
+        re.compile(r'\bagendamento\s+de\s+serviço\b', re.IGNORECASE),
+        
+        # Distratos e rescisões
+        re.compile(r'\bdistrato\b', re.IGNORECASE),
+        re.compile(r'\brescis[ãa]o\s*(contratual)?\b', re.IGNORECASE),
+        
+        # Encerramentos e cancelamentos
+        re.compile(r'\bencerramento\s+(de\s+)?contrato\b', re.IGNORECASE),
+        re.compile(r'\bsolicitação\s+de\s+encerramento\b', re.IGNORECASE),
+        re.compile(r'\bcancelamento\s+(de\s+)?contrato\b', re.IGNORECASE),
+        
+        # Relatórios e planilhas de conferência
+        re.compile(r'\brelat[oó]rio\s+de\s+faturamento\b', re.IGNORECASE),
+        re.compile(r'\bplanilha\s+de\s+(confer[eê]ncia|faturamento)\b', re.IGNORECASE),
+        
+        # Documentos informativos
+        re.compile(r'\bcomprovante\s+de\s+solicitação\b', re.IGNORECASE),
+        re.compile(r'\bnotificação\s+automática\b', re.IGNORECASE),
+        
+        # ============ NOVOS PADRÕES ADICIONADOS ============
+        
+        # Guias jurídicas e fiscais
+        re.compile(r'\bguia\s*[\|\-]?\s*(processo|execu[çc][aã]o|fiscal|trabalhist|rr)\b', re.IGNORECASE),
+        re.compile(r'\bguias\s*-?\s*(csc|processo)\b', re.IGNORECASE),
+        
+        # Contratos (não faturas)
+        re.compile(r'\bcontrato(_|\s+)(site|master|renova[çc][aã]o|aditivo)\b', re.IGNORECASE),
+        
+        # Câmbio/programação TV
+        re.compile(r'\bc[aâ]mbio\s+(hbo|globosat|band|sbt|record|programadora)\b', re.IGNORECASE),
+        
+        # Lembretes gentis (sem NF anexa, apenas aviso)
+        re.compile(r'\blembrete\s+gentil\b', re.IGNORECASE),
+        
+        # Invoices internacionais vazias (December/January Invoice for...)
+        re.compile(r'\b(december|january|february|march|april|may|june|july|august|september|october|november)\s*-?\s*\d{4}\s+invoice\s+for\b', re.IGNORECASE),
+        
+        # Processos e execuções judiciais
+        re.compile(r'\b(processo|execu[çc][aã]o)\s+(fiscal|trabalhist[ao]|judicial)\b', re.IGNORECASE),
+        
+        # Anuidades e taxas de órgãos
+        re.compile(r'\banuidade\s+(crea|oab|crm|cfm|coren)\b', re.IGNORECASE),
+        
+        # Reembolsos internos
+        re.compile(r'\breembolso\s+de\s+tarifas\b', re.IGNORECASE),
+        
+        # Tarifas CSC (documentos internos)
+        re.compile(r'\btarifas\s+csc\b', re.IGNORECASE),
+        
+        # Alvim Nogueira (condomínio - boleto separado de cobrança)
+        re.compile(r'\balvim\s+nogueira\b', re.IGNORECASE),
+        
+        # Cobranças indevidas (reclamações, não pagamentos)
+        re.compile(r'\bcobran[çc]a\s+indevida\b', re.IGNORECASE),
+    ]
+
     def correlate(
         self,
         batch: BatchResult,
@@ -75,7 +137,9 @@ class CorrelationService:
         duplicatas = self._detect_duplicate_documents(batch)
 
         # 4. Validação cruzada de valores (compara com boleto)
-        self._validate_cross_values(batch, result, duplicatas)
+        # Passa o subject do batch para detectar documentos administrativos
+        email_subject = batch.email_subject or ""
+        self._validate_cross_values(batch, result, duplicatas, email_subject)
 
         # 5. Verifica se lote ficou sem vencimento após toda herança
         vencimento_final = batch._get_primeiro_vencimento()
@@ -330,11 +394,69 @@ class CorrelationService:
 
         return duplicatas
 
+    def _check_admin_subject(self, subject: str) -> Optional[str]:
+        """
+        Verifica se o assunto corresponde a um padrão de documento administrativo.
+
+        Args:
+            subject: Assunto do e-mail
+
+        Returns:
+            Descrição do padrão encontrado ou None se não for administrativo
+        """
+        if not subject:
+            return None
+
+        subject_lower = subject.lower()
+        
+        # Mapeamento de padrões para descrições amigáveis
+        pattern_descriptions = {
+            'ordem': 'Ordem de serviço/agendamento',
+            'agendamento': 'Ordem de serviço/agendamento',
+            'distrato': 'Documento de distrato',
+            'rescis': 'Documento de rescisão contratual',
+            'encerramento': 'Documento de encerramento de contrato',
+            'cancelamento': 'Documento de cancelamento',
+            'relatório': 'Relatório/planilha de conferência',
+            'relatorio': 'Relatório/planilha de conferência',
+            'planilha': 'Relatório/planilha de conferência',
+            'comprovante': 'Comprovante administrativo',
+            'notificação': 'Notificação automática',
+            # Novos padrões adicionados
+            'guia': 'Guia jurídica/fiscal',
+            'contrato_': 'Documento de contrato',
+            'contrato ': 'Documento de contrato',
+            'câmbio': 'Documento de programação/câmbio',
+            'cambio': 'Documento de programação/câmbio',
+            'lembrete': 'Lembrete administrativo',
+            'invoice': 'Invoice internacional',
+            'processo': 'Processo jurídico',
+            'execução': 'Execução fiscal/judicial',
+            'execucao': 'Execução fiscal/judicial',
+            'anuidade': 'Taxa/anuidade de órgão',
+            'reembolso': 'Reembolso interno',
+            'tarifa': 'Documento de tarifas internas',
+            'alvim': 'Documento de condomínio',
+            'cobrança indevida': 'Reclamação de cobrança',
+            'cobranca indevida': 'Reclamação de cobrança',
+        }
+
+        for pattern in self.ADMIN_SUBJECT_PATTERNS:
+            if pattern.search(subject):
+                # Tenta identificar qual descrição usar
+                for keyword, description in pattern_descriptions.items():
+                    if keyword in subject_lower:
+                        return description
+                return 'Documento administrativo'
+
+        return None
+
     def _validate_cross_values(
         self,
         batch: BatchResult,
         result: CorrelationResult,
-        duplicatas: Optional[Dict[str, List[str]]] = None
+        duplicatas: Optional[Dict[str, List[str]]] = None,
+        email_subject: str = ""
     ) -> None:
         """
         Valida valores cruzados entre documentos.
@@ -345,9 +467,11 @@ class CorrelationService:
         - Se só tem boleto (compra = 0) → CONFERIR
         - Se só tem compra (sem boleto) → CONFERIR
         - Adiciona aviso de encaminhamento duplicado se detectado
+        - Adiciona aviso se assunto indica documento administrativo (não cobrança)
+        - Adiciona aviso se valor veio de extrator OUTROS (menos confiável)
         """
         duplicatas = duplicatas or {}
-        valor_compra = batch.get_valor_compra()
+        valor_compra, valor_fonte = batch.get_valor_compra_fonte()
         valor_boleto = batch.get_valor_total_boletos()
 
         result.valor_compra = valor_compra
@@ -386,6 +510,23 @@ class CorrelationService:
             # Só tem compra (sem boleto) ou nenhum dos dois - precisa conferir
             result.status = "CONFERIR"
             result.divergencia = f"Conferir valor (R$ {valor_compra:.2f}) - sem boleto para comparação" + aviso_duplicata
+
+        # Verifica se é documento administrativo baseado no assunto do e-mail
+        admin_type = self._check_admin_subject(email_subject)
+        if admin_type:
+            aviso_admin = f" [POSSÍVEL DOCUMENTO ADMINISTRATIVO - {admin_type}]"
+            if result.divergencia:
+                result.divergencia += aviso_admin
+            else:
+                result.divergencia = aviso_admin.strip()
+
+        # Verifica se o valor veio de extrator OUTROS (menos confiável)
+        if valor_fonte == 'OUTROS':
+            aviso_outros = " [VALOR EXTRAÍDO DE DOCUMENTO GENÉRICO - conferir manualmente]"
+            if result.divergencia:
+                result.divergencia += aviso_outros
+            else:
+                result.divergencia = aviso_outros.strip()
 
     def _apply_vencimento_alerta(
         self,

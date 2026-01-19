@@ -166,27 +166,47 @@ class BatchResult:
         Returns:
             Valor da compra ou 0.0 se não encontrar
         """
+        valor, _ = self.get_valor_compra_fonte()
+        return valor
+
+    def get_valor_compra_fonte(self) -> tuple:
+        """
+        Obtém o valor da compra/locação do lote e identifica a fonte.
+
+        Cada lote representa UMA compra, então pega o valor da primeira
+        nota fiscal encontrada (NFS-e ou DANFE).
+
+        Se não houver nota, usa o valor de OUTROS ou Boleto.
+
+        Returns:
+            Tupla (valor: float, fonte: str) onde fonte é:
+            - 'NFSE': Valor veio de NFS-e (confiável)
+            - 'DANFE': Valor veio de DANFE (confiável)
+            - 'OUTROS': Valor veio de documento genérico (menos confiável)
+            - 'BOLETO': Valor veio do boleto (fallback)
+            - None: Nenhum valor encontrado
+        """
         # Prioridade 1: NFS-e
         for nfse in self.nfses:
             if nfse.valor_total and nfse.valor_total > 0:
-                return nfse.valor_total
+                return (nfse.valor_total, 'NFSE')
 
         # Prioridade 2: DANFE
         for danfe in self.danfes:
             if danfe.valor_total and danfe.valor_total > 0:
-                return danfe.valor_total
+                return (danfe.valor_total, 'DANFE')
 
         # Prioridade 3: Outros documentos
         for outro in self.outros:
             if outro.valor_total and outro.valor_total > 0:
-                return outro.valor_total
+                return (outro.valor_total, 'OUTROS')
 
         # Fallback: Boleto
         for boleto in self.boletos:
             if boleto.valor_documento and boleto.valor_documento > 0:
-                return boleto.valor_documento
+                return (boleto.valor_documento, 'BOLETO')
 
-        return 0.0
+        return (0.0, None)
 
     def _normalize_fornecedor(self, fornecedor: str) -> str:
         """
