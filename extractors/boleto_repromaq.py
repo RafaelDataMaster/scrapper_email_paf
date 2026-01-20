@@ -132,12 +132,13 @@ class BoletoRepromaqExtractor(BaseExtractor):
             True se é um boleto REPROMAQ/Bradesco.
         """
         import logging
+
         logger = logging.getLogger(__name__)
         if not text:
             logger.info("[BoletoRepromaqExtractor] can_handle chamado com texto vazio.")
             return False
 
-        trecho = (text or "")[:200].replace('\n', ' ')
+        trecho = (text or "")[:200].replace("\n", " ")
         logger.info(f"[BoletoRepromaqExtractor] can_handle chamado. Trecho: '{trecho}'")
 
         text_compact = _compact(text)
@@ -147,13 +148,18 @@ class BoletoRepromaqExtractor(BaseExtractor):
         has_bradesco = "BRADESCO" in text_compact
 
         result = has_repromaq and has_bradesco
-        logger.info(f"[BoletoRepromaqExtractor] Resultado do can_handle: {result} (has_repromaq={has_repromaq}, has_bradesco={has_bradesco})")
+        logger.info(
+            f"[BoletoRepromaqExtractor] Resultado do can_handle: {result} (has_repromaq={has_repromaq}, has_bradesco={has_bradesco})"
+        )
         return result
 
     def extract(self, text: str) -> Dict[str, Any]:
         import logging
+
         logger = logging.getLogger(__name__)
-        logger.info(f"[BoletoRepromaqExtractor] extract chamado para documento. Trecho: '{(text or '')[:200]}'")
+        logger.info(
+            f"[BoletoRepromaqExtractor] extract chamado para documento. Trecho: '{(text or '')[:200]}'"
+        )
         """
         Extrai dados estruturados do boleto REPROMAQ/Bradesco.
 
@@ -219,7 +225,9 @@ class BoletoRepromaqExtractor(BaseExtractor):
                             nome,
                         ).strip()
                         # Remove "CNPJ/CPF:" sozinho
-                        nome = re.sub(r"\s*CNPJ/CPF\s*:?\s*$", "", nome, flags=re.IGNORECASE).strip()
+                        nome = re.sub(
+                            r"\s*CNPJ/CPF\s*:?\s*$", "", nome, flags=re.IGNORECASE
+                        ).strip()
                         if nome:
                             return normalize_entity_name(nome)
 
@@ -243,9 +251,7 @@ class BoletoRepromaqExtractor(BaseExtractor):
             if "BENEFICI" in line_upper or "REPROMAQ" in line_upper:
                 # Procura CNPJ nesta linha e nas próximas 3
                 for j in range(i, min(i + 4, len(lines))):
-                    match = re.search(
-                        r"(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", lines[j]
-                    )
+                    match = re.search(r"(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", lines[j])
                     if match:
                         return match.group(1)
 
@@ -530,7 +536,9 @@ class BoletoRepromaqExtractor(BaseExtractor):
             if re.search(r"(?i)\bNosso\s{0,3}N[úu]mero\b", line):
                 # Tenta extrair da mesma linha (após o label)
                 # Padrão: sequência com / ou - (ex: 00/000103372-0)
-                match = re.search(r"(?i)Nosso\s+N[úu]mero\s*[:\s]*(\d{2}/\d{6,12}-?\d?)", line)
+                match = re.search(
+                    r"(?i)Nosso\s+N[úu]mero\s*[:\s]*(\d{2}/\d{6,12}-?\d?)", line
+                )
                 if match:
                     return match.group(1).strip()
 
