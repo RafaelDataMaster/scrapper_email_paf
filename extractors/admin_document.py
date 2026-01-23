@@ -110,6 +110,16 @@ class AdminDocumentExtractor(BaseExtractor):
             r"ITENS\s+DA\s+FATURA\b",
             r"UN\s+QUANT\s+PRE[ÇC]O\s+UNIT",
             r"CNTINT\d+\s*-\s*IP\s+TRANSIT",
+            # 6. NFSEs municipais específicas (baseado em casos problemáticos)
+            r"PREFEITURA\s+MUNICIPAL\s+DE",
+            r"S[EÉ]CRETARIA\s+MUNICIPAL\s+(?:DA\s+)?FAZENDA",
+            r"AUTENTICIDADE\s+[A-Z0-9\-]+",  # Código de autenticação (ex: F00N-GL8A)
+            r"TOMADOR\s+DE\s+SERVI[ÇC]OS",
+            r"PRESTADOR\s+DE\s+SERVI[ÇC]OS",
+            r"NOTA\s+FISCAL\s+ELETR[ÔO]NICA\s+DE\s+SERVI[ÇC]OS",
+            # 7. Dados específicos de NFSE de municípios
+            r"IM:\d+",  # Inscrição Municipal
+            r"IE:\d+",  # Inscrição Estadual
         ]
 
         # Primeiro verifica se é claramente um documento fiscal
@@ -206,6 +216,20 @@ class AdminDocumentExtractor(BaseExtractor):
             (r"COBRAN[ÇC]A\s+INDEVIDA", "Reclamação de cobrança"),
             # 17. Comprovantes administrativos
             (r"COMPROVANTE\s+DE\s+SOLICITA[ÇC][AÃ]O", "Comprovante administrativo"),
+            # 18. Documentos informativos de serviços públicos
+            (r"INFORMATIVO\s+IMPORTANTE", "Documento informativo de serviço público"),
+            (r"COPASA", "Documento informativo de serviço público (água/esgoto)"),
+            (
+                r"C[ÂA]MBIO\s+(MTV|HBO|GLOBOSAT|BAND|SBT|RECORD|PROGRAMADORA)",
+                "Documento de programação/câmbio",
+            ),
+            (r"PROGRAMADORA\s+BRASILEIRA", "Documento de programação/câmbio"),
+            (r"BOX\s+BRAZIL", "Documento de programação/câmbio"),
+            (r"SERVI[ÇC]O\s+P[ÚU]BLICO", "Documento de serviço público"),
+            (
+                r"CONTA\s+(DE\s+)?(ÁGUA|LUZ|ENERGIA|TELEFONE)",
+                "Documento de serviço público",
+            ),
         ]
 
         for pattern, _ in patterns:

@@ -1,578 +1,498 @@
 ====================================================================================================
-ANÁLISE DETALHADA DE PDFs PROBLEMÁTICOS
-====================================================================================================
-Documentos administrativos (outros > 0) com valor zero
-
-ESTATÍSTICAS GERAIS
---------------------------------------------------
-Total de casos analisados: 18
-Casos com PDFs disponíveis: 16
-Casos classificados automaticamente: 16
-
-PROBLEMAS DE EXTRAÇÃO DO CSV
---------------------------------------------------
-  Extrator Identification Issues: 9 casos
-  Fornecedor Issues: 1 casos
-  Valor Issues: 18 casos
-  Vencimento Issues: 10 casos
-
-RESUMO POR CLASSIFICAÇÃO
---------------------------------------------------
-  ADMIN: 4 casos
-  DESCONHECIDO: 6 casos
-  NFSE: 8 casos
-
-AÇÕES RECOMENDADAS
---------------------------------------------------
-  DESCONHECIDO: 2 casos
-  DOCUMENTO_ADMIN_OK: 4 casos
-  INVESTIGAR_MANUALMENTE: 3 casos
-  MELHORAR_EXTRACAO: 1 casos
-  REVISAR_CLASSIFICACAO: 8 casos
-
-====================================================================================================
-CASOS DETALHADOS
+RELATÓRIO DETALHADO DE ANÁLISE DE PDFs PROBLEMÁTICOS
 ====================================================================================================
 
-Caso 1: 
-  Assunto: Distrato - Speed Copy
-  Remetente: Maria Julia Inácio Correa
-  Fornecedor: SPEEDY COPY SOLUÇÕES EM IMPRESSÃO LTDA. M.E.,
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094633_3be520e2
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 2, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 2 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
-  PDFs analisados: 1
-  Classificação principal: ADMIN
-  Ação recomendada: DOCUMENTO_ADMIN_OK
-  Valores encontrados: NÃO
+CASO #2
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094602_7aefa200
+Empresa: 
 
-    PDF 1: 02_Notificação de rescisão contratual - SPEEDY COPY x ATIVE.pdf
-      Páginas: 1
-      Tipo recomendado: CONTRATO
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: ADMIN: DISTRATO.*CONTRATO|RESCISÃO.*CONTRATUAL
-      Extração testada com: NFSE, ADMIN
-      Problemas na extração:
-        - NFSE: Não extraiu valor total
-
-
-Caso 2: 
-  Assunto: [HaY Systems] Seu pagamento foi processado. Obrigado!
-  Remetente: neto@haysystems.com.br
-  Fornecedor: VICENTE TREVISAN NETO
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094634_563b977e
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [VENCIMENTO NÃO ENCONTRADO...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
-  PDFs analisados: 1
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_NotaFiscal.pdf
-      Páginas: 1
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 1.618,20
-      Padrões: NFSE: TOMADOR.*SERVIÇOS|TOMADOR.*SERVICOS
-      Extração testada com: NFSE
-      Problemas na extração:
-        - NFSE: Não extraiu valor total
-
-
-Caso 3: 
-  Assunto: Cobrança - JANEIRO2026 - Ative Telecomunicaco
-  Remetente: financeiro@quicksoft.com.br
-  Fornecedor: QUICK SOFT TECNOLOGIA DA INFORMACAO S.A. - CNPJ 00.565.447/0001-08
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094644_fbd8df8e
-  Status conciliação: PAREADO_FORCADO
-  Divergência: Nota sem valor (R$ 0,00) pareada com boleto (R$ 1303.51) por lote
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-  PDFs analisados: 2
-  Classificação principal: DESCONHECIDO
-  Ação recomendada: MELHORAR_EXTRACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_ConsumoQcertifica_4793_JANEIRO2026.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 0,00, R$ 0,00, R$ 0,00... (+19 mais)
-      Extração testada com: NFSE
-      Problemas na extração:
-        - NFSE: Não extraiu valor total
-        - NFSE: Não extraiu número da nota
-
-    PDF 2: 02_Boleto_95640_1_JANEIRO2026.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 0,43, R$ 26,07, R$ 0,43... (+1 mais)
-      Extração testada com: BOLETO
-      Extração OK (sem problemas detectados)
-
-
-Caso 4: 
-  Assunto: Relatório de faturamento JAN 26 - MASTER INTERNET ATIVE MG
-  Remetente: Contas a Receber
-  Fornecedor: Contas a Receber
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094645_858c7716
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (assunto sugere boleto/fatura)
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 1
-  Classificação principal: ADMIN
-  Ação recomendada: DOCUMENTO_ADMIN_OK
-  Valores encontrados: NÃO
-
-    PDF 1: 01_MASTER INTERNET ATIVE MG FAT JAN26.pdf
-      Páginas: 1
-      Tipo recomendado: RELATÓRIO
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: ADMIN: RELATÓRIO.*FATURAMENTO|RELATORIO.*FATURAMENTO
-      Extração testada com: ADMIN
-      Problemas na extração:
-        - ADMIN: Fornecedor é empresa nossa: MASTER INTERNET ATIVE MG 54.277,00 278.626,93 10.000,00 0,00
-
-
-Caso 5: 
-  Assunto: Relatório de faturamento JAN 26 - MASTER INTERNET ATIVE SP
-  Remetente: Contas a Receber
-  Fornecedor: Contas a Receber
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094646_56dc88b9
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (assunto sugere boleto/fatura)
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 1
-  Classificação principal: ADMIN
-  Ação recomendada: DOCUMENTO_ADMIN_OK
-  Valores encontrados: NÃO
-
-    PDF 1: 01_MASTER INTERNET ATIVE SP FAT JAN26.pdf
-      Páginas: 1
-      Tipo recomendado: RELATÓRIO
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: ADMIN: RELATÓRIO.*FATURAMENTO|RELATORIO.*FATURAMENTO
-      Extração testada com: ADMIN
-      Problemas na extração:
-        - ADMIN: Fornecedor é empresa nossa: MASTER INTERNET ATIVE SP 3.400,00 0,00
-
-
-Caso 6: 
-  Assunto: Relatório de faturamento JAN 26 - MASTER INTERNET EXATA
-  Remetente: Contas a Receber
-  Fornecedor: Contas a Receber
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094646_dc82f363
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (assunto sugere boleto/fatura)
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 1
-  Classificação principal: ADMIN
-  Ação recomendada: DOCUMENTO_ADMIN_OK
-  Valores encontrados: NÃO
-
-    PDF 1: 01_MASTER INTERNET EXATA FAT JAN26.pdf
-      Páginas: 1
-      Tipo recomendado: RELATÓRIO
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: ADMIN: RELATÓRIO.*FATURAMENTO|RELATORIO.*FATURAMENTO
-      Extração testada com: ADMIN
-      Problemas na extração:
-        - ADMIN: Fornecedor é empresa nossa: MASTER INTERNET EXATA 4.200,00 4,50
-
-
-Caso 7: 
-  Assunto: RES: SOLICITAÇÃO DISTRATO DE VEÍCULO- OSVALDO PERES- RECISÓRIO
-  Remetente: otavio.teodoro@soumaster.com.br
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
   Fornecedor: 
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094650_67c42745
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Fornecedor vazio
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT04_0085070351_0000003774A.pdf
+    Páginas: 2
+    Texto (chars): 2736
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$0,04, R$ 23,56, R$ 55,00
+
+RESUMO DA CLASSIFICAÇÃO:
   PDFs analisados: 1
-  Classificação principal: DESCONHECIDO
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #3
+Batch ID: 
+Assunto do e-mail: RES: [proScore] Faturamento 11/2025
+Remetente: contasapagar@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094602_80f4da1c
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: EDANPAY S A - CNPJ 18.672.547/0001-07
+  Vencimento: 2025-11-18
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Comprovante Cheque Pre.pdf
+    Páginas: 1
+    Texto (chars): 1351
+    Classificação sugerida: DESCONHECIDO
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
   Ação recomendada: INVESTIGAR_MANUALMENTE
-  Valores encontrados: NÃO
 
-    PDF 1: 01_DISTRATO - ATIVE - OSVALDO PERES JUNIOR.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: NÃO
-      Extração testada com: NFSE, ADMIN
-      Problemas na extração:
-        - ADMIN: Não extraiu fornecedor
-        - NFSE: Não extraiu valor total
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2025-11-18'
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
 
+--------------------------------------------------------------------------------
 
-Caso 8: 
-  Assunto: ALVIM NOGUEIRA ( |601) - Boleto Vencimento (01/2026)
-  Remetente: AlmahCondos
-  Fornecedor: saneamento em Divinópolis foi alterada da ARSAE-MG para a ARISMIG (Agência
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094700_1b69d658
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Assunto sugere boleto/fatura
+CASO #5
+Batch ID: 
+Assunto do e-mail: BOLETO DO MONITORAMENTO 12/2025
+Remetente: financeiro@semelclavras.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094602_d3223ebf
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 2026-01-05
+  Número da nota: 26289
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_79 MASTER CABO NF_26289.pdf
+    Páginas: 1
+    Texto (chars): 5761
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
   PDFs analisados: 1
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: NÃO
-
-    PDF 1: 01_COPASA - INFORMATIVO IMPORTANTE 12.2205 (1).pdf
-      Páginas: 4
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: NFSE: ISS|INSS|PIS|COFINS
-      Extração testada com: NFSE, ADMIN
-      Problemas na extração:
-        - ADMIN: Não extraiu fornecedor
-        - NFSE: Não extraiu valor total
-        - NFSE: Não extraiu número da nota
-
-
-Caso 9: 
-  Assunto: Fwd: RES: Cobrança - JANEIRO2026 - Ative Telecomunicaco
-  Remetente: Clara Barbosa
-  Fornecedor: BELO HORIZONTE/MG, inscrita no CNPJ - CNPJ 12.222.945/0001-37
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094700_d6329c34
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação
-  Outros: 1, NFSEs: 1, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 1 NFSEs
-  PDFs analisados: 1
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_F479315122025155051_Aditivo valores Qcertifica - Global Finanças_FIDC Aratu_assinado.pdf
-      Páginas: 6
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 111,35, R$ 90,00, R$ 728,11... (+6 mais)
-      Padrões: NFSE: PRESTAÇÃO.*SERVIÇOS|PRESTACAO.*SERVICOS
-      Extração testada com: NFSE, ADMIN
-      Problemas na extração:
-        - ADMIN: Não extraiu fornecedor
-        - ADMIN: Fornecedor inferível do texto: cidade de Blumenau - SC, CNPJ - CNPJ 00.565.447/0001-08
-        - NFSE: Não extraiu valor total
-
-
-Caso 10: 
-  Assunto: ALVIM NOGUEIRA ( |601) - Boleto Vencimento (01/2026)
-  Remetente: AlmahCondos
-  Fornecedor: saneamento em Divinópolis foi alterada da ARSAE-MG para a ARISMIG (Agência
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094700_f7c13bd1
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 1
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: NÃO
-
-    PDF 1: 01_COPASA - INFORMATIVO IMPORTANTE 12.2205 (1).pdf
-      Páginas: 4
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: NFSE: ISS|INSS|PIS|COFINS
-      Extração testada com: NFSE, ADMIN
-      Problemas na extração:
-        - ADMIN: Não extraiu fornecedor
-        - NFSE: Não extraiu valor total
-        - NFSE: Não extraiu número da nota
-
-
-Caso 11: 
-  Assunto: RES: RES: Distrato do veiculo Placa DQR-5192 (Giovani Marques Barbosa)  Lavras.
-  Remetente: otavio.teodoro@soumaster.com.br
-  Fornecedor: igual teor e forma, na presença de testemunhas.
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094750_c7451dbf
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
-  ⚠️  Sem PDFs disponíveis para análise
-
-Caso 12: 
-  Assunto: FATURAMENTO BOX BRAZIL - EXATA - DEZEMBRO 2025
-  Remetente: Jéssica Dorneles da Silva
-  Fornecedor: PBI - PROGRAMADORA BRASILEIRA INDEPENDENTE S.A
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094759_02e2b11f
-  Status conciliação: PAREADO_FORCADO
-  Divergência: Nota sem valor (R$ 0,00) pareada com boleto (R$ 430.00) por lote
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 2
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_FATURA 202600022 EXATA.pdf
-      Páginas: 1
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: NFSE: ISS|INSS|PIS|COFINS
-      Extração testada com: 
-      Extração OK (sem problemas detectados)
-
-    PDF 2: 02_BOLETO EXATA.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 430,00
-      Extração testada com: BOLETO
-      Extração OK (sem problemas detectados)
-
-
-Caso 13: 
-  Assunto: FATURAMENTO BOX BRAZIL - MOC - DEZEMBRO 2025
-  Remetente: Jéssica Dorneles da Silva
-  Fornecedor: PBI - PROGRAMADORA BRASILEIRA INDEPENDENTE S.A
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094759_6c1257a5
-  Status conciliação: PAREADO_FORCADO
-  Divergência: Nota sem valor (R$ 0,00) pareada com boleto (R$ 725.20) por lote
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 2
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_FATURA 202600035 MOC.pdf
-      Páginas: 1
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: NFSE: ISS|INSS|PIS|COFINS
-      Extração testada com: 
-      Extração OK (sem problemas detectados)
-
-    PDF 2: 02_BOLETO MOC.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 725,20
-      Extração testada com: BOLETO
-      Extração OK (sem problemas detectados)
-
-
-Caso 14: 
-  Assunto: FATURAMENTO BOX BRAZIL - ATIVE - DEZEMBRO 2025
-  Remetente: Jéssica Dorneles da Silva
-  Fornecedor: PBI - PROGRAMADORA BRASILEIRA INDEPENDENTE S.A
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094759_9f4f2bfd
-  Status conciliação: PAREADO_FORCADO
-  Divergência: Nota sem valor (R$ 0,00) pareada com boleto (R$ 430.00) por lote
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Assunto sugere boleto/fatura
-  PDFs analisados: 2
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_BOLETO ATIVE.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: SIM
-      Valores encontrados: R$ 430,00
-      Extração testada com: BOLETO
-      Extração OK (sem problemas detectados)
-
-    PDF 2: 02_FATURA 202600013 ATIVE.pdf
-      Páginas: 1
-      Tipo recomendado: NFSE
-      Confiança: 100.00%
-      Tem valores: NÃO
-      Padrões: NFSE: ISS|INSS|PIS|COFINS
-      Extração testada com: 
-      Extração OK (sem problemas detectados)
-
-
-Caso 15: 
-  Assunto: RES: Cobrança NF 10447 Interfocus
-  Remetente: Larissa Sbampato
-  Fornecedor: métricas de atendimentos (dashboard).
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094806_6eabe488
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [VENCIMENTO NÃO ENCONTRADO...
-  Outros: 2, NFSEs: 1, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 2 outros e 1 NFSEs
-    - Assunto sugere nota fiscal
-  PDFs analisados: 2
-  Classificação principal: NFSE
-  Ação recomendada: REVISAR_CLASSIFICACAO
-  Valores encontrados: SIM
-
-    PDF 1: 01_Proposta Comercial_Interfocus Tecnologia_15.05.2025 - Clicksign.pdf
-      Páginas: 6
-      Tipo recomendado: NFSE
-      Confiança: 66.67%
-      Tem valores: SIM
-      Valores encontrados: R$ 6.400,00
-      Padrões: NFSE: PRESTAÇÃO.*SERVIÇOS|PRESTACAO.*SERVICOS
-      Extração testada com: NFSE, ADMIN
-      Problemas na extração:
-        - ADMIN: Não extraiu fornecedor
-        - NFSE: Não extraiu valor total
-        - NFSE: Não extraiu número da nota
-
-    PDF 2: 02_e-mail Master.pdf
-      Páginas: 2
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: NÃO
-      Extração testada com: NFSE
-      Problemas na extração:
-        - NFSE: Não extraiu fornecedor
-        - NFSE: Não extraiu valor total
-        - NFSE: Não extraiu número da nota
-
-
-Caso 16: 
-  Assunto: CAMBIO MTV MOC NOVEMBRO
-  Remetente: Vítor Eduardo Fernandes
-  Fornecedor: Vítor Eduardo Fernandes
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094843_fa7f3a01
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [VENCIMENTO NÃO ENCONTRADO...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
-  PDFs analisados: 1
-  Classificação principal: DESCONHECIDO
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
   Ação recomendada: INVESTIGAR_MANUALMENTE
-  Valores encontrados: NÃO
 
-    PDF 1: 01_12.11 MOC 93259211 MTV.pdf
-      Páginas: 1
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: NÃO
-      Extração testada com: 
-      Extração OK (sem problemas detectados)
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-05'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
 
+--------------------------------------------------------------------------------
 
-Caso 17: 
-  Assunto: distrato veicular e planilha final
-  Remetente: Luis
-  Fornecedor: Luis
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094846_8f0ad1d9
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [POSSÍVEL DOCUMENTO ADMINI...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
-  ⚠️  Sem PDFs disponíveis para análise
+CASO #37
+Batch ID: 
+Assunto do e-mail: Nota Fiscal AGYONET
+Remetente: fiscal@agyonet.com.br(Nota Fiscal AGYONET)
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094607_04a43456
+Empresa: ITACOLOMI
 
-Caso 18: 
-  Assunto: ALUGUEL VEÍCULO BRUNO
-  Remetente: Mirian da Silva Cupido Mendrot
-  Fornecedor: Mirian da Silva Cupido Mendrot
-  Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094848_5e831318
-  Status conciliação: CONFERIR
-  Divergência: Conferir valor (R$ 0.00) - sem boleto para comparação [VENCIMENTO NÃO ENCONTRADO...
-  Outros: 1, NFSEs: 0, Valor: R$ 0.00
-  ⚠️  Problemas de extração do CSV:
-    - Valor zero com 1 outros e 0 NFSEs
-    - Vencimento não extraído (pode ser boleto)
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: PRESTADOR DE SERVIÇOS Nome
+  Vencimento: 
+  Número da nota: 92644
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NFS-e926444932872104.pdf
+    Páginas: 1
+    Texto (chars): 2649
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+RESUMO DA CLASSIFICAÇÃO:
   PDFs analisados: 1
-  Classificação principal: DESCONHECIDO
-  Ação recomendada: INVESTIGAR_MANUALMENTE
-  Valores encontrados: NÃO
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
 
-    PDF 1: 01_Distrato (1).pdf
-      Páginas: 2
-      Tipo recomendado: DESCONHECIDO
-      Confiança: 0.00%
-      Tem valores: NÃO
-      Extração testada com: NFSE
-      Problemas na extração:
-        - NFSE: Não extraiu fornecedor
-        - NFSE: Não extraiu valor total
-        - NFSE: Não extraiu número da nota
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #38
+Batch ID: 
+Assunto do e-mail: Sua ordem Equinix n.º 1-255425159203 foi agendada   
+Remetente: Equinix Orders
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094607_6c661983
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_sv2lxcrmappr118_3984368_-311534912_0_QRCodeAttachmentTemplate.jld_1-39D4H68P.PDF
+    Páginas: 1
+    Texto (chars): 3620
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_sv2lxcrmappr118_3984368_-311534912_0_work-visit-request-form.pdf
+    Páginas: 1
+    Texto (chars): 395
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #44
+Batch ID: 
+Assunto do e-mail: Nota Fiscal AGYONET
+Remetente: fiscal@agyonet.com.br(Nota Fiscal AGYONET)
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094607_d6105edb
+Empresa: ITACOLOMI
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: PRESTADOR DE SERVIÇOS Nome
+  Vencimento: 
+  Número da nota: 92644
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NFS-e926444932872104.pdf
+    Páginas: 1
+    Texto (chars): 2649
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #97
+Batch ID: 
+Assunto do e-mail: CAMBIO HBO RBC NOVEMBRO
+Remetente: Vítor Eduardo Fernandes
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094614_5dc30a4e
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: HBO XTREME
+  Vencimento: 
+  Número da nota: 995319891
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_ACFROG~4.PDF
+    Páginas: 1
+    Texto (chars): 1107
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: MEDIA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+
+--------------------------------------------------------------------------------
+
+CASO #129
+Batch ID: 
+Assunto do e-mail: NOTAS FISCAIS - MUGO TELECOM
+Remetente: CONTATO MUGO TELECOM
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094619_30ef9266
+Empresa: ITACOLOMI
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: CONTATO MUGO TELECOM
+  Vencimento: 2026-01-20
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NF ESCOLAS.pdf
+    Páginas: 2
+    Texto (chars): 6159
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 1.980,00, R$ 121,00, R$ 121,00
+
+  PDF: 02_NF ITACOLOMI.pdf
+    Páginas: 1
+    Texto (chars): 1362
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 20,40
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 2
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 2
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-20'
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #172
+Batch ID: 
+Assunto do e-mail: Nota Fiscal Uluhub - Referente Boleto Dezembro
+Remetente: financeiro@uluhub.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094626_a705e5fc
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: PRESTADOR DE SERVIÇOS Nome
+  Vencimento: 2025-12-18
+  Número da nota: 690
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Nota Fiscal Master - Dezembro.pdf
+    Páginas: 1
+    Texto (chars): 2299
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2025-12-18'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #174
+Batch ID: 
+Assunto do e-mail: PRO PAINEL (FL 9638 - VENC 18/01/2026)
+Remetente: FinanceiroProPainel
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094627_4e91fcd6
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: PRO PAINEL LTDA
+  Vencimento: 2026-01-18
+  Número da nota: 112
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+[ATENCAO] FORNECEDOR INTERNO DETECTADO
+  • Fornecedor é empresa nossa: 'PRO PAINEL LTDA'
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_9638 - venc 18.01.2026.pdf
+    Páginas: 1
+    Texto (chars): 1507
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 2.415,66
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+    [OK] Correção de fornecedor sugerida: Beneficiário Agência / Código do Beneficiário - CNPJ 23.129.448/0001-05
+       Método: infer, Confiança: 80%
+
+  PDF: 02_9638 - MASTERCABO.pdf
+    Páginas: 1
+    Texto (chars): 2354
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 2.415,66, R$ 243,02
+    [OK] Correção de fornecedor sugerida: CNPJ: 23.129.448/0001-05
+       Método: cnpj_only, Confiança: 60%
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 2
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+CORREÇÕES DE FORNECEDOR SUGERIDAS:
+  • Beneficiário Agência / Código do Beneficiário - CNPJ 23.129.448/0001-05 (método: infer, confiança: 80%)
+  • CNPJ: 23.129.448/0001-05 (método: cnpj_only, confiança: 60%)
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor é empresa nossa: 'PRO PAINEL LTDA'
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-18'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
 
 ====================================================================================================
-RECOMENDAÇÕES PARA MELHORIA
+RESUMO EXECUTIVO
 ====================================================================================================
 
-1. REVISÃO DE CLASSIFICAÇÃO
-   - Casos classificados como NFSE mas marcados como 'outros' podem indicar:
-     a) Falso positivo no AdminDocumentExtractor
-     b) PDFs com múltiplos documentos (NFSE + administrativo)
-     c) NFSEs que também contêm conteúdo administrativo
+Total de casos analisados: 10
+Casos com PDFs analisados: 10
 
-2. MELHORIA NA EXTRAÇÃO DE VALORES
-   - Casos com valores detectados mas não extraídos sugerem:
-     a) Padrões de valor não cobertos pelos extratores atuais
-     b) Valores em formatos não padrão (ex: sem 'R$')
-     c) Valores em tabelas que requerem extração estruturada
+Distribuição de classificações:
+  DESCONHECIDO: 4 casos (40.0%)
+  NFSE: 6 casos (60.0%)
 
-3. AJUSTES NO ADMIN DOCUMENT EXTRACTOR
-   - Considerar:
-     a) Adicionar mais padrões administrativos específicos
-     b) Melhorar detecção de valores em contratos e relatórios
-     c) Ajustar ordem de prioridade dos extratores
+Problemas específicos detectados:
+  Fornecedor Interno: 1 casos (10.0%)
+  Vencimento Invalido: 10 casos (100.0%)
 
-4. PRÓXIMOS PASSOS
-   - Revisar manualmente os casos marcados como 'INVESTIGAR_MANUALMENTE'
-   - Testar ajustes no AdminDocumentExtractor com casos problemáticos
-   - Monitorar métricas após implementação das melhorias
+CORREÇÕES DE FORNECEDOR SUGERIDAS:
+  Total de correções sugeridas: 1
+  Correções por inferência (alta confiança): 1
+  Correções apenas por CNPJ (média confiança): 1
 
 ====================================================================================================

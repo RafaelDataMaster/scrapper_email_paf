@@ -5,7 +5,7 @@ Contém funções de parsing e normalização usadas por múltiplos extratores:
 - Parsing de valores monetários brasileiros (R$ 1.234,56)
 - Parsing de datas brasileiras (dd/mm/yyyy, dd-mm-yyyy)
 - Extração e formatação de CNPJ/CPF
-- Normalização de texto (acentos, espaços, entidades)
+- Normalização de texto (acentos, espaços, entidades, caracteres OCR)
 
 Princípio DRY: Estas funções eram duplicadas em boleto.py, danfe.py,
 nfse_generic.py e outros.py. Centralizá-las aqui evita inconsistências
@@ -28,7 +28,9 @@ BR_MONEY_RE = re.compile(r"\b(\d{1,3}(?:\.\d{3})*,\d{2})\b")
 CNPJ_RE = re.compile(r"\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b")
 
 # CNPJ sem formatação (14 dígitos)
-CNPJ_DIGITS_RE = re.compile(r"(?<!\d)(\d{2})\D?(\d{3})\D?(\d{3})\D?(\d{4})\D?(\d{2})(?!\d)")
+CNPJ_DIGITS_RE = re.compile(
+    r"(?<!\d)(\d{2})\D?(\d{3})\D?(\d{3})\D?(\d{4})\D?(\d{2})(?!\d)"
+)
 
 # CPF formatado: 000.000.000-00
 CPF_RE = re.compile(r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b")
@@ -40,6 +42,7 @@ BR_DATE_RE = re.compile(r"\b(\d{2})[/\-](\d{2})[/\-](\d{2,4})\b")
 # =============================================================================
 # PARSING DE VALORES MONETÁRIOS
 # =============================================================================
+
 
 def parse_br_money(value: str) -> float:
     """
@@ -124,6 +127,7 @@ def extract_best_money_from_segment(segment: str) -> float:
 # PARSING DE DATAS
 # =============================================================================
 
+
 def parse_date_br(value: str) -> Optional[str]:
     """
     Converte data brasileira para formato ISO (YYYY-MM-DD).
@@ -196,6 +200,7 @@ def extract_first_date_br(text: str) -> Optional[str]:
 # =============================================================================
 # EXTRAÇÃO DE CNPJ/CPF
 # =============================================================================
+
 
 def extract_cnpj(text: str) -> Optional[str]:
     """
@@ -284,6 +289,7 @@ def format_cnpj(digits: str) -> str:
 # NORMALIZAÇÃO DE TEXTO
 # =============================================================================
 
+
 def strip_accents(value: str) -> str:
     """
     Remove acentos de uma string.
@@ -302,8 +308,8 @@ def strip_accents(value: str) -> str:
     """
     if not value:
         return ""
-    normalized = unicodedata.normalize('NFKD', value)
-    return ''.join(ch for ch in normalized if not unicodedata.combining(ch))
+    normalized = unicodedata.normalize("NFKD", value)
+    return "".join(ch for ch in normalized if not unicodedata.combining(ch))
 
 
 def normalize_whitespace(text: str) -> str:
@@ -337,6 +343,7 @@ def normalize_text_for_extraction(text: str) -> str:
     - Hífens especiais (soft hyphen, en-dash, em-dash)
     - Espaços não-breaking
     - Múltiplos espaços/tabs
+    - Caracteres OCR problemáticos (Ê, □, etc.)
 
     Args:
         text: Texto bruto extraído de PDF
@@ -351,6 +358,16 @@ def normalize_text_for_extraction(text: str) -> str:
     text = text.replace("\u00ad", "-")  # soft hyphen
     text = text.replace("\u2013", "-")  # en-dash
     text = text.replace("\u2014", "-")  # em-dash
+
+    # Normaliza caracteres OCR problemáticos
+    # Caractere 'Ê' (circumflex accent) que aparece no lugar de espaços em alguns PDFs
+    text = text.replace("Ê", " ")
+    text = text.replace("ê", " ")
+
+    # Outros caracteres problemáticos que podem aparecer em OCR
+    problematic_chars = ["□", "▢", "■", "▭", "▯", "�"]
+    for char in problematic_chars:
+        text = text.replace(char, " ")
 
     # Normaliza espaços
     text = text.replace("\u00a0", " ")  # nbsp
@@ -368,6 +385,7 @@ def normalize_entity_name(raw: str) -> str:
     - Números de documento
     - Espaços extras
     - Caracteres especiais de pontuação
+    - Caracteres OCR problemáticos
 
     Args:
         raw: Nome bruto extraído
@@ -395,6 +413,13 @@ def normalize_entity_name(raw: str) -> str:
 
     # Remove sequências numéricas longas (4+ dígitos)
     name = re.sub(r"\b\d{4,}\b", " ", name)
+
+    # Remove caracteres OCR problemáticos (Ê, □, etc.)
+    name = name.replace("Ê", " ")
+    name = name.replace("ê", " ")
+    problematic_chars = ["□", "▢", "■", "▭", "▯", "�"]
+    for char in problematic_chars:
+        name = name.replace(char, " ")
 
     # Limpa espaços e pontuação residual
     name = re.sub(r"\s+", " ", name).strip(" -:;")
@@ -424,6 +449,7 @@ def normalize_digits(value: str) -> str:
 # =============================================================================
 # VALIDAÇÕES
 # =============================================================================
+
 
 def is_valid_cnpj_format(value: str) -> bool:
     """

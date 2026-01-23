@@ -6,7 +6,6 @@ from .emc_fatura import EmcFaturaExtractor
 from .net_center import NetCenterExtractor
 from .nfse_custom_montes_claros import NfseCustomMontesClarosExtractor
 from .nfse_custom_vila_velha import NfseCustomVilaVelhaExtractor
-from .sicoob import SicoobExtractor
 from .carrier_telecom import CarrierTelecomExtractor
 
 # Extrator especializado para documentos administrativos (deve vir antes dos genéricos)
@@ -24,6 +23,7 @@ from .email_body_extractor import (
 from .outros import OutrosExtractor
 from .nfse_generic import NfseGenericExtractor
 from .boleto import BoletoExtractor
+from .sicoob import SicoobExtractor
 from .danfe import DanfeExtractor
 from .xml_extractor import XmlExtractionResult, XmlExtractor, extract_xml
 
