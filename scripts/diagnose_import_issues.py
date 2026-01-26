@@ -79,27 +79,20 @@ try:
         traceback.print_exc()
 
 except ImportError as e:
-    print(f"   ❌ Erro ao importar extractors.carrier_telecom: {e}")
+    print(f"   ❌ Erro ao importar um extrator específico: {e}")
     print(f"   Traceback:")
     traceback.print_exc()
 
     # Tentar verificar o arquivo diretamente
-    print("\n   d) Verificando arquivo carrier_telecom.py...")
-    carrier_file = os.path.join(extractors_dir, "carrier_telecom.py")
-    if os.path.exists(carrier_file):
-        print(f"   ✅ Arquivo existe: {carrier_file}")
-
-        # Ler primeiras linhas para verificar sintaxe
-        try:
-            with open(carrier_file, "r", encoding="utf-8") as f:
-                lines = f.readlines()[:20]
-            print(f"   Primeiras 20 linhas do arquivo:")
-            for i, line in enumerate(lines):
-                print(f"   {i + 1:3}: {line.rstrip()}")
-        except Exception as e:
-            print(f"   ❌ Erro ao ler arquivo: {e}")
-    else:
-        print(f"   ❌ Arquivo NÃO existe: {carrier_file}")
+    print("\n   d) Verificando arquivos de extratores...")
+    # Verificar alguns extratores comuns
+    common_extractors = ["energy_bill.py", "nfse_generic.py", "boleto.py"]
+    for ext_file in common_extractors:
+        ext_path = os.path.join(extractors_dir, ext_file)
+        if os.path.exists(ext_path):
+            print(f"   ✅ {ext_file} existe: {ext_path}")
+        else:
+            print(f"   ⚠️  {ext_file} não encontrado")
 
 # 5. Verificar outras importações que possam estar causando problemas
 print("\n4. VERIFICANDO DEPENDÊNCIAS:")

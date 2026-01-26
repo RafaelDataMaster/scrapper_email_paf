@@ -2,58 +2,11 @@
 RELATÓRIO DETALHADO DE ANÁLISE DE PDFs PROBLEMÁTICOS
 ====================================================================================================
 
-CASO #2
-Batch ID: 
-Assunto do e-mail: EDP - FATURAS
-Remetente: edpcontaporemail@edpbr.com.br
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094602_7aefa200
-Empresa: 
-
-INFORMAÇÕES DO CSV:
-  Outros (administrativos): 0
-  NFSEs: 1
-  Valor total: R$ 0.00
-  Fornecedor: 
-  Vencimento: 
-  Número da nota: 
-
-[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
-
-ANÁLISE DOS PDFs ENCONTRADOS:
-  PDF: 01_BANDFATELBT04_0085070351_0000003774A.pdf
-    Páginas: 2
-    Texto (chars): 2736
-    Classificação sugerida: NFSE
-    Valores detectados no PDF: R$0,04, R$ 23,56, R$ 55,00
-
-RESUMO DA CLASSIFICAÇÃO:
-  PDFs analisados: 1
-  PDFs classificados como NFSE: 1
-  PDFs classificados como administrativos: 0
-  PDFs com valores detectados: 1
-  Classificação primária: NFSE
-  Ação recomendada: MELHORAR_EXTRACAO
-
-QUALIDADE DA EXTRAÇÃO DO CSV:
-  Nível de severidade: ALTA
-  Fornecedor Issues:
-    • Fornecedor vazio
-  Valor Issues:
-    • Valor zero com 0 outros e 1 NFSEs
-  Vencimento Issues:
-    • Vencimento vazio
-  Numero Nota Issues:
-    • Número da nota não extraído (para NFSE)
-  Extrator Identification Issues:
-    • Assunto sugere boleto/fatura
-
---------------------------------------------------------------------------------
-
-CASO #3
+CASO #1
 Batch ID: 
 Assunto do e-mail: RES: [proScore] Faturamento 11/2025
 Remetente: contasapagar@soumaster.com.br
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094602_80f4da1c
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100118_b27075cb
 Empresa: CSC
 
 INFORMAÇÕES DO CSV:
@@ -96,11 +49,58 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
+CASO #4
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100119_528c71f5
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT04_0085070351_0000003774A.pdf
+    Páginas: 2
+    Texto (chars): 2736
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$0,04, R$ 23,56, R$ 55,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
 CASO #5
 Batch ID: 
 Assunto do e-mail: BOLETO DO MONITORAMENTO 12/2025
 Remetente: financeiro@semelclavras.com.br
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094602_d3223ebf
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100119_bc9d97e3
 Empresa: 
 
 INFORMAÇÕES DO CSV:
@@ -142,11 +142,11 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
-CASO #37
+CASO #39
 Batch ID: 
 Assunto do e-mail: Nota Fiscal AGYONET
 Remetente: fiscal@agyonet.com.br(Nota Fiscal AGYONET)
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094607_04a43456
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100127_2b716b85
 Empresa: ITACOLOMI
 
 INFORMAÇÕES DO CSV:
@@ -185,11 +185,54 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
-CASO #38
+CASO #40
+Batch ID: 
+Assunto do e-mail: Nota Fiscal AGYONET
+Remetente: fiscal@agyonet.com.br(Nota Fiscal AGYONET)
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100127_64e02a98
+Empresa: ITACOLOMI
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: PRESTADOR DE SERVIÇOS Nome
+  Vencimento: 
+  Número da nota: 92644
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NFS-e926444932872104.pdf
+    Páginas: 1
+    Texto (chars): 2649
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #43
 Batch ID: 
 Assunto do e-mail: Sua ordem Equinix n.º 1-255425159203 foi agendada   
 Remetente: Equinix Orders
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094607_6c661983
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100127_ed1ab757
 Empresa: CARRIER
 
 INFORMAÇÕES DO CSV:
@@ -232,54 +275,58 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
-CASO #44
+CASO #98
 Batch ID: 
-Assunto do e-mail: Nota Fiscal AGYONET
-Remetente: fiscal@agyonet.com.br(Nota Fiscal AGYONET)
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094607_d6105edb
-Empresa: ITACOLOMI
+Assunto do e-mail: BOLETO ACIMOC JANEIRO/26
+Remetente: cobranca@acimoc.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100138_3b563cf9
+Empresa: MOC
 
 INFORMAÇÕES DO CSV:
-  Outros (administrativos): 0
-  NFSEs: 1
+  Outros (administrativos): 1
+  NFSEs: 0
   Valor total: R$ 0.00
-  Fornecedor: PRESTADOR DE SERVIÇOS Nome
+  Fornecedor: ASSOCIAÇÃO COML. INDL. E SERVIÇOS DE MONTES CLAROS
   Vencimento: 
-  Número da nota: 92644
+  Número da nota: 401-301
 
 [ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
 
 ANÁLISE DOS PDFs ENCONTRADOS:
-  PDF: 01_NFS-e926444932872104.pdf
+  PDF: 01_Boleto 1335 12-2025.PDF
     Páginas: 1
-    Texto (chars): 2649
-    Classificação sugerida: NFSE
-    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+    Texto (chars): 2063
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 79,00
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
 
 RESUMO DA CLASSIFICAÇÃO:
   PDFs analisados: 1
-  PDFs classificados como NFSE: 1
+  PDFs classificados como NFSE: 0
   PDFs classificados como administrativos: 0
   PDFs com valores detectados: 1
-  Classificação primária: NFSE
+  Classificação primária: DESCONHECIDO
   Ação recomendada: MELHORAR_EXTRACAO
 
 QUALIDADE DA EXTRAÇÃO DO CSV:
   Nível de severidade: ALTA
   Valor Issues:
-    • Valor zero com 0 outros e 1 NFSEs
+    • Valor zero com 1 outros e 0 NFSEs
   Vencimento Issues:
     • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
   Extrator Identification Issues:
-    • Assunto sugere nota fiscal
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
 
 --------------------------------------------------------------------------------
 
-CASO #97
+CASO #101
 Batch ID: 
 Assunto do e-mail: CAMBIO HBO RBC NOVEMBRO
 Remetente: Vítor Eduardo Fernandes
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094614_5dc30a4e
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100138_ba54049b
 Empresa: RBC
 
 INFORMAÇÕES DO CSV:
@@ -315,11 +362,11 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
-CASO #129
+CASO #132
 Batch ID: 
 Assunto do e-mail: NOTAS FISCAIS - MUGO TELECOM
 Remetente: CONTATO MUGO TELECOM
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094619_30ef9266
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100145_63cb4e75
 Empresa: ITACOLOMI
 
 INFORMAÇÕES DO CSV:
@@ -368,11 +415,11 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
-CASO #172
+CASO #170
 Batch ID: 
 Assunto do e-mail: Nota Fiscal Uluhub - Referente Boleto Dezembro
 Remetente: financeiro@uluhub.com.br
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094626_a705e5fc
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100153_61fb1bb0
 Empresa: CSC
 
 INFORMAÇÕES DO CSV:
@@ -413,11 +460,11 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
-CASO #174
+CASO #172
 Batch ID: 
 Assunto do e-mail: PRO PAINEL (FL 9638 - VENC 18/01/2026)
 Remetente: FinanceiroProPainel
-Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260122_094627_4e91fcd6
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100154_32a889cb
 Empresa: CSC
 
 INFORMAÇÕES DO CSV:
@@ -475,20 +522,4118 @@ QUALIDADE DA EXTRAÇÃO DO CSV:
 
 --------------------------------------------------------------------------------
 
+CASO #177
+Batch ID: 
+Assunto do e-mail: Solicitação de encerramento de contrato realizada com sucesso. Sua conta referente ao encerramento está disponível.
+Remetente: atendimento@cemig.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100155_043f8030
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_1160994085.pdf
+    Páginas: 1
+    Texto (chars): 979
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #178
+Batch ID: 
+Assunto do e-mail: Solicitação de encerramento de contrato realizada com sucesso. Sua conta referente ao encerramento está disponível.
+Remetente: atendimento@cemig.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100155_1c083059
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_1160994085.pdf
+    Páginas: 1
+    Texto (chars): 994
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #182
+Batch ID: 
+Assunto do e-mail: Solicitação de encerramento de contrato realizada com sucesso. Sua conta referente ao encerramento está disponível.
+Remetente: atendimento@cemig.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100155_5735e053
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_1160994085.pdf
+    Páginas: 1
+    Texto (chars): 991
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #183
+Batch ID: 
+Assunto do e-mail: Solicitação de encerramento de contrato realizada com sucesso. Sua conta referente ao encerramento está disponível.
+Remetente: atendimento@cemig.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100155_7e6d96b4
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_1160994085.pdf
+    Páginas: 1
+    Texto (chars): 982
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #205
+Batch ID: 
+Assunto do e-mail: Nota Fiscal FAT/10731
+Remetente: fishtv@fishtv.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100200_bf95b3db
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: fishtv@fishtv.com
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_DANFEFAT0000010731.pdf
+    Páginas: 1
+    Texto (chars): 1679
+    Classificação sugerida: NFSE
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #206
+Batch ID: 
+Assunto do e-mail: Nota Fiscal FAT/10732
+Remetente: fishtv@fishtv.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100201_3771aab7
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: fishtv@fishtv.com
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_DANFEFAT0000010732.pdf
+    Páginas: 1
+    Texto (chars): 1650
+    Classificação sugerida: NFSE
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #208
+Batch ID: 
+Assunto do e-mail: Nota Fiscal FAT/10733
+Remetente: fishtv@fishtv.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100201_f62ed6ed
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: fishtv@fishtv.com
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_DANFEFAT0000010733.pdf
+    Páginas: 1
+    Texto (chars): 1644
+    Classificação sugerida: NFSE
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #212
+Batch ID: 
+Assunto do e-mail: Distrato - Speed Copy
+Remetente: Maria Julia Inácio Correa
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100202_68da0b08
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 2
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: SPEEDY COPY SOLUÇÕES EM IMPRESSÃO LTDA. M.E.,
+  Vencimento: 
+  Número da nota: 0001-91
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 02_Notificação de rescisão contratual - SPEEDY COPY x ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 1806
+    Classificação sugerida: CONTRATO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 1
+  PDFs com valores detectados: 0
+  Classificação primária: ADMIN
+  Ação recomendada: DOCUMENTO_ADMIN_OK
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 2 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #218
+Batch ID: 
+Assunto do e-mail: TCF TELECOM - Nota Fiscal 0
+Remetente: TCF Telecom
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100204_3b1c7f5c
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TCF Telecom
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_nota_fiscal_tipo0_n528743_c128326_1767713264.pdf
+    Páginas: 1
+    Texto (chars): 1258
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #221
+Batch ID: 
+Assunto do e-mail: TCF TELECOM - Nota Fiscal 0
+Remetente: TCF Telecom
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100204_a45fd1ae
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TCF Telecom
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_nota_fiscal_tipo0_n521912_c128326_1767712922.pdf
+    Páginas: 1
+    Texto (chars): 1192
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 700,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #225
+Batch ID: 
+Assunto do e-mail: Notificação Automática Ufinet - Documento 000000135
+Remetente: facturacionufinet@ufinet.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100205_db6e9f69
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2026-01-25
+  Número da nota: 000000135
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_000000135_06_FilialMG.pdf
+    Páginas: 1
+    Texto (chars): 759
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-25'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #235
+Batch ID: 
+Assunto do e-mail: Notificação Automática Ufinet - Documento 000011239
+Remetente: facturacionufinet@ufinet.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100206_96ba0def
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2026-01-25
+  Número da nota: 000011239
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_000011239_01_Matriz.pdf
+    Páginas: 1
+    Texto (chars): 729
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-25'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #239
+Batch ID: 
+Assunto do e-mail: Sua ordem Equinix n.º 1-255756176620 foi agendada   
+Remetente: Equinix Orders
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100206_f9df6f89
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_sv2lxcrmappr116_2507307_-286262592_0_QRCodeAttachmentTemplate.jld_1-39I1DNGD.PDF
+    Páginas: 1
+    Texto (chars): 3617
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_sv2lxcrmappr116_2507307_-286262592_6_work-visit-request-form.pdf
+    Páginas: 1
+    Texto (chars): 373
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #270
+Batch ID: 
+Assunto do e-mail: Cobrança - JANEIRO2026 - Ative Telecomunicaco
+Remetente: financeiro@quicksoft.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100210_e9ec890b
+Empresa: HD
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: QUICK SOFT TECNOLOGIA DA INFORMACAO S.A. - CNPJ 00.565.447/0001-08
+  Vencimento: 2026-01-14
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_ConsumoQcertifica_4793_JANEIRO2026.pdf
+    Páginas: 1
+    Texto (chars): 1166
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+  PDF: 02_Boleto_95640_1_JANEIRO2026.pdf
+    Páginas: 1
+    Texto (chars): 2422
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 0,43, R$ 26,07, R$ 0,43
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 2
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-14'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #272
+Batch ID: 
+Assunto do e-mail: Relatório de faturamento JAN 26 - MASTER INTERNET ATIVE SP
+Remetente: Contas a Receber
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100211_57b7b628
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Contas a Receber
+  Vencimento: 
+  Número da nota: 0001-77
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_MASTER INTERNET ATIVE SP FAT JAN26.pdf
+    Páginas: 1
+    Texto (chars): 382
+    Classificação sugerida: RELATÓRIO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 1
+  PDFs com valores detectados: 0
+  Classificação primária: ADMIN
+  Ação recomendada: DOCUMENTO_ADMIN_OK
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #273
+Batch ID: 
+Assunto do e-mail: Relatório de faturamento JAN 26 - MASTER INTERNET ATIVE MG
+Remetente: Contas a Receber
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100211_8c656e2f
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Contas a Receber
+  Vencimento: 
+  Número da nota: 0002-58
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_MASTER INTERNET ATIVE MG FAT JAN26.pdf
+    Páginas: 1
+    Texto (chars): 1634
+    Classificação sugerida: RELATÓRIO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 1
+  PDFs com valores detectados: 0
+  Classificação primária: ADMIN
+  Ação recomendada: DOCUMENTO_ADMIN_OK
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #280
+Batch ID: 
+Assunto do e-mail: Relatório de faturamento JAN 26 - MASTER INTERNET EXATA
+Remetente: Contas a Receber
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100212_465d3e38
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Contas a Receber
+  Vencimento: 
+  Número da nota: 0001-22
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_MASTER INTERNET EXATA FAT JAN26.pdf
+    Páginas: 1
+    Texto (chars): 432
+    Classificação sugerida: RELATÓRIO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 1
+  PDFs com valores detectados: 0
+  Classificação primária: ADMIN
+  Ação recomendada: DOCUMENTO_ADMIN_OK
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #299
+Batch ID: 
+Assunto do e-mail: Notificação Automática Ufinet - Documento 
+Remetente: facturacionufinet@ufinet.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100215_cc71de91
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2026-01-25
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_000000145_06_FilialMG.pdf
+    Páginas: 1
+    Texto (chars): 756
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-25'
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #309
+Batch ID: 
+Assunto do e-mail: RES: SOLICITAÇÃO DISTRATO DE VEÍCULO- OSVALDO PERES- RECISÓRIO
+Remetente: otavio.teodoro@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100217_144a5f50
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 918-12
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_DISTRATO - ATIVE - OSVALDO PERES JUNIOR.pdf
+    Páginas: 1
+    Texto (chars): 1507
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #322
+Batch ID: 
+Assunto do e-mail: ENC: December - 2025  Invoice for 6343 - ATIVE TELECOMUNICAÇÕES S.A (R$)
+Remetente: contasapagar@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100219_4cbec011
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Invoice_778272_Signal_December_2025.pdf
+    Páginas: 1
+    Texto (chars): 12271
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #326
+Batch ID: 
+Assunto do e-mail: ENC: December - 2025  Invoice for 6342 - MOC COMUNICAÇÃO S.A (R$)
+Remetente: contasapagar@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100219_e3a625a7
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Invoice_778271_Signal_December_2025.pdf
+    Páginas: 1
+    Texto (chars): 12204
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #334
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100222_3dcc05d1
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT12_00000000136811600420_0000002507A.pdf
+    Páginas: 2
+    Texto (chars): 2702
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$1,35
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #347
+Batch ID: 
+Assunto do e-mail: LEMBRETE- BOLETO ACI- JANEIRO 25
+Remetente: cobranca@acimoc.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100224_85b7d461
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: ASSOCIAÇÃO COML. INDL. E SERVIÇOS DE MONTES CLAROS
+  Vencimento: 
+  Número da nota: 401-301
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Boleto 1335 01-2026.PDF
+    Páginas: 1
+    Texto (chars): 2063
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 79,00
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #370
+Batch ID: 
+Assunto do e-mail: ALVIM NOGUEIRA ( |601) - Boleto Vencimento (01/2026)
+Remetente: AlmahCondos
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100227_3659f4ba
+Empresa: MINAS
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: saneamento em Divinópolis foi alterada da ARSAE-MG para a ARISMIG (Agência
+  Vencimento: 2026-01-25
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_COPASA - INFORMATIVO IMPORTANTE 12.2205 (1).pdf
+    Páginas: 4
+    Texto (chars): 2652
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-25'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #371
+Batch ID: 
+Assunto do e-mail: ALVIM NOGUEIRA ( |601) - Boleto Vencimento (01/2026)
+Remetente: AlmahCondos
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100227_55126dfe
+Empresa: MINAS
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: saneamento em Divinópolis foi alterada da ARSAE-MG para a ARISMIG (Agência
+  Vencimento: 2026-01-25
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_COPASA - INFORMATIVO IMPORTANTE 12.2205 (1).pdf
+    Páginas: 4
+    Texto (chars): 2652
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-25'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #377
+Batch ID: 
+Assunto do e-mail: Fwd: RES: Cobrança - JANEIRO2026 - Ative Telecomunicaco
+Remetente: Clara Barbosa
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100228_18da6a51
+Empresa: SERVICOS
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: BELO HORIZONTE/MG, inscrita no CNPJ - CNPJ 12.222.945/0001-37
+  Vencimento: 2026-01-14
+  Número da nota: 240825292
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_F479315122025155051_Aditivo valores Qcertifica - Global Finanças_FIDC Aratu_assinado.pdf
+    Páginas: 6
+    Texto (chars): 9693
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 111,35, R$ 90,00, R$ 728,11
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-14'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #407
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100233_6af532ae
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT09_00000000225508300403_0000001973A.pdf
+    Páginas: 2
+    Texto (chars): 2812
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$1,54
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #416
+Batch ID: 
+Assunto do e-mail: CEMIG FATURA ONLINE - 214687916
+Remetente: Fatura Cemig
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100235_0ac263fe
+Empresa: HD
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2652-02-17
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2652-02-17'
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #429
+Batch ID: 
+Assunto do e-mail: LEMBRETE ACI- BOLETO VENCE HOJE
+Remetente: cobranca@acimoc.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100236_efcbb77e
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: ASSOCIAÇÃO COML. INDL. E SERVIÇOS DE MONTES CLAROS
+  Vencimento: 
+  Número da nota: 401-301
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Boleto 1335 01-2026.PDF
+    Páginas: 1
+    Texto (chars): 2063
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 79,00
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #443
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100239_475f3adc
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT12_00000000118844000465_0000003748A.pdf
+    Páginas: 2
+    Texto (chars): 2957
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$0,51
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #474
+Batch ID: 
+Assunto do e-mail: Solicitação de encerramento de contrato realizada com sucesso. Sua conta referente ao encerramento está disponível.
+Remetente: atendimento@cemig.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100242_a5bf4bc7
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_1165193624.pdf
+    Páginas: 1
+    Texto (chars): 1031
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #480
+Batch ID: 
+Assunto do e-mail: Faturamento 01/2026 - Carrier Telecom S/A
+Remetente: TELCABLES BRASIL LTDA (FILIAL SÃO PAULO)
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100243_3812a5dc
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2026-02-23
+  Número da nota: 323
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_B. Carrier Telecom SA - NF 323 - PARCELA 1.PDF
+    Páginas: 1
+    Texto (chars): 1702
+    Classificação sugerida: DESCONHECIDO
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-23'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #482
+Batch ID: 
+Assunto do e-mail: RES: RES: Distrato do veiculo Placa DQR-5192 (Giovani Marques Barbosa)  Lavras.
+Remetente: otavio.teodoro@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100243_6f88c7ac
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: igual teor e forma, na presença de testemunhas.
+  Vencimento: 
+  Número da nota: 236-54
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #524
+Batch ID: 
+Assunto do e-mail: FATURAMENTO BOX BRAZIL - ATIVE - DEZEMBRO 2025
+Remetente: Jéssica Dorneles da Silva
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100249_05512bd4
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 2
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: PBI - PROGRAMADORA BRASILEIRA INDEPENDENTE S.A
+  Vencimento: 2026-02-16
+  Número da nota: 041-8
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BOLETO ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 1846
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 430,00
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+  PDF: 02_FATURA 202600013 ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 1315
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 2 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-16'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #526
+Batch ID: 
+Assunto do e-mail: FATURAMENTO BOX BRAZIL - EXATA - DEZEMBRO 2025
+Remetente: Jéssica Dorneles da Silva
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100249_0d4ecbd9
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 2
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: PBI - PROGRAMADORA BRASILEIRA INDEPENDENTE S.A
+  Vencimento: 2026-02-16
+  Número da nota: 0001-20
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_FATURA 202600022 EXATA.pdf
+    Páginas: 1
+    Texto (chars): 1368
+    Classificação sugerida: NFSE
+
+  PDF: 02_BOLETO EXATA.pdf
+    Páginas: 1
+    Texto (chars): 1810
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 430,00
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 2 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-16'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #527
+Batch ID: 
+Assunto do e-mail: CEMIG FATURA ONLINE - 214992984
+Remetente: Fatura Cemig
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100249_37616535
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2652-02-17
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2652-02-17'
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #529
+Batch ID: 
+Assunto do e-mail: FATURAMENTO BOX BRAZIL - MOC - DEZEMBRO 2025
+Remetente: Jéssica Dorneles da Silva
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100249_5f053424
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 2
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: PBI - PROGRAMADORA BRASILEIRA INDEPENDENTE S.A
+  Vencimento: 2026-02-16
+  Número da nota: 0001-20
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_FATURA 202600035 MOC.pdf
+    Páginas: 1
+    Texto (chars): 1376
+    Classificação sugerida: NFSE
+
+  PDF: 02_BOLETO MOC.pdf
+    Páginas: 1
+    Texto (chars): 1814
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 725,20
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 2 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-16'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #540
+Batch ID: 
+Assunto do e-mail: GUIA | Execução Fiscal - Vale Telecom
+Remetente: Ana Elisa Santos
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100251_68dbaade
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Ana Elisa Santos
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_GUIA COMPLEMENTAR CUSTAS FINAIS.pdf
+    Páginas: 1
+    Texto (chars): 8199
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #542
+Batch ID: 
+Assunto do e-mail: GUIA | Processo - Miralva Macedo Dias x CSC
+Remetente: Ana Elisa Santos
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100251_934cb19d
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Ana Elisa Santos
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_GUIA TAXA JUDICIARIA.pdf
+    Páginas: 1
+    Texto (chars): 8077
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #550
+Batch ID: 
+Assunto do e-mail: RES: GUIA | Execução Fiscal - Vale Telecom
+Remetente: contasapagar@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100252_e561ea90
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_GUIA COMPLEMENTAR CUSTAS FINAIS.pdf
+    Páginas: 1
+    Texto (chars): 8199
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #563
+Batch ID: 
+Assunto do e-mail: Boleto BRANDAO E LEITE LTDA NF 410
+Remetente: protelmgnfse@gmail.com
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100254_8afaa41c
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: ( ) Mudou-se ( ) Ausente ( ) Não Existe nº indicado
+  Vencimento: 2026-01-30
+  Número da nota: 410
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_2772_MOC_COMUNICACAO_SA_NF_410.pdf
+    Páginas: 1
+    Texto (chars): 2615
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 145,09, R$ 0,15, R$ 145,09
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #570
+Batch ID: 
+Assunto do e-mail: RES: Cobrança NF 10447 Interfocus
+Remetente: Larissa Sbampato
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100255_9f6febb8
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 2
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: métricas de atendimentos (dashboard).
+  Vencimento: 
+  Número da nota: 17525-210
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Proposta Comercial_Interfocus Tecnologia_15.05.2025 - Clicksign.pdf
+    Páginas: 6
+    Texto (chars): 12773
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 6.400,00
+
+  PDF: 02_e-mail Master.pdf
+    Páginas: 2
+    Texto (chars): 1745
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 2 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #588
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100259_c59efaab
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT12_00000000180014000418_0000003915A.pdf
+    Páginas: 2
+    Texto (chars): 3294
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$2,80
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #590
+Batch ID: 
+Assunto do e-mail: ENC: Nota fiscal e boleto - FILIBRAS
+Remetente: filibras@filibras.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100300_a3895691
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: FILIBRAS COMERCIAL IMPORTACAO E EXPORTAC - CNPJ 05.781.815/0001-79
+  Vencimento: 2026-02-08
+  Número da nota: 30140
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_boleto1.pdf
+    Páginas: 1
+    Texto (chars): 1850
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 159,00
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+  PDF: 02_nota_fiscal.pdf
+    Páginas: 1
+    Texto (chars): 1309
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$22,93
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 2
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-08'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #599
+Batch ID: 
+Assunto do e-mail: Re: ENC: RES: RES: PAGAMENTOS EM ABERTOS
+Remetente: financeiro@semelclavras.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100303_63f77dac
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 26406
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_79 CANCELADA MASTER CABO NF_26406 NOVA NF.pdf
+    Páginas: 1
+    Texto (chars): 10837
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+
+--------------------------------------------------------------------------------
+
+CASO #600
+Batch ID: 
+Assunto do e-mail: Sua fatura TIM
+Remetente: contatim@faturadatim.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100303_84f9cde5
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #602
+Batch ID: 
+Assunto do e-mail: Sua fatura TIM
+Remetente: contatim@faturadatim.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100303_b5237790
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #604
+Batch ID: 
+Assunto do e-mail: Sua ordem Equinix n.º 1-256055228531 foi agendada   
+Remetente: Equinix Orders
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100303_dad1ae79
+Empresa: CARRIER
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_sv2lxcrmappr132_200151_-316835136_0_QRCodeAttachmentTemplate.jld_1-39OQW2C9.PDF
+    Páginas: 1
+    Texto (chars): 3621
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_sv2lxcrmappr132_200151_-316835136_0_work-visit-request-form.pdf
+    Páginas: 1
+    Texto (chars): 374
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #611
+Batch ID: 
+Assunto do e-mail: Sua fatura TIM
+Remetente: contatim@faturadatim.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100304_8cb92b9c
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #613
+Batch ID: 
+Assunto do e-mail: Relatório Assinantes 12/25 - Record News
+Remetente: Maria Luiza Souza Ferreira
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100305_0d1b96ca
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Rede Mulher de Televisao Ltda CNPJ: -8 / -8
+  Vencimento: 2026-02-28
+  Número da nota: 00002262
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-28'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #620
+Batch ID: 
+Assunto do e-mail: ENC: NOTAS FISCAIS NÃO RECEBIDAS - UNIFEI Itajubá
+Remetente: Ney Junior
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100307_0a846184
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: Ney Junior
+  Vencimento: 
+  Número da nota: 022
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NF 001882316 - UNIFEI - 21-09-2025 a 20-10-2025 - MEDICAO 2.pdf
+    Páginas: 1
+    Texto (chars): 970
+    Classificação sugerida: NFSE
+
+  PDF: 02_NF 001882315 - UNIFEI - 22-08-2025 a 20-09-2025 - MEDICAO 1.pdf
+    Páginas: 1
+    Texto (chars): 970
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 2
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Extrator Identification Issues:
+    • Assunto sugere nota fiscal
+
+--------------------------------------------------------------------------------
+
+CASO #633
+Batch ID: 
+Assunto do e-mail: CEMIG FATURA ONLINE - 215332751
+Remetente: Fatura Cemig
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100308_a60d90d4
+Empresa: PRIME
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TELCABLES BRASIL LTDA
+  Vencimento: 2652-02-17
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2652-02-17'
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #636
+Batch ID: 
+Assunto do e-mail: CAMBIOS FOX EXATA
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100309_219b99ff
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 6
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_10-15 EXATA FOX.pdf
+    Páginas: 1
+    Texto (chars): 975
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_11-15 EXATA FOX.pdf
+    Páginas: 1
+    Texto (chars): 975
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 03_11_30 - Invoice 1800225789 - TFCF - EXATA.PDF
+    Páginas: 1
+    Texto (chars): 1043
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 04_12.15 EXATA FOX LATIN.pdf
+    Páginas: 1
+    Texto (chars): 1043
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 05_12_15 - 1800225838 - TFCF - EXATA.PDF
+    Páginas: 1
+    Texto (chars): 1043
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 5
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 6 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #639
+Batch ID: 
+Assunto do e-mail: CAMBIO OLE ATIVE NOVEMBRO
+Remetente: Vítor Eduardo Fernandes
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100309_cec8fa2d
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Vítor Eduardo Fernandes
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_12.31 ATIVE OLE.pdf
+    Páginas: 1
+    Texto (chars): 12271
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #640
+Batch ID: 
+Assunto do e-mail: CAMBIO OLE EXATA OUTUBRO E NOVEMBRO
+Remetente: Vítor Eduardo Fernandes
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100309_d7f02d40
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: Vítor Eduardo Fernandes
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_12.31 EXATA OLE 762287.pdf
+    Páginas: 1
+    Texto (chars): 12058
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_12.01 EXATA 750469 OLE.pdf
+    Páginas: 1
+    Texto (chars): 12058
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #641
+Batch ID: 
+Assunto do e-mail: CAMBIOS E CREDITO FOX EXATA
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100309_f21f3d82
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 6
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_10-15 EXATA FOX.pdf
+    Páginas: 1
+    Texto (chars): 975
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_11-15 EXATA FOX.pdf
+    Páginas: 1
+    Texto (chars): 975
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 03_11_30 - Invoice 1800225789 - TFCF - EXATA.PDF
+    Páginas: 1
+    Texto (chars): 1043
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 04_12.15 EXATA FOX LATIN.pdf
+    Páginas: 1
+    Texto (chars): 1043
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 05_12_15 - 1800225838 - TFCF - EXATA.PDF
+    Páginas: 1
+    Texto (chars): 1043
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 5
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 6 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #642
+Batch ID: 
+Assunto do e-mail: CAMBIO TURNER RBC OUTUBRO
+Remetente: Vítor Eduardo Fernandes
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100310_2bb1bea0
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Vítor Eduardo Fernandes
+  Vencimento: 
+  Número da nota: 17747
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_01.15 RBC 920007759 TURNER.pdf
+    Páginas: 1
+    Texto (chars): 1109
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: MEDIA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+
+--------------------------------------------------------------------------------
+
+CASO #644
+Batch ID: 
+Assunto do e-mail: CAMBIOS E CREDITO FOX MOC
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100310_3f48f2d2
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 6
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA TAXID95-4428164 MOCCOMUNICACAOS/A
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_11-15 MOC FOX.pdf
+    Páginas: 1
+    Texto (chars): 961
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_11_30 - Invoice 1800225790 - TFCF - MOC.PDF
+    Páginas: 1
+    Texto (chars): 1026
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 03_12_15 - 1800225837 - TFCF -MOC.PDF
+    Páginas: 1
+    Texto (chars): 1026
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 04_12.15MOC FOX LATIN.pdf
+    Páginas: 1
+    Texto (chars): 1026
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 05_NOTA CREDITO FOX.pdf
+    Páginas: 1
+    Texto (chars): 900
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 5
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 6 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #645
+Batch ID: 
+Assunto do e-mail: CAMBIOS FOX MOC
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100310_8a254027
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 6
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA TAXID95-4428164 MOCCOMUNICACAOS/A
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_11-15 MOC FOX.pdf
+    Páginas: 1
+    Texto (chars): 961
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_11_30 - Invoice 1800225790 - TFCF - MOC.PDF
+    Páginas: 1
+    Texto (chars): 1026
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 03_12_15 - 1800225837 - TFCF -MOC.PDF
+    Páginas: 1
+    Texto (chars): 1026
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 04_12.15MOC FOX LATIN.pdf
+    Páginas: 1
+    Texto (chars): 1026
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 05_NOTA CREDITO FOX.pdf
+    Páginas: 1
+    Texto (chars): 900
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 5
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 6 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #646
+Batch ID: 
+Assunto do e-mail: CAMBIO OLE MOC NOVEMBRO
+Remetente: Vítor Eduardo Fernandes
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100310_b4573a24
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Vítor Eduardo Fernandes
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_12.31MOC OLE BRASIL.pdf
+    Páginas: 1
+    Texto (chars): 12204
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #647
+Batch ID: 
+Assunto do e-mail: ALUGUEL VEÍCULO BRUNO
+Remetente: Mirian da Silva Cupido Mendrot
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100311_1d3f81e1
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Mirian da Silva Cupido Mendrot
+  Vencimento: 
+  Número da nota: 098-26
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Distrato (1).pdf
+    Páginas: 2
+    Texto (chars): 154
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #648
+Batch ID: 
+Assunto do e-mail: distrato veicular e planilha final
+Remetente: Luis
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100311_38c4657f
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Luis
+  Vencimento: 
+  Número da nota: 0001-77
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+NENHUM PDF ANALISADO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #649
+Batch ID: 
+Assunto do e-mail: CAMBIOS E CREDITO FOX ATIVE
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100311_611edaef
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 6
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA TAXID95-4428164 ATIVETELECOMUNICAÇÕESSA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_10-15 ATIVE FOX.pdf
+    Páginas: 1
+    Texto (chars): 992
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_11_30 - Invoice 1800225788 - TFCF - ATIVE.PDF
+    Páginas: 1
+    Texto (chars): 1061
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 03_11-15 ATIVE FOX.pdf
+    Páginas: 1
+    Texto (chars): 992
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 04_12.15 ATIVE FOX LATIN.pdf
+    Páginas: 1
+    Texto (chars): 1061
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 05_12_15 - 1800225839 - TFCF - ATIVE 1.PDF
+    Páginas: 1
+    Texto (chars): 1061
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 5
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 6 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #650
+Batch ID: 
+Assunto do e-mail: CAMBIOS FOX ATIVE
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100311_69dd8b74
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 6
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA TAXID95-4428164 ATIVETELECOMUNICAÇÕESSA
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_10-15 ATIVE FOX.pdf
+    Páginas: 1
+    Texto (chars): 992
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_11_30 - Invoice 1800225788 - TFCF - ATIVE.PDF
+    Páginas: 1
+    Texto (chars): 1061
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 03_11-15 ATIVE FOX.pdf
+    Páginas: 1
+    Texto (chars): 992
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 04_12.15 ATIVE FOX LATIN.pdf
+    Páginas: 1
+    Texto (chars): 1061
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 05_12_15 - 1800225839 - TFCF - ATIVE 1.PDF
+    Páginas: 1
+    Texto (chars): 1061
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 5
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 6 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #654
+Batch ID: 
+Assunto do e-mail: CAMBIO MTV MOC NOVEMBRO
+Remetente: Vítor Eduardo Fernandes
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100311_f1b2c312
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Vítor Eduardo Fernandes
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_12.11 MOC 93259211 MTV.pdf
+    Páginas: 1
+    Texto (chars): 907
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #658
+Batch ID: 
+Assunto do e-mail: CEMIG D.Compartilhamento de Infraestrutura - Fatura nº 0090006173 (jan.2026 - venc.10.02.2026) - Cód.SAP: 1000012564 (RBC REDE SA)
+Remetente: GI - Faturamento
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100312_2724876b
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: CEMIG Distribuição S.A. -9
+  Vencimento: 2026-01-10
+  Número da nota: 000
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_F_530_202601_1000012564_20260210_0090006173_RBC-REDE BRASILEIRA DE COM.LTDA.PDF
+    Páginas: 1
+    Texto (chars): 1269
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 282.889,20, R$ 282.889,20, VALOR LÍQUIDO A PAGAR R$ 282.889,20
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+  PDF: 02_B_530_202601_1000012564_20260210_0090006173_001_RBC-REDE BRASILEIRA DE COM.LTDA.PDF
+    Páginas: 1
+    Texto (chars): 2180
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 282.889,20, R$ 282.889,20
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 2
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-10'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #660
+Batch ID: 
+Assunto do e-mail: ENC: CEMIG D.Compartilhamento de Infraestrutura - Fatura nº 0090006173 (jan.2026 - venc.10.02.2026) - Cód.SAP: 1000012564 (RBC REDE SA)
+Remetente: contasapagar@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100312_55bc4403
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 2
+  Valor total: R$ 0.00
+  Fornecedor: CEMIG Distribuição S.A. -9
+  Vencimento: 2026-01-10
+  Número da nota: 000
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_F_530_202601_1000012564_20260210_0090006173_RBC-REDE BRASILEIRA DE COM.LTDA.PDF
+    Páginas: 1
+    Texto (chars): 1269
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 282.889,20, R$ 282.889,20, VALOR LÍQUIDO A PAGAR R$ 282.889,20
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+  PDF: 02_B_530_202601_1000012564_20260210_0090006173_001_RBC-REDE BRASILEIRA DE COM.LTDA.PDF
+    Páginas: 1
+    Texto (chars): 2180
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 282.889,20, R$ 282.889,20
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 2
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 2 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-10'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #681
+Batch ID: 
+Assunto do e-mail: TFCF Latin American Channel LLC Invoice AJUSTE - MOC Comunicação S.A
+Remetente: Intl BRSP Afiliados
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100315_2db2139f
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Florida33134USA TAXID95-4428164 MOCCOMUNICACAOS/A
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_MOC 1800225907.pdf
+    Páginas: 1
+    Texto (chars): 942
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+
+--------------------------------------------------------------------------------
+
+CASO #687
+Batch ID: 
+Assunto do e-mail: Veja a fatura Power BI Premium Per User
+Remetente: Microsoft
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100316_1bb10c20
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Microsoft do Brasil Importação e Comércio de Software e Video Games Ltda
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_73067070247.pdf
+    Páginas: 2
+    Texto (chars): 2381
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #688
+Batch ID: 
+Assunto do e-mail: Veja a fatura Planner and Project Plan 3
+Remetente: Microsoft
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100316_4c9cbd96
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Microsoft do Brasil Importação e Comércio de Software e Video Games Ltda
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_73067080437.pdf
+    Páginas: 2
+    Texto (chars): 2914
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #689
+Batch ID: 
+Assunto do e-mail: Veja a fatura Power BI Pro
+Remetente: Microsoft
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100316_4dc9cf86
+Empresa: PRO
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Microsoft do Brasil Importação e Comércio de Software e Video Games Ltda
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_63067082956.pdf
+    Páginas: 2
+    Texto (chars): 2343
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #692
+Batch ID: 
+Assunto do e-mail: Veja a fatura Microsoft 365 Apps for business
+Remetente: Microsoft
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100316_7fe8f544
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Microsoft do Brasil Importação e Comércio de Software e Video Games Ltda
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_93067028304.pdf
+    Páginas: 2
+    Texto (chars): 2376
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #695
+Batch ID: 
+Assunto do e-mail: Veja a fatura Microsoft 365 Business Standard
+Remetente: Microsoft
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100317_20515458
+Empresa: CSC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: Microsoft do Brasil Importação e Comércio de Software e Video Games Ltda
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_63067083306.pdf
+    Páginas: 2
+    Texto (chars): 2322
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (assunto sugere boleto/fatura)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #698
+Batch ID: 
+Assunto do e-mail: RES: CAMBIOS FOX MOC
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100317_93d5c33f
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: FOX LATIN AMERICAN CPF/CNPJ - CNPJ 03.347.577/0001-62
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_FOX IR MOC.pdf
+    Páginas: 1
+    Texto (chars): 970
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_FOX COND MOC.pdf
+    Páginas: 1
+    Texto (chars): 1866
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 63,03
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #699
+Batch ID: 
+Assunto do e-mail: RES: CAMBIOS FOX EXATA
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100317_9d8250c6
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: FOX LATIN AMERICAN CPF/CNPJ - CNPJ 03.347.577/0001-62
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_FOX COND EXATA.pdf
+    Páginas: 1
+    Texto (chars): 1898
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 48,48
+
+  PDF: 02_FOX IR EXATA.pdf
+    Páginas: 1
+    Texto (chars): 956
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #700
+Batch ID: 
+Assunto do e-mail: RES: CAMBIOS FOX ATIVE
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100317_bcfbc0f3
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: FOX LATIN AMERICAN CPF/CNPJ - CNPJ 03.347.577/0001-62
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_FOX IR ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 968
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_FOX COND ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 1914
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 48,48
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #701
+Batch ID: 
+Assunto do e-mail: Boletos de: ASSOCIAÇÃO NEO - No. 09/00000024302-P
+Remetente: financeiro@associacaoneo.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100317_e8258c92
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: 39400-103 - MONTES CLAROS - MG - CNPJ 31.385.373/0001-51
+  Vencimento: 2026-02-08
+  Número da nota: 0001025818
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BOL_0001_026329_NF0001025818.PDF
+    Páginas: 1
+    Texto (chars): 2102
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 3.268,24
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+  PDF: 02_FATURA_PROC_0001_00026329.PDF
+    Páginas: 1
+    Texto (chars): 1128
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-08'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #702
+Batch ID: 
+Assunto do e-mail: RES: CAMBIO OLE MOC NOVEMBRO
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_2385afba
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: MTV NETWORKS L AMER INC/ NICKELODEON BRA CPF/CNPJ - CNPJ 03.534.341/0001-35
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_OLE COND MOC.pdf
+    Páginas: 1
+    Texto (chars): 1910
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 66,00
+
+  PDF: 02_OLE IR MOC.pdf
+    Páginas: 1
+    Texto (chars): 958
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #705
+Batch ID: 
+Assunto do e-mail: RES: CAMBIO TURNER RBC OUTUBRO
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_41e244be
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TOPSPORTS VENTURES LTDA. CPF/CNPJ - CNPJ 03.390.444/0001-79
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_TURNER COND.pdf
+    Páginas: 1
+    Texto (chars): 1949
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 219,05
+
+  PDF: 02_TURNER IR.pdf
+    Páginas: 1
+    Texto (chars): 988
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #706
+Batch ID: 
+Assunto do e-mail: RES: CAMBIO OLE ATIVE NOVEMBRO
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_630c7413
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: OLE BRASIL SERVICOS AUDIOVISUAIS LTDA. CPF/CNPJ - CNPJ 37.168.987/0001-68
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_OLE COND ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 1956
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 71,16
+
+  PDF: 02_OLE IR ATIVE.pdf
+    Páginas: 1
+    Texto (chars): 968
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #707
+Batch ID: 
+Assunto do e-mail: RES: CAMBIO MTV MOC NOVEMBRO
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_a0424ac2
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: OLE BRASIL SERVICOS AUDIOVISUAIS LTDA. CPF/CNPJ - CNPJ 37.168.987/0001-68
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_MTV COND.pdf
+    Páginas: 1
+    Texto (chars): 1910
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 111,47
+
+  PDF: 02_MTV IR.pdf
+    Páginas: 1
+    Texto (chars): 958
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #708
+Batch ID: 
+Assunto do e-mail: Faturamento
+Remetente: Grupo Forte Seguranca
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_b65f3819
+Empresa: ATIVE
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: emitida por MONITORE SERVICOS LTDA -
+  Vencimento: 2026-02-18
+  Número da nota: 15899
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Nota15899_ATIVE TELECOMUNICACOES S.A..pdf
+    Páginas: 2
+    Texto (chars): 3681
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,00, R$ 0,00, R$ 0,00
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-02-18'
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #709
+Batch ID: 
+Assunto do e-mail: RES: CAMBIO OLE EXATA NOVEMBRO
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_c3bdae27
+Empresa: MOC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: OLE BRASIL SERVICOS AUDIOVISUAIS LTDA. CPF/CNPJ - CNPJ 37.168.987/0001-68
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_OLE COND EXATA.pdf
+    Páginas: 1
+    Texto (chars): 1930
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 71,16
+
+  PDF: 02_OLE IR MOC.pdf
+    Páginas: 1
+    Texto (chars): 958
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #712
+Batch ID: 
+Assunto do e-mail: RES: CAMBIO DISCOVERY RBC OUTUBRO
+Remetente: luis.torres@soumaster.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100318_fb8a4f57
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: TOPSPORTS VENTURES LTDA. CPF/CNPJ - CNPJ 03.390.444/0001-79
+  Vencimento: 2026-01-30
+  Número da nota: 07
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_DISCOVERY COND.pdf
+    Páginas: 1
+    Texto (chars): 1953
+    Classificação sugerida: DESCONHECIDO
+    Valores detectados no PDF: R$ 2.011,70
+
+  PDF: 02_DISCOVERY IR.pdf
+    Páginas: 1
+    Texto (chars): 991
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Formato não padrão: '2026-01-30'
+  Data Validation Issues:
+    • Data de vencimento inválida
+
+--------------------------------------------------------------------------------
+
+CASO #713
+Batch ID: 
+Assunto do e-mail: [GIGA + EMPRESAS] JANELA  PROGRAMADA DE ATIVIDADE EMERGENCIAL  03/02/2026  GMUDPROG06626 | 04/02/2026  GMUDPROG06628 (BACKUP) | 06/02/2026  GMUDPROG06629 (BACKUP 2) | São Paulo - SP
+Remetente: Sandra Kalia da Silva Meneses
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100319_382c6380
+Empresa: EXATA
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: Sandra Kalia da Silva Meneses
+  Vencimento: 
+  Número da nota: 608-0068
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_Escalation Operadoras - Atualizado.pdf
+    Páginas: 1
+    Texto (chars): 3921
+    Classificação sugerida: DESCONHECIDO
+
+  PDF: 02_Escalation Giga+ Empresas_Corporativo e Governo (2) (1).pdf
+    Páginas: 1
+    Texto (chars): 1050
+    Classificação sugerida: DESCONHECIDO
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 2
+  PDFs classificados como NFSE: 0
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: DESCONHECIDO
+  Ação recomendada: INVESTIGAR_MANUALMENTE
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: MEDIA
+  Valor Issues:
+    • Valor zero com 1 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+
+--------------------------------------------------------------------------------
+
+CASO #715
+Batch ID: 
+Assunto do e-mail: Fatura de Serviço F  -000008248/ COMPANHIA RIO BONITO - COMUNICACOES / EXATA TELCO
+Remetente: protheus@band.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100319_6b17f145
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NFFAT_5701_F_000008248_20260123.PDF
+    Páginas: 1
+    Texto (chars): 1600
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,20, R$ 0,95
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #717
+Batch ID: 
+Assunto do e-mail: Fatura de Serviço F  -000008250/ COMPANHIA RIO BONITO - COMUNICACOES / ATIVE TELECOMUNICACO
+Remetente: protheus@band.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100319_95bfc550
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NFFAT_5701_F_000008250_20260123.PDF
+    Páginas: 1
+    Texto (chars): 1627
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 0,08, R$ 0,35
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #718
+Batch ID: 
+Assunto do e-mail: Fatura de Serviço F  -000008249/ COMPANHIA RIO BONITO - COMUNICACOES / MOC COMUNICACAO
+Remetente: protheus@band.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100319_a97160f9
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_NFFAT_5701_F_000008249_20260123.PDF
+    Páginas: 1
+    Texto (chars): 1611
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$ 3,28, R$ 15,13
+    Problemas de vencimento: Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*$, Padrão vencimento vazio: VENCIMENTO\s*[:;]?\s*\n
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
+CASO #735
+Batch ID: 
+Assunto do e-mail: NOTIFICAÇÃO CABOS IRREGULARES - SÃO JOSÉ DOS CAMPOS - RBC - REDE BRAS. DE COMUNICAÇÃO LTDA
+Remetente: ISABELLY DE SOUZA XAVIER PROVIDER SOLUÇOES TECNOLOGICAS
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100321_d559ba84
+Empresa: RBC
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 1
+  NFSEs: 0
+  Valor total: R$ 0.00
+  Fornecedor: TONIO OLIMPIO DE MORAIS, 545, NA CIDADE DE DIVINOPOLIS, ESTADO DE MG, INSCRITA NO
+  Vencimento: 
+  Número da nota: 001-2026
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_RBC_-_REDE_BRASILEIRA_DE_COMUNICAO_LTDA_-__MASTER_CABOS_-_SJCAMPOS001-2026.pdf
+    Páginas: 4
+    Texto (chars): 11074
+    Classificação sugerida: NFSE
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 0
+  Classificação primária: NFSE
+  Ação recomendada: REVISAR_CLASSIFICACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Valor Issues:
+    • Valor zero com 1 outros e 0 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+    • Vencimento não extraído (pode ser boleto)
+  Data Validation Issues:
+    • Data de vencimento faltante
+
+--------------------------------------------------------------------------------
+
+CASO #737
+Batch ID: 
+Assunto do e-mail: EDP - FATURAS
+Remetente: edpcontaporemail@edpbr.com.br
+Pasta fonte: C:\Users\rafael.ferreira\Documents\scrapper\temp_email\email_20260126_100322_8c72a2a9
+Empresa: 
+
+INFORMAÇÕES DO CSV:
+  Outros (administrativos): 0
+  NFSEs: 1
+  Valor total: R$ 0.00
+  Fornecedor: 
+  Vencimento: 
+  Número da nota: 
+
+[ATENCAO] VENCIMENTO INVÁLIDO DETECTADO
+
+ANÁLISE DOS PDFs ENCONTRADOS:
+  PDF: 01_BANDFATELBT11_00000000095866400401_0000003821A.pdf
+    Páginas: 2
+    Texto (chars): 2244
+    Classificação sugerida: NFSE
+    Valores detectados no PDF: R$0,09
+
+RESUMO DA CLASSIFICAÇÃO:
+  PDFs analisados: 1
+  PDFs classificados como NFSE: 1
+  PDFs classificados como administrativos: 0
+  PDFs com valores detectados: 1
+  Classificação primária: NFSE
+  Ação recomendada: MELHORAR_EXTRACAO
+
+QUALIDADE DA EXTRAÇÃO DO CSV:
+  Nível de severidade: ALTA
+  Fornecedor Issues:
+    • Fornecedor vazio
+  Valor Issues:
+    • Valor zero com 0 outros e 1 NFSEs
+  Vencimento Issues:
+    • Vencimento vazio
+  Numero Nota Issues:
+    • Número da nota não extraído (para NFSE)
+  Extrator Identification Issues:
+    • Assunto sugere boleto/fatura
+
+--------------------------------------------------------------------------------
+
 ====================================================================================================
 RESUMO EXECUTIVO
 ====================================================================================================
 
-Total de casos analisados: 10
-Casos com PDFs analisados: 10
+Total de casos analisados: 101
+Casos com PDFs analisados: 92
 
 Distribuição de classificações:
-  DESCONHECIDO: 4 casos (40.0%)
-  NFSE: 6 casos (60.0%)
+  ADMIN: 4 casos (4.3%)
+  DESCONHECIDO: 50 casos (54.3%)
+  NFSE: 38 casos (41.3%)
 
 Problemas específicos detectados:
-  Fornecedor Interno: 1 casos (10.0%)
-  Vencimento Invalido: 10 casos (100.0%)
+  Fornecedor Interno: 1 casos (1.0%)
+  Vencimento Invalido: 101 casos (100.0%)
 
 CORREÇÕES DE FORNECEDOR SUGERIDAS:
   Total de correções sugeridas: 1

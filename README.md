@@ -43,6 +43,30 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 
 ## Done
 
+### 26/01/2026
+
+- [x] **Resolução do problema Carrier Telecom vs faturas de energia**: Remoção do CarrierTelecomExtractor e criação do EnergyBillExtractor
+    - Identificado que Carrier Telecom S/A (CNPJ 38323230000164) é uma de nossas empresas, não um fornecedor externo
+    - O extrator original estava sendo ativado indevidamente em faturas de energia onde Carrier Telecom aparece como cliente
+    - Criado EnergyBillExtractor especializado para faturas de energia (EDP, CEMIG, COPEL, etc.)
+    - Detecta distribuidoras de energia por múltiplos indicadores (DISTRIB DE ENERGIA, CONSUMO, KWH, etc.)
+    - Extrai campos específicos: fornecedor, CNPJ, número da nota, valor total, vencimento, período de referência
+- [x] **Aprimoramento do script inspect_pdf.py para análise detalhada de batches**:
+    - Adicionado modo batch (`--batch`) para analisar todos os PDFs de um lote do temp_email
+    - Exibe informações de extratores testados e qual foi selecionado (ordem de prioridade)
+    - Mostra campos que seriam exportados para relatorio_lotes.csv
+    - Informações automáticas do batch (ID, data, pasta)
+    - Estatísticas consolidadas de extratores, tipos e empresas no modo batch
+
+### 23/01/2026
+
+- [x] Aprimora classificação de documentos
+    - Trocado a ordem do SicoobExtractor porque aparentemente ele é pior que o generico, avaliar o porque e oque pode ser feito. (issue)
+    - Adiciona padrões para NFSEs municipais e documentos de serviço público
+    - Atualiza título do relatório de análise de PDFs para maior clareza
+    - Remove arquivo obsoleto de análise de NFSEs administrativas com valor zero
+    - Adiciona relatório simples para lotes problemáticos
+
 ### 22/01/2026
 
 - [x] **Resolução do caso VCOM Tecnologia**: Correção do AdminDocumentExtractor para extrair valores de ordens de serviço e melhoria na extração de vencimento para documentos tabulares, resolvendo 6 casos de documentos classificados como administrativos com valores não extraídos.
