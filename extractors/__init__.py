@@ -7,6 +7,7 @@ from .net_center import NetCenterExtractor
 from .nfse_custom_montes_claros import NfseCustomMontesClarosExtractor
 from .nfse_custom_vila_velha import NfseCustomVilaVelhaExtractor
 from .energy_bill import EnergyBillExtractor
+from .nfcom_telcables_extractor import NfcomTelcablesExtractor
 
 # Extrator especializado para documentos administrativos (deve vir antes dos genéricos)
 from .admin_document import AdminDocumentExtractor
@@ -33,6 +34,7 @@ __all__ = [
     "DanfeExtractor",
     "EmcFaturaExtractor",
     "NetCenterExtractor",
+    "NfcomTelcablesExtractor",
     "OutrosExtractor",
     "SicoobExtractor",
     "EnergyBillExtractor",

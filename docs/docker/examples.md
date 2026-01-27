@@ -19,9 +19,9 @@ setup-docker.bat
 # 3. Edite o .env com suas credenciais (abre no Notepad)
 notepad .env
 
-# 4. Build e teste
+# 4. Build e validação
 docker-compose build
-docker-compose run --rm scrapper python scripts/test_docker_setup.py
+docker-compose run --rm scrapper python scripts/validate_extraction_rules.py --batch-mode
 ```
 
 ### Linux/Mac
@@ -38,9 +38,9 @@ chmod +x setup-docker.sh
 # 3. Edite o .env
 nano .env  # ou vim, code, etc.
 
-# 4. Build e teste
+# 4. Build e validação
 docker-compose build
-docker-compose run --rm scrapper python scripts/test_docker_setup.py
+docker-compose run --rm scrapper python scripts/validate_extraction_rules.py --batch-mode
 ```
 
 ---
@@ -238,7 +238,7 @@ print('Config:', settings.TESSERACT_CMD)
 ### Teste Completo de Setup
 
 ```bash
-docker-compose run --rm scrapper python scripts/test_docker_setup.py
+docker-compose run --rm scrapper python run_ingestion.py --status
 ```
 
 ### Validar Regras de Extração
@@ -552,7 +552,7 @@ jobs:
               run: docker-compose build
 
             - name: Run tests
-              run: docker-compose run --rm scrapper python scripts/test_docker_setup.py
+              run: docker-compose run --rm scrapper python run_ingestion.py --status
 
             - name: Push to Docker Hub
               run: |

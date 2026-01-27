@@ -34,11 +34,11 @@ shell: ## Acessa shell do container
 run-once: ## Executa uma vez e remove o container
 	$(COMPOSE) run --rm $(SERVICE)
 
-test: ## Executa testes de configuração
-	$(COMPOSE) run --rm $(SERVICE) python scripts/test_docker_setup.py
+test: ## Executa validação de regras de extração
+	$(COMPOSE) run --rm $(SERVICE) python scripts/validate_extraction_rules.py --batch-mode
 
-test-local: ## Executa testes localmente (sem Docker)
-	python scripts/test_docker_setup.py
+test-local: ## Executa validação localmente (sem Docker)
+	python scripts/validate_extraction_rules.py --batch-mode
 
 validate-rules: ## Valida regras de extração
 	$(COMPOSE) run --rm $(SERVICE) python scripts/validate_extraction_rules.py
@@ -46,8 +46,11 @@ validate-rules: ## Valida regras de extração
 analyze-boletos: ## Analisa boletos
 	$(COMPOSE) run --rm $(SERVICE) python scripts/analyze_boletos.py
 
+status: ## Verifica status do sistema
+	$(COMPOSE) run --rm $(SERVICE) python run_ingestion.py --status
+
 diagnose: ## Executa diagnóstico de falhas
-	$(COMPOSE) run --rm $(SERVICE) python scripts/diagnose_failures.py
+	$(COMPOSE) run --rm $(SERVICE) python scripts/check_problematic_pdfs.py
 
 ps: ## Lista containers ativos
 	$(COMPOSE) ps

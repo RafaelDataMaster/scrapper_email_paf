@@ -275,7 +275,7 @@ class BatchResult:
 
         return None
 
-    def _get_primeiro_vencimento(self) -> Optional[str]:
+    def get_primeiro_vencimento(self) -> Optional[str]:
         """
         Extrai a data de vencimento priorizando notas e boletos.
 
@@ -311,7 +311,7 @@ class BatchResult:
 
         return None
 
-    def _get_primeiro_numero_nota(self) -> Optional[str]:
+    def get_primeiro_numero_nota(self) -> Optional[str]:
         """
         Extrai o número da nota/fatura priorizando NFSE e DANFE.
 
@@ -376,7 +376,7 @@ class BatchResult:
         Returns:
             Dicionário com estatísticas do lote
         """
-        vencimento = self._get_primeiro_vencimento()
+        vencimento = self.get_primeiro_vencimento()
         # Não aplica fallback - deixa vencimento vazio/nulo se não encontrado
 
         summary = {
@@ -386,7 +386,7 @@ class BatchResult:
             'email_sender': self.email_sender,
             'fornecedor': self._get_primeiro_fornecedor(),
             'vencimento': vencimento,
-            'numero_nota': self._get_primeiro_numero_nota(),
+            'numero_nota': self.get_primeiro_numero_nota(),
             'total_documents': self.total_documents,
             'total_errors': self.total_errors,
             'danfes': len(self.danfes),
@@ -521,20 +521,20 @@ class BatchResult:
                 return BoletoData(
                     arquivo_origem=doc_dict.get("arquivo_origem", ""),
                     fornecedor_nome=doc_dict.get("fornecedor_nome"),
-                    valor_documento=doc_dict.get("valor_documento"),
+                    valor_documento=doc_dict.get("valor_documento") or 0.0,
                     vencimento=doc_dict.get("vencimento"),
                     numero_documento=doc_dict.get("numero_documento"),
                     linha_digitavel=doc_dict.get("linha_digitavel"),
-                    codigo_barras=doc_dict.get("codigo_barras"),
-                    banco=doc_dict.get("banco"),
+                    nosso_numero=doc_dict.get("nosso_numero"),
+                    banco_nome=doc_dict.get("banco_nome"),
                     empresa=doc_dict.get("empresa"),
                 )
             elif doc_type == "DANFE":
                 return DanfeData(
                     arquivo_origem=doc_dict.get("arquivo_origem", ""),
                     fornecedor_nome=doc_dict.get("fornecedor_nome"),
-                    fornecedor_cnpj=doc_dict.get("fornecedor_cnpj"),
-                    valor_total=doc_dict.get("valor_total"),
+                    cnpj_prestador=doc_dict.get("cnpj_prestador") or doc_dict.get("fornecedor_cnpj"),
+                    valor_total=doc_dict.get("valor_total") or 0.0,
                     numero_nota=doc_dict.get("numero_nota"),
                     chave_acesso=doc_dict.get("chave_acesso"),
                     data_emissao=doc_dict.get("data_emissao"),
@@ -544,8 +544,8 @@ class BatchResult:
                 return InvoiceData(
                     arquivo_origem=doc_dict.get("arquivo_origem", ""),
                     fornecedor_nome=doc_dict.get("fornecedor_nome"),
-                    fornecedor_cnpj=doc_dict.get("fornecedor_cnpj"),
-                    valor_total=doc_dict.get("valor_total"),
+                    cnpj_emitente=doc_dict.get("cnpj_emitente") or doc_dict.get("fornecedor_cnpj"),
+                    valor_total=doc_dict.get("valor_total") or 0.0,
                     numero_nota=doc_dict.get("numero_nota"),
                     data_emissao=doc_dict.get("data_emissao"),
                     vencimento=doc_dict.get("vencimento"),
@@ -565,7 +565,7 @@ class BatchResult:
                 return OtherDocumentData(
                     arquivo_origem=doc_dict.get("arquivo_origem", ""),
                     fornecedor_nome=doc_dict.get("fornecedor_nome"),
-                    valor_total=doc_dict.get("valor_total"),
+                    valor_total=doc_dict.get("valor_total") or 0.0,
                     empresa=doc_dict.get("empresa"),
                 )
         except Exception:

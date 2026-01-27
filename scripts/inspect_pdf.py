@@ -663,7 +663,7 @@ def main():
 
     if not pdf_path:
         print(f"ERRO: Arquivo não encontrado: {filename}")
-        print("\nBuscado em:")
+        print(f"\nBuscado em:")
         for d in SEARCH_DIRS:
             print(f"  - {d}")
         print(

@@ -32,7 +32,6 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 
 ## To Do - Notas mentais
 
-- [ ] Fazer um script pra automatizar a analise de logs
 - [ ] **Verificar se o projeto roda corretamente em container de docker e testar local mesmo no docker desktop do windows**.
 - [ ] Lembrar de atualizar os dados do imap pro email da empresa.
 - [ ] Procurar APIs da openAI para OCR e valibdadção dos dados no documento no caso para a coluna NF num primeiro momento.
@@ -42,6 +41,11 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 # Estudar por agora
 
 ## Done
+
+### 27/02/2026
+
+- [x] Fazer um script pra automatizar a analise de logs, feito scripts\analyze_logs.py
+- [x] Extrator para os casos da Telcables criado, extractors\nfcom_telcables_extractor.py
 
 ### 26/01/2026
 

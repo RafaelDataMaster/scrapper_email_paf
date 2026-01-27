@@ -107,6 +107,7 @@ class DocumentData(ABC):
     valor_compra: Optional[float] = None
     status_conciliacao: Optional[str] = None
     email_date: Optional[str] = None  # Data de recebimento do email (ISO format)
+    vencimento: Optional[str] = None  # Data de vencimento (ISO format)
 
     @property
     @abstractmethod

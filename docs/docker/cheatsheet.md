@@ -34,8 +34,8 @@ docker-compose restart scrapper-cron
 # 9. Ver últimas 50 linhas de log
 docker-compose logs --tail=50 scrapper-cron
 
-# 10. Testar configuração
-docker-compose run --rm scrapper python scripts/test_docker_setup.py
+# 10. Verificar status do sistema
+docker-compose run --rm scrapper python run_ingestion.py --status
 ```
 
 ---

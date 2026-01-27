@@ -352,7 +352,7 @@ Ferramentas de linha de comando para diagnóstico e manutenção:
 | `validate_extraction_rules.py` | Valida regras de extração em PDFs de teste | Legacy + Batch |
 | `example_batch_processing.py`  | Exemplos de processamento em lote          | Batch          |
 | `inspect_pdf.py`               | Inspeção rápida de PDFs (busca automática) | Legacy + Batch |
-| `test_docker_setup.py`         | Testa setup Docker/Tesseract               | Setup          |
+| `run_ingestion.py --status`    | Verifica status do sistema e configurações | Setup          |
 
 ### Script `export_to_sheets.py` 🆕
 

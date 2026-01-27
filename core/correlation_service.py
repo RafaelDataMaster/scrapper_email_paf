@@ -18,7 +18,7 @@ Princípios SOLID aplicados:
 - DIP: Depende de abstrações (DocumentData), não de implementações concretas
 """
 import re
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 
 from core.batch_result import BatchResult, CorrelationResult
 from core.metadata import EmailMetadata
@@ -142,7 +142,7 @@ class CorrelationService:
         self._validate_cross_values(batch, result, duplicatas, email_subject)
 
         # 5. Verifica se lote ficou sem vencimento após toda herança
-        vencimento_final = batch._get_primeiro_vencimento()
+        vencimento_final = batch.get_primeiro_vencimento()
         if not vencimento_final:
             result.sem_vencimento = True
 
@@ -334,7 +334,7 @@ class CorrelationService:
             result.numero_pedido_herdado = numero_pedido
 
         # Fallback: Se nenhum documento tem numero_nota, tenta extrair do e-mail
-        numero_nota_batch = batch._get_primeiro_numero_nota()
+        numero_nota_batch = batch.get_primeiro_numero_nota()
         if not numero_nota_batch and metadata:
             numero_nota_from_email = metadata.extract_numero_nota_from_context()
             if numero_nota_from_email:

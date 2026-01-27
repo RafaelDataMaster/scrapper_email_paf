@@ -213,11 +213,12 @@ python run_ingestion.py --all
 ### Script de Validação
 
 ```bash
-# Testar conexão IMAP e credenciais
-python scripts/test_docker_setup.py
+# Verificar status e configuração
+python run_ingestion.py --status
 
-# Verificar estrutura de pastas
-python run_ingestion.py --dry-run
+# Verificar estrutura de pastas (simulação)
+echo "Verificando estrutura..."
+python -c "from config.settings import DIR_TEMP, DIR_SAIDA; print(f'Temp: {DIR_TEMP}'); print(f'Saída: {DIR_SAIDA}')"
 ```
 
 ### Modo Debug
@@ -321,14 +322,17 @@ Os logs são salvos em `logs/ingestion.log`:
 ### Métricas
 
 ```bash
-# Ver estatísticas
-python scripts/analyze_all_batches.py
-
 # Ver lotes problemáticos
 python scripts/simple_list.py
 
+# Ver análise detalhada de problemas
+python scripts/list_problematic.py
+
 # Analisar padrões de e-mail
-python scripts/analyze_emails_no_attachment.py
+python scripts/diagnose_inbox_patterns.py
+
+# Validar regras de extração
+python scripts/validate_extraction_rules.py --batch-mode
 ```
 
 ## 🔗 Integração com Outros Sistemas

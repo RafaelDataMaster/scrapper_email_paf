@@ -13,6 +13,7 @@ O projeto foi completamente analisado e preparado para execução em Docker. Tod
 **Tipo:** Sistema de scraping e extração de dados de PDFs via email (IMAP)
 
 **Componentes principais:**
+
 1. **Ingestão** (`ingestors/imap.py`) - Conexão IMAP e download de anexos
 2. **Processamento** (`core/processor.py`) - Orquestração da extração
 3. **Estratégias** (`strategies/`) - Native PDF, OCR, Fallback
@@ -22,6 +23,7 @@ O projeto foi completamente analisado e preparado para execução em Docker. Tod
 ### Dependências Críticas
 
 **Python (requirements.txt):**
+
 - `pdfplumber` - Extração de PDFs vetoriais
 - `pytesseract` - Interface Python para Tesseract
 - `pdf2image` - Conversão PDF → Imagem
@@ -31,10 +33,10 @@ O projeto foi completamente analisado e preparado para execução em Docker. Tod
 
 **Binários Externos (Windows vs Linux):**
 
-| Dependência | Windows (Dev) | Linux (Docker) |
-|-------------|---------------|----------------|
+| Dependência | Windows (Dev)                                  | Linux (Docker)       |
+| ----------- | ---------------------------------------------- | -------------------- |
 | Tesseract   | `C:\Program Files\Tesseract-OCR\tesseract.exe` | `/usr/bin/tesseract` |
-| Poppler     | `C:\Poppler\...\Library\bin` | `/usr/bin` |
+| Poppler     | `C:\Poppler\...\Library\bin`                   | `/usr/bin`           |
 
 ### Fluxo de Execução
 
@@ -61,46 +63,46 @@ Email (IMAP) → Download Anexos → Salva em temp_email/
 ### Arquivos Criados
 
 1. ✅ **Dockerfile** - Multi-stage build otimizado
-   - Base: `python:3.11-slim`
-   - Instala: `tesseract-ocr`, `tesseract-ocr-por`, `poppler-utils`
-   - Usuário não-root: `scrapper:1000`
-   - Healthcheck para Tesseract
+    - Base: `python:3.11-slim`
+    - Instala: `tesseract-ocr`, `tesseract-ocr-por`, `poppler-utils`
+    - Usuário não-root: `scrapper:1000`
+    - Healthcheck para Tesseract
 
 2. ✅ **docker-compose.yml** - Orquestração completa
-   - Serviço `scrapper`: Execução única
-   - Serviço `scrapper-cron`: Execução periódica (30 min)
-   - Volumes para persistência de dados
-   - Configuração de recursos (CPU/RAM)
-   - Logs rotacionados
+    - Serviço `scrapper`: Execução única
+    - Serviço `scrapper-cron`: Execução periódica (30 min)
+    - Volumes para persistência de dados
+    - Configuração de recursos (CPU/RAM)
+    - Logs rotacionados
 
 3. ✅ **.dockerignore** - Otimização de build
-   - Exclui: `__pycache__`, dados locais, documentação, testes
+    - Exclui: `__pycache__`, dados locais, documentação, testes
 
 4. ✅ **docker-entrypoint.sh** - Script de inicialização
-   - Valida Tesseract e Poppler
-   - Verifica credenciais
-   - Cria estrutura de diretórios
+    - Valida Tesseract e Poppler
+    - Verifica credenciais
+    - Cria estrutura de diretórios
 
 5. ✅ **README-DOCKER.md** - Documentação completa
-   - Guia de instalação
-   - Comandos úteis
-   - Troubleshooting
-   - Exemplos de uso
+    - Guia de instalação
+    - Comandos úteis
+    - Troubleshooting
+    - Exemplos de uso
 
 6. ✅ **Makefile** - Atalhos para comandos Docker
-   - `make build`, `make up`, `make logs`, etc.
-   - Simplifica operações complexas
+    - `make build`, `make up`, `make logs`, etc.
+    - Simplifica operações complexas
 
 7. ✅ **setup-docker.sh / .bat** - Setup automático
-   - Valida pré-requisitos
-   - Cria `.env` se não existir
-   - Build e teste inicial
-   - Suporte Windows e Linux
+    - Valida pré-requisitos
+    - Cria `.env` se não existir
+    - Build e teste inicial
+    - Suporte Windows e Linux
 
-8. ✅ **scripts/test_docker_setup.py** - Validação de ambiente
-   - Testa Tesseract, Poppler, bibliotecas Python
-   - Verifica configurações
-   - Valida estrutura de diretórios
+8. ✅ **run_ingestion.py --status** - Validação de ambiente
+    - Verifica status do sistema e checkpoints
+    - Valida configurações de email
+    - Mostra dados parciais pendentes
 
 ### Modificações no Código Existente
 
@@ -127,11 +129,13 @@ else:
 ### Setup Inicial (Primeira Vez)
 
 **Windows:**
+
 ```bash
 setup-docker.bat
 ```
 
 **Linux/Mac:**
+
 ```bash
 chmod +x setup-docker.sh
 ./setup-docker.sh
@@ -175,6 +179,7 @@ docker-compose exec scrapper-cron bash
 ### Problema
 
 O projeto depende de binários externos (Tesseract e Poppler) que:
+
 - No Windows: Precisam ser instalados manualmente e configurados via paths
 - No Docker: Precisam estar disponíveis no container Linux
 
@@ -193,22 +198,25 @@ RUN apt-get update && apt-get install -y \
 **2. Configuração Automática:**
 
 O `settings.py` detecta o SO automaticamente:
+
 - **Linux (Docker):** Usa `/usr/bin/tesseract` e `/usr/bin`
 - **Windows (Dev):** Usa os paths do Windows
 
 **3. Override Manual (se necessário):**
 
 Via `.env`:
+
 ```env
 TESSERACT_CMD=/usr/bin/tesseract
 POPPLER_PATH=/usr/bin
 ```
 
 Via `docker-compose.yml`:
+
 ```yaml
 environment:
-  - TESSERACT_CMD=/usr/bin/tesseract
-  - POPPLER_PATH=/usr/bin
+    - TESSERACT_CMD=/usr/bin/tesseract
+    - POPPLER_PATH=/usr/bin
 ```
 
 ### Validação
@@ -216,15 +224,22 @@ environment:
 Execute o teste para confirmar que tudo está instalado:
 
 ```bash
-docker-compose run --rm scrapper python scripts/test_docker_setup.py
+# Verificar status do sistema
+docker-compose run --rm scrapper python run_ingestion.py --status
+
+# Validar regras de extração
+docker-compose run --rm scrapper python scripts/validate_extraction_rules.py --batch-mode
 ```
 
 Output esperado:
+
 ```
-✅ Tesseract OCR: tesseract 5.x.x
-✅ Poppler (pdfinfo): pdfinfo version 23.x.x
-✅ pytesseract consegue acessar Tesseract
-✅ pdf2image consegue acessar Poppler
+📊 STATUS DA INGESTÃO
+   Status: READY
+   E-mails processados: 0
+   Lotes criados: 0
+   ...
+✅ Validação concluída - X sucessos, Y falhas
 ```
 
 ---
@@ -242,6 +257,7 @@ Host (seu PC/servidor)          Container (Docker)
 ```
 
 **Benefícios:**
+
 - Dados persistem mesmo se o container for destruído
 - Acesso fácil aos CSVs gerados
 - Debug de PDFs problemáticos
@@ -273,16 +289,17 @@ Edite em `docker-compose.yml`:
 
 ```yaml
 deploy:
-  resources:
-    limits:
-      cpus: '2.0'      # Máximo de CPUs
-      memory: 2G       # Máximo de RAM
-    reservations:
-      cpus: '0.5'      # Garantido
-      memory: 512M
+    resources:
+        limits:
+            cpus: "2.0" # Máximo de CPUs
+            memory: 2G # Máximo de RAM
+        reservations:
+            cpus: "0.5" # Garantido
+            memory: 512M
 ```
 
 **Recomendações:**
+
 - **Leve** (poucos PDFs): 1 CPU, 1GB RAM
 - **Médio** (100-500 PDFs/dia): 2 CPUs, 2GB RAM
 - **Pesado** (1000+ PDFs/dia): 4 CPUs, 4GB RAM
@@ -326,6 +343,7 @@ docker-compose run --rm scrapper python -c "from config import settings; print(s
 **Causa:** PDFs escaneados são processados via OCR, que é lento.
 
 **Solução:**
+
 1. Aumente recursos do container (mais CPUs)
 2. Processe em lote menor
 3. Use GPU (requer Tesseract com suporte CUDA)
@@ -335,18 +353,21 @@ docker-compose run --rm scrapper python -c "from config import settings; print(s
 ## 📈 Próximos Passos Recomendados
 
 ### Curto Prazo
+
 1. ✅ Teste local com `docker-compose run --rm scrapper`
 2. ✅ Valide extração de NFSe e Boletos
 3. ✅ Configure cron com `docker-compose up -d scrapper-cron`
 4. ✅ Monitore logs por 24h
 
 ### Médio Prazo
+
 1. [ ] Deploy em servidor de produção (VPS, AWS, Azure)
 2. [ ] Configure backup automático de `data/output/`
 3. [ ] Integre com sistema de monitoramento (Grafana, Prometheus)
 4. [ ] Implemente alertas (email/Slack quando falhar)
 
 ### Longo Prazo
+
 1. [ ] Migre para Kubernetes (se escalar muito)
 2. [ ] Adicione fila de processamento (RabbitMQ, Redis)
 3. [ ] Implemente retry automático para falhas

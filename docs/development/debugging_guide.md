@@ -17,20 +17,15 @@ O projeto conta com uma estrutura organizada de scripts na pasta `scripts/`, cat
 
 ### 🔍 **Diagnóstico e Debug Específico**
 
-- `diagnose_import_issues.py` - Diagnóstico de erros de importação de módulos
-- `diagnose_inbox_patterns.py` - Analisa padrões de e-mail na caixa de entrada para otimização
-- `diagnose_ocr_issue.py` - Diagnóstico específico do problema do caractere 'Ê' no OCR
-- `debug_pdf_text.py` - Extrai e analisa texto de PDFs para debug de extração
 - `inspect_pdf.py` - Inspeção rápida de PDFs para debug (mais prático)
-- `check_problematic_pdfs.py` - Analisa PDFs de casos problemáticos onde "outros" têm valor zero
-- `repro_extraction_failure.py` - Reproduz falhas de extração específicas para debugging
+- `diagnose_inbox_patterns.py` - Analisa padrões de e-mail na caixa de entrada para otimização
+- `repro_extraction_failure.py` - Reproduz falhas de extração para análise
 
 ### 🧪 **Testes e Validação**
 
 - `test_admin_detection.py` - Testa padrões de detecção de documentos administrativos
 - `test_extractor_routing.py` - Testa qual extrator seria usado para um PDF específico
-- `test_docker_setup.py` - Testa configuração do Docker e variáveis de ambiente
-- `validate_extraction_rules.py` - Valida regras de extração contra casos conhecidos
+- `validate_extraction_rules.py` - Valida regras de extração contra casos conhecidos (substitui scripts de diagnóstico específicos)
 
 ### 🔧 **Utilitários e Operações**
 
@@ -39,7 +34,7 @@ O projeto conta com uma estrutura organizada de scripts na pasta `scripts/`, cat
 - `consolidate_batches.py` - Consolida resultados de múltiplos batches
 - `clean_dev.py` - Limpeza de arquivos temporários de desenvolvimento
 - `_init_env.py` - Configuração de paths para importação de módulos
-- `demo_pairing.py` - Demonstração do sistema de pareamento de documentos
+- `example_batch_processing.py` - Exemplo de processamento de lote completo
 
 ## Workflow de Debug Recomendado
 
@@ -70,12 +65,9 @@ python scripts/test_extractor_routing.py caminho/do/pdf.pdf
 
 ### 2. **Problema com Lotes (resultados no CSV)**
 
-**Use: `analyze_admin_nfse.py`, `list_problematic.py`, ou `check_problematic_pdfs.py`**
+**Use: `list_problematic.py`, `simple_list.py` ou `check_problematic_pdfs.py`**
 
 ```bash
-# Para análise específica de NFSEs mal classificadas
-python scripts/analyze_admin_nfse.py
-
 # Para lista completa de lotes problemáticos
 python scripts/list_problematic.py
 
@@ -94,35 +86,35 @@ python scripts/check_problematic_pdfs.py
 
 ### 3. **Problema de OCR ou Qualidade de Texto**
 
-**Use: `diagnose_ocr_issue.py`**
+**Use: `inspect_pdf.py --raw` e `validate_extraction_rules.py`**
 
 ```bash
-# Para diagnóstico do problema do caractere 'Ê'
-python scripts/diagnose_ocr_issue.py
-
 # Para debug específico de texto de PDF
-python scripts/debug_pdf_text.py
+python scripts/inspect_pdf.py arquivo.pdf --raw
+
+# Para validar após ajustar regex
+python scripts/validate_extraction_rules.py --batch-mode
 ```
 
 **Análise:**
 
 - Identifique caracteres problemáticos ('Ê' substituindo espaços)
-- Teste estratégias de normalização
-- Verifique se extratores processam texto normalizado
+- Normalize texto nos extratores (ex: `text.replace('Ê', ' ')`)
+- Valide regras após modificações
 
-### 4. **Problema de Importação ou Configuração**
+### 4. **Problema de Ingestão ou Configuração**
 
-**Use: `diagnose_import_issues.py` ou `test_docker_setup.py`**
+**Use: `run_ingestion.py --status` e `diagnose_inbox_patterns.py`**
 
 ```bash
-# Para diagnóstico de erros de importação
-python scripts/diagnose_import_issues.py
-
-# Para validação de ambiente Docker
-python scripts/test_docker_setup.py
+# Ver status do checkpoint e dados parciais
+python run_ingestion.py --status
 
 # Para diagnóstico de padrões de inbox
 python scripts/diagnose_inbox_patterns.py --limit 100
+
+# Exportar dados parciais se necessário
+python run_ingestion.py --export-partial
 ```
 
 ## Scripts Chave para Casos Comuns
@@ -139,10 +131,10 @@ python scripts/inspect_pdf.py arquivo_problematico.pdf --raw
 python scripts/simple_list.py
 ```
 
-### Para análise detalhada de padrões de classificação errada:
+### Para verificar status do sistema e lotes pendentes:
 
 ```bash
-python scripts/analyze_admin_nfse.py
+python run_ingestion.py --status
 ```
 
 ### Para validar regras de extração após modificações:
@@ -231,38 +223,38 @@ print(assuntos)
 
 ## Referência Rápida por Tipo de Problema
 
-| Problema                              | Script Primário                   | Scripts Secundários                                  | Comando Exemplo                                             |
-| ------------------------------------- | --------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
-| **PDF não extrai campos**             | `inspect_pdf.py`                  | `debug_pdf_text.py`, `test_extractor_routing.py`     | `python scripts/inspect_pdf.py arquivo.pdf --raw`           |
-| **Lote com status DIVERGENTE**        | `list_problematic.py`             | `analyze_admin_nfse.py`, `check_problematic_pdfs.py` | `python scripts/list_problematic.py`                        |
-| **NFSE classificada como "outros"**   | `analyze_admin_nfse.py`           | `check_problematic_pdfs.py`                          | `python scripts/analyze_admin_nfse.py`                      |
-| **Problema de caractere 'Ê' no OCR**  | `diagnose_ocr_issue.py`           | `debug_pdf_text.py`                                  | `python scripts/diagnose_ocr_issue.py`                      |
-| **Erro de importação de módulos**     | `diagnose_import_issues.py`       | `test_docker_setup.py`                               | `python scripts/diagnose_import_issues.py`                  |
-| **Validação após modificar extrator** | `validate_extraction_rules.py`    | `test_extractor_routing.py`                          | `python scripts/validate_extraction_rules.py --batch-mode`  |
-| **E-mails sem anexo úteis**           | `analyze_emails_no_attachment.py` | `diagnose_inbox_patterns.py`                         | `python scripts/analyze_emails_no_attachment.py --limit 50` |
-| **Exportação para Google Sheets**     | `export_to_sheets.py`             | -                                                    | `python scripts/export_to_sheets.py`                        |
+| Problema                              | Script Primário                | Scripts Secundários              | Comando Exemplo                                            |
+| ------------------------------------- | ------------------------------ | -------------------------------- | ---------------------------------------------------------- |
+| **PDF não extrai campos**             | `inspect_pdf.py`               | `test_extractor_routing.py`      | `python scripts/inspect_pdf.py arquivo.pdf --raw`          |
+| **Lote com status DIVERGENTE**        | `list_problematic.py`          | `check_problematic_pdfs.py`      | `python scripts/list_problematic.py`                       |
+| **NFSE classificada como "outros"**   | `check_problematic_pdfs.py`    | `list_problematic.py`            | `python scripts/check_problematic_pdfs.py`                 |
+| **Problema de caractere 'Ê' no OCR**  | `inspect_pdf.py --raw`         | `validate_extraction_rules.py`   | `python scripts/inspect_pdf.py arquivo.pdf --raw`          |
+| **Erro de importação/ingestão**       | `run_ingestion.py --status`    | `validate_extraction_rules.py`   | `python run_ingestion.py --status`                         |
+| **Validação após modificar extrator** | `validate_extraction_rules.py` | `test_extractor_routing.py`      | `python scripts/validate_extraction_rules.py --batch-mode` |
+| **E-mails sem anexo úteis**           | `diagnose_inbox_patterns.py`   | `ingest_emails_no_attachment.py` | `python scripts/diagnose_inbox_patterns.py --limit 50`     |
+| **Exportação para Google Sheets**     | `export_to_sheets.py`          | -                                | `python scripts/export_to_sheets.py`                       |
 
 ## Dicas de Produtividade
 
 1. **Sempre comece com `inspect_pdf.py`** para problemas de extração individual
 2. **Use `simple_list.py`** para visão rápida de lotes problemáticos
 3. **Execute `validate_extraction_rules.py`** após modificar qualquer extrator
-4. **Consulte `diagnose_ocr_issue.py`** para problemas de qualidade de texto OCR
-5. **Analise padrões com `analyze_emails_no_attachment.py`** para otimizar filtros de ingestão
+4. **Use `inspect_pdf.py --raw`** para problemas de qualidade de texto OCR, seguido de `validate_extraction_rules.py` para validar correções
+5. **Analise padrões com `diagnose_inbox_patterns.py`** para otimizar filtros de ingestão
 
 ## Monitoramento Contínuo
 
 Para monitorar a saúde do sistema:
 
 ```bash
-# Gerar relatório de todos os batches
-python scripts/analyze_all_batches.py
-
 # Validar todas as regras periodicamente
-python scripts/validate_extraction_rules.py --full-scan
+python scripts/validate_extraction_rules.py --batch-mode
 
 # Analisar padrões de inbox para ajustar filtros
 python scripts/diagnose_inbox_patterns.py --all --resume
+
+# Gerar relatórios
+python scripts/generate_report.py
 ```
 
 Os scripts estão organizados para suportar debug desde problemas pontuais até análise sistêmica, sempre com foco em identificar a causa raiz e fornecer recomendações acionáveis.

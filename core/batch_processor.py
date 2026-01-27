@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 from core.batch_result import BatchResult
-from core.correlation_service import CorrelationResult, CorrelationService
+from core.correlation_service import CorrelationService
 from core.empresa_matcher import find_empresa_no_texto
 from core.metadata import EmailMetadata
 from core.models import DanfeData, DocumentData, InvoiceData

@@ -34,13 +34,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 if TYPE_CHECKING:
     from core.batch_result import BatchResult
-    from core.models import (
-        BoletoData,
-        DanfeData,
-        DocumentData,
-        InvoiceData,
-        OtherDocumentData,
-    )
 
 
 @dataclass
@@ -618,7 +611,7 @@ class DocumentPairingService:
         pairs = []
         boletos_usados: Set[str] = set()
 
-        for nota_key, nota_grupo in notas.items():
+        for _nota_key, nota_grupo in notas.items():
             valor_nf = nota_grupo['valor']
             numero_nota = nota_grupo['numero']
             numero_norm = nota_grupo.get('numero_norm', '')
@@ -698,7 +691,7 @@ class DocumentPairingService:
         valor_boleto = sum(b[1] for b in boletos_raw)
 
         numero = None
-        for num, _, doc in notas_raw:
+        for num, _, _doc in notas_raw:
             if num:
                 numero = num
                 break
@@ -993,13 +986,7 @@ class DocumentPairingService:
 
         Distribui os contadores proporcionalmente ou atribui ao primeiro par.
         """
-        from core.models import (
-            BoletoData,
-            DanfeData,
-            EmailAvisoData,
-            InvoiceData,
-            OtherDocumentData,
-        )
+
 
         # Conta tipos no batch
         total_danfes = len(batch.danfes)

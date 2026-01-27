@@ -161,13 +161,13 @@ Dados enriquecidos e validados prontos para integração:
 
 O sistema inclui uma suite completa de scripts para debugging e diagnóstico de problemas de extração:
 
-| Problema                    | Scripts Recomendados                                             | Descrição                                           |
-| --------------------------- | ---------------------------------------------------------------- | --------------------------------------------------- |
-| **Debug de PDF individual** | `inspect_pdf.py`, `debug_pdf_text.py`                            | Inspeção rápida de campos extraídos e texto bruto   |
-| **Lotes problemáticos**     | `simple_list.py`, `list_problematic.py`, `analyze_admin_nfse.py` | Identificação de lotes com "outros > 0 e valor = 0" |
-| **Problemas OCR**           | `diagnose_ocr_issue.py`, `debug_pdf_text.py`                     | Diagnóstico do caractere 'Ê' e qualidade de texto   |
-| **Validação de extratores** | `validate_extraction_rules.py`, `test_extractor_routing.py`      | Teste após modificar extratores                     |
-| **Análise de e-mails**      | `analyze_emails_no_attachment.py`, `diagnose_inbox_patterns.py`  | Identificação de padrões úteis                      |
+| Problema                    | Scripts Recomendados                                        | Descrição                                           |
+| --------------------------- | ----------------------------------------------------------- | --------------------------------------------------- |
+| **Debug de PDF individual** | `inspect_pdf.py`, `test_extractor_routing.py`               | Inspeção rápida de campos extraídos e texto bruto   |
+| **Lotes problemáticos**     | `simple_list.py`, `list_problematic.py`                     | Identificação de lotes com "outros > 0 e valor = 0" |
+| **Problemas OCR**           | `inspect_pdf.py --raw`, `validate_extraction_rules.py`      | Análise de texto e validação após correções         |
+| **Validação de extratores** | `validate_extraction_rules.py`, `test_extractor_routing.py` | Teste após modificar extratores                     |
+| **Análise de e-mails**      | `diagnose_inbox_patterns.py`                                | Identificação de padrões úteis                      |
 
 **Documentação completa**: Consulte o [Guia de Debug](development/debugging_guide.md) para workflows detalhados e a [Referência Rápida](debug/scripts_quick_reference.md) para comandos essenciais.
 
@@ -254,22 +254,15 @@ scrapper/
 │
 ├── scripts/                    # Scripts utilitários e de diagnóstico (debug, análise, validação)
 │   ├── _init_env.py
-│   ├── analyze_admin_nfse.py          # Análise de NFSEs mal classificadas
-│   ├── analyze_all_batches.py         # Análise completa de todos os batches
-│   ├── analyze_emails_no_attachment.py # E-mails sem anexo (links úteis)
 │   ├── check_problematic_pdfs.py      # Análise de PDFs problemáticos
 │   ├── clean_dev.py                   # Limpeza de arquivos temporários
 │   ├── consolidate_batches.py         # Consolidação de resultados
-│   ├── debug_pdf_text.py              # Debug detalhado de texto de PDF
-│   ├── demo_pairing.py                # Demonstração de pareamento
-│   ├── diagnose_import_issues.py      # Diagnóstico de problemas de importação
 │   ├── diagnose_inbox_patterns.py     # Análise de padrões de inbox
-│   ├── diagnose_ocr_issue.py          # Problemas de OCR (caractere 'Ê')
 │   ├── example_batch_processing.py    # Exemplo de processamento
 │   ├── export_to_sheets.py            # Exportação Google Sheets (v0.3.x)
 │   ├── generate_report.py             # Relatório pyright JSON→Markdown
 │   ├── ingest_emails_no_attachment.py # Ingestão de e-mails sem anexo
-│   ├── inspect_pdf.py                 # Inspeção rápida de PDFs 🆕
+│   ├── inspect_pdf.py                 # Inspeção rápida de PDFs
 │   ├── list_problematic.py            # Lista detalhada de lotes problemáticos
 │   ├── repro_extraction_failure.py    # Reprodução de falhas de extração
 │   ├── simple_list.py                 # Lista simples de lotes problemáticos

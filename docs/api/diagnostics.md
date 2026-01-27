@@ -14,8 +14,8 @@ O módulo `core.diagnostics` fornece ferramentas para validação, classificaç�
 **Uso principal:**
 
 - Scripts de validação ([`validate_extraction_rules.py`](../../scripts/validate_extraction_rules.py))
-- Scripts de diagnóstico ([`diagnose_failures.py`](../../scripts/diagnose_failures.py))
 - Análise de lotes de processamento
+- Geração de relatórios de qualidade
 
 ---
 
@@ -325,39 +325,12 @@ if isinstance(result, InvoiceData):
     sucesso, motivos = ExtractionDiagnostics.classificar_nfse(result)
     if not sucesso:
         print(f"⚠️ NFSe INCOMPLETA: {' | '.join(motivos)}")
-        
+
 elif isinstance(result, BoletoData):
     sucesso, motivos = ExtractionDiagnostics.classificar_boleto(result)
     if not sucesso:
         print(f"⚠️ BOLETO INCOMPLETO: {' | '.join(motivos)}")
 ```
-
-### Script de Diagnóstico
-
-Usado em [`scripts/diagnose_failures.py`](../../scripts/diagnose_failures.py):
-
-```python
-from core.diagnostics import ExtractionDiagnostics
-import pandas as pd
-
-# Ler CSV de ingestão
-df = pd.read_csv("data/output/relatorio_ingestao.csv")
-
-# Filtrar falhas
-falhas = df[(df['numero_nota'].isna()) | (df['valor_total'] == 0)]
-
-# Diagnosticar cada falha
-for _, row in falhas.iterrows():
-    diagnostico = ExtractionDiagnostics.diagnosticar_tipo_falha(
-        arquivo=row['arquivo_origem'],
-        texto_snippet=row['texto_bruto'][:150],
-        numero_nota=row['numero_nota'],
-        valor=row['valor_total']
-    )
-    print(f"💡 Diagnóstico: {diagnostico}")
-```
-
----
 
 ## Modelo de Dados: DiagnosticReport
 
@@ -415,7 +388,7 @@ class TestDiagnostics(unittest.TestCase):
         sucesso, motivos = ExtractionDiagnostics.classificar_nfse(nfse)
         self.assertTrue(sucesso)
         self.assertEqual(motivos, [])
-    
+
     def test_classificar_nfse_falha(self):
         nfse = InvoiceData(
             arquivo_origem="test.pdf",
@@ -434,20 +407,15 @@ class TestDiagnostics(unittest.TestCase):
 ## API Reference
 
 ::: core.diagnostics.ExtractionDiagnostics
-    options:
-      show_root_heading: true
-      show_source: false
-      members:
-        - classificar_nfse
-        - classificar_boleto
-        - gerar_relatorio_texto
-        - salvar_relatorio
-        - diagnosticar_tipo_falha
+options:
+show_root_heading: true
+show_source: false
+members: - classificar_nfse - classificar_boleto - gerar_relatorio_texto - salvar_relatorio - diagnosticar_tipo_falha
 
 ::: core.diagnostics.DiagnosticReport
-    options:
-      show_root_heading: true
-      members_order: source
+options:
+show_root_heading: true
+members_order: source
 
 ---
 

@@ -13,15 +13,15 @@ Os documentos nesta pasta servem como:
 
 ## Documentos Disponíveis
 
-| Documento | Data | Descrição |
-|-----------|------|-----------|
+| Documento                                  | Data    | Descrição                                                                                                                                                                                                                   |
+| ------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **[analise-falhas.md](analise-falhas.md)** | 2025-01 | Análise de como o script `export_to_sheets.py` determina os valores enviados para a planilha Google Sheets. Inclui discussão sobre lógica de prioridade (valor_boleto vs valor_compra) e tratamento de documentos "outros". |
 
 ## Como São Gerados
 
 Estes documentos são criados quando:
 
-1. **Problemas recorrentes são identificados** através de scripts como `analyze_admin_nfse.py` ou `list_problematic.py`
+1. **Problemas recorrentes são identificados** através de scripts como `check_problematic_pdfs.py` ou `list_problematic.py`
 2. **Análises de causa raiz** são necessárias para entender falhas sistêmicas
 3. **Decisões de design** precisam ser documentadas para referência futura
 4. **Padrões de problemas** emergem que requerem documentação técnica
@@ -30,12 +30,11 @@ Estes documentos são criados quando:
 
 Os documentos nesta pasta frequentemente complementam os scripts de análise disponíveis em `scripts/`:
 
-| Script de Análise | Documento Relacionado | Finalidade |
-|-------------------|----------------------|------------|
-| `analyze_admin_nfse.py` | (Futuro) `analise-nfse-mal-classificadas.md` | Documentar casos específicos de NFSEs classificadas como "outros" |
-| `check_problematic_pdfs.py` | (Futuro) `analise-pdfs-problematicos.md` | Análise detalhada de PDFs que falham consistentemente |
-| `diagnose_ocr_issue.py` | (Futuro) `analise-problema-ocr.md` | Documentação do problema do caractere 'Ê' e soluções |
-| `analyze_emails_no_attachment.py` | (Futuro) `analise-padroes-email.md` | Padrões de e-mail identificados como úteis/inúteis |
+| Script de Análise              | Documento Relacionado                    | Finalidade                                            |
+| ------------------------------ | ---------------------------------------- | ----------------------------------------------------- |
+| `check_problematic_pdfs.py`    | (Futuro) `analise-pdfs-problematicos.md` | Análise detalhada de PDFs que falham consistentemente |
+| `validate_extraction_rules.py` | (Futuro) `analise-regras-extracao.md`    | Validação de regras e performance dos extratores      |
+| `diagnose_inbox_patterns.py`   | (Futuro) `analise-padroes-email.md`      | Padrões de e-mail identificados como úteis/inúteis    |
 
 ## Estrutura Recomendada para Novos Documentos
 
@@ -51,16 +50,19 @@ Ao criar novos documentos de análise, considere incluir:
 ## Usos Comuns
 
 ### Para desenvolvedores:
+
 - Entender problemas históricos do sistema
 - Evitar repetir soluções que já foram tentadas
 - Compreender a lógica por trás de decisões técnicas
 
 ### Para análise de dados:
+
 - Identificar padrões de falha recorrentes
 - Priorizar melhorias no sistema
 - Medir impacto de correções implementadas
 
 ### Para documentação:
+
 - Manter registro de decisões técnicas
 - Documentar trade-offs e considerações
 - Preservar conhecimento institucional
@@ -69,7 +71,7 @@ Ao criar novos documentos de análise, considere incluir:
 
 Para adicionar novos documentos de análise:
 
-1. Execute os scripts relevantes para identificar padrões (`analyze_admin_nfse.py`, `list_problematic.py`, etc.)
+1. Execute os scripts relevantes para identificar padrões (`check_problematic_pdfs.py`, `list_problematic.py`, etc.)
 2. Documente as descobertas em um novo arquivo Markdown
 3. Use dados concretos (exemplos de lotes, estatísticas, trechos de código)
 4. Inclua recomendações acionáveis

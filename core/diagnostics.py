@@ -201,7 +201,7 @@ class ExtractionDiagnostics:
         
         # Validações básicas
         tem_valor = result.valor_documento > 0
-        tem_identificacao = result.vencimento or result.linha_digitavel
+        tem_identificacao = bool(result.vencimento or result.linha_digitavel)
         tem_fornecedor = bool(result.fornecedor_nome and result.fornecedor_nome.strip())
         
         if not tem_valor:

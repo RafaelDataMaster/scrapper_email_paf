@@ -82,13 +82,13 @@ find data/test/boletos -name "*.pdf" | xargs -I {} python scripts/test_extractor
 
 ```bash
 # Analisar um lote específico
-python scripts/debug_batch.py temp_email/email_20260105_125518_4e51c5e2
-
-# Analisar todos os lotes
-python scripts/analyze_all_batches.py
+python run_ingestion.py --batch-folder temp_email/email_20260105_125518_4e51c5e2
 
 # Identificar lotes problemáticos
 python scripts/list_problematic.py
+
+# Lista simples de problemas
+python scripts/simple_list.py
 ```
 
 ### Validação de Correlação
@@ -158,17 +158,15 @@ python scripts/export_to_sheets.py --dry-run
 ### Scripts de Análise Periódica
 
 ```bash
-# Analisar saúde do sistema
-python scripts/analyze_all_batches.py
-
 # Identificar padrões de falha
 python scripts/check_problematic_pdfs.py
 
 # Monitorar qualidade de OCR
-python scripts/diagnose_ocr_issue.py
+python scripts/inspect_pdf.py arquivo.pdf --raw
+python scripts/validate_extraction_rules.py --batch-mode
 
 # Analisar padrões de e-mail
-python scripts/analyze_emails_no_attachment.py --limit 100
+python scripts/diagnose_inbox_patterns.py --limit 100
 ```
 
 ### Métricas de Qualidade
@@ -228,7 +226,7 @@ Antes de considerar uma modificação como concluída:
 
 **Solução:**
 
-1. Use `python scripts/debug_batch.py` para analisar lote
+1. Use `python run_ingestion.py --batch-folder <pasta>` para analisar lote específico
 2. Verifique `metadata.json` para contexto
 3. Ajuste regras no `CorrelationService`
 
@@ -268,8 +266,8 @@ jobs:
 
             - name: Check for regressions
               run: |
-                  # Comparar com baseline
-                  python scripts/compare_with_baseline.py
+                  # Verificar taxa de sucesso no relatório
+                  python scripts/generate_report.py
 ```
 
 ### Baseline de Performance

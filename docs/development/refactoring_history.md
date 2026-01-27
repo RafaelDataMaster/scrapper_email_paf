@@ -843,10 +843,10 @@ setup_project_path()
 **Scripts refatorados:**
 
 - ✅ [`scripts/validate_extraction_rules.py`](scripts/validate_extraction_rules.py) (renomeado)
-- ✅ [`scripts/diagnose_failures.py`](scripts/diagnose_failures.py)
-- ✅ [`scripts/analyze_boletos.py`](scripts/analyze_boletos.py)
-- ✅ [`scripts/move_failed_files.py`](scripts/move_failed_files.py)
-- ✅ [`scripts/test_boleto_extractor.py`](scripts/test_boleto_extractor.py)
+- ✅ `scripts/diagnose_failures.py` (removido - funcionalidade migrada para `validate_extraction_rules.py`)
+- ✅ `scripts/analyze_boletos.py` (removido - funcionalidade migrada)
+- ✅ `scripts/move_failed_files.py` (removido)
+- ✅ `scripts/test_boleto_extractor.py` (removido - funcionalidade migrada para `test_extractor_routing.py`)
 
 ---
 
@@ -903,9 +903,11 @@ scripts/test_rules_extractors.py
 ├── classificar_boleto()         ❌ Duplicado
 └── gerar_relatorio_qualidade()  ❌ Duplicado
 
-scripts/diagnose_failures.py
-├── diagnosticar_tipo_falha()    ❌ Duplicado
-└── análise manual de falhas     ❌ Duplicado
+# Scripts obsoletos (removidos posteriormente):
+# scripts/diagnose_failures.py
+# scripts/analyze_boletos.py
+# scripts/move_failed_files.py
+# scripts/test_boleto_extractor.py
 
 # 5 scripts com path resolution duplicado
 # Nenhum teste unitário real

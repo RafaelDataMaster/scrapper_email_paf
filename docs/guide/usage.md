@@ -87,11 +87,14 @@ python scripts/inspect_pdf.py danfe.pdf --fields fornecedor_nome valor_total
 
 ### 3) Debug de Lote de Processamento
 
-Use `debug_batch.py` para diagnosticar problemas de correlação ou de lógica dentro de um lote específico.
+Use `run_ingestion.py` com a flag `--batch-folder` para processar ou reprocessar um lote específico.
 
 ```bash
-# Analisar uma pasta de lote
-python scripts/debug_batch.py temp_email/email_com_problema_123
+# Analisar uma pasta de lote específica
+python run_ingestion.py --batch-folder temp_email/email_com_problema_123
+
+# Reprocessar lote específico
+python run_ingestion.py --batch-folder temp_email/email_com_problema_123 --reprocess
 ```
 
 ### 4) Validação em Massa
