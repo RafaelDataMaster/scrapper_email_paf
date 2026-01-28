@@ -10,7 +10,7 @@ Conformidade: GoogleSheetsExporter com retry strategy para Política 5.9.
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 
@@ -111,7 +111,7 @@ class GoogleSheetsExporter(DataExporter):
     """
 
     def __init__(self, credentials_path: str = 'credentials.json',
-                 spreadsheet_id: str = None):
+                 spreadsheet_id: Optional[str] = None):
         """
         Inicializa o exportador do Google Sheets.
 
@@ -147,7 +147,7 @@ class GoogleSheetsExporter(DataExporter):
                 if gspread is None:
                     raise ImportError("gspread não está instalado. Execute: pip install gspread")
                 self._client = gspread.service_account(filename=self.credentials_path)
-                logger.info(f"Autenticado com sucesso no Google Sheets")
+                logger.info("Autenticado com sucesso no Google Sheets")
             except FileNotFoundError:
                 logger.error(f"Arquivo de credenciais não encontrado: {self.credentials_path}")
                 raise
@@ -169,6 +169,8 @@ class GoogleSheetsExporter(DataExporter):
             self._authenticate()
             if self._client is None:
                 raise RuntimeError("Cliente Google Sheets não inicializado")
+            if self.spreadsheet_id is None:
+                raise RuntimeError("Spreadsheet ID não configurado")
             spreadsheet = self._client.open_by_key(self.spreadsheet_id)
             self._worksheet = spreadsheet.worksheet(destination)
             logger.info(f"Conectado à planilha: {destination}")

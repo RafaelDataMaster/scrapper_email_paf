@@ -33,9 +33,10 @@ def extract_text_simple(pdf_path: str) -> str:
     doc = fitz.open(pdf_path)
     all_text = []
     
-    for page_num, page in enumerate(doc):
+    for page_num in range(len(doc)):
+        page = doc[page_num]
         # Tenta texto nativo primeiro
-        text = page.get_text()
+        text = str(page.get_text())
         
         # Se texto nativo for muito curto, usa OCR
         if len(text.strip()) < 500:
@@ -122,7 +123,7 @@ def main():
         
         if result and extrator_usado is None:
             extrator_usado = ext_cls
-            print(f"       👆 ESTE SERÁ O EXTRATOR USADO")
+            print("       👆 ESTE SERÁ O EXTRATOR USADO")
     
     # Se encontrou extrator, roda a extração
     if extrator_usado:

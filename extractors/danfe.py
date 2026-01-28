@@ -32,7 +32,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from core.extractors import BaseExtractor, register_extractor
 from extractors.utils import (
-    CNPJ_RE,
     extract_best_money_from_segment,
     normalize_digits,
     parse_br_money,

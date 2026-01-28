@@ -30,7 +30,7 @@ Example:
 
 import logging
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from core.extractors import BaseExtractor, register_extractor
 from extractors.utils import (
@@ -89,20 +89,20 @@ class OutrosExtractor(BaseExtractor):
         # Verificar indicadores fortes
         if any(ind in t for ind in nfse_indicators):
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle excluído - documento fiscal (NFSE)"
+                "OutrosExtractor: can_handle excluído - documento fiscal (NFSE)"
             )
             return False
 
         if any(ind in t for ind in danfe_indicators):
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle excluído - documento fiscal (DANFE/NF-e)"
+                "OutrosExtractor: can_handle excluído - documento fiscal (DANFE/NF-e)"
             )
             return False
 
         # Verificar chave de acesso de 44 dígitos
         if re.search(r"(?<!\d)\d{44}(?!\d)", text or ""):
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle excluído - chave de acesso de 44 dígitos"
+                "OutrosExtractor: can_handle excluído - chave de acesso de 44 dígitos"
             )
             return False
 
@@ -118,13 +118,13 @@ class OutrosExtractor(BaseExtractor):
         # Locação / demonstrativos
         if "DEMONSTRATIVO" in t and ("LOCA" in t or "LOCAÇÃO" in t or "LOCACAO" in t):
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle detectou demonstrativo de locação"
+                "OutrosExtractor: can_handle detectou demonstrativo de locação"
             )
             return True
 
         if "VALOR DA LOCA" in t:
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle detectou 'VALOR DA LOCA'"
+                "OutrosExtractor: can_handle detectou 'VALOR DA LOCA'"
             )
             return True
 
@@ -133,7 +133,7 @@ class OutrosExtractor(BaseExtractor):
             # Se for "NOTA FATURA" ou contém indicadores de NFSE, excluir
             if "NOTA FATURA" in t or "NOTA-FATURA" in t:
                 logging.getLogger(__name__).debug(
-                    f"OutrosExtractor: can_handle excluído - 'NOTA FATURA' (NFSE)"
+                    "OutrosExtractor: can_handle excluído - 'NOTA FATURA' (NFSE)"
                 )
                 return False
             # Verificar se há outros indicadores de documento fiscal
@@ -153,14 +153,14 @@ class OutrosExtractor(BaseExtractor):
                 )
                 return False
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle detectou fatura administrativa"
+                "OutrosExtractor: can_handle detectou fatura administrativa"
             )
             return True
 
         # Heurística específica do caso citado
         if "LOCAWEB" in t:
             logging.getLogger(__name__).debug(
-                f"OutrosExtractor: can_handle detectou LOCAWEB"
+                "OutrosExtractor: can_handle detectou LOCAWEB"
             )
             return True
 
@@ -169,7 +169,7 @@ class OutrosExtractor(BaseExtractor):
     def extract(self, text: str) -> Dict[str, Any]:
         logger = logging.getLogger(__name__)
         data: Dict[str, Any] = {"tipo_documento": "OUTRO"}
-        logger.debug(f"OutrosExtractor: iniciando extração de documento")
+        logger.debug("OutrosExtractor: iniciando extração de documento")
 
         t = text.upper()
         if "LOCA" in t and "DEMONSTRATIVO" in t:
@@ -267,7 +267,7 @@ class OutrosExtractor(BaseExtractor):
             )
         else:
             logger.warning(
-                f"OutrosExtractor: documento processado mas valor_total não encontrado"
+                "OutrosExtractor: documento processado mas valor_total não encontrado"
             )
 
         return data

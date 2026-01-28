@@ -10,7 +10,7 @@ Saída: Lista de batch IDs para reprocessamento
 """
 
 import csv
-import os
+
 import sys
 from pathlib import Path
 

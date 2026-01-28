@@ -8,7 +8,9 @@ estão capturando corretamente os assuntos de e-mails administrativos.
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.stdout.reconfigure(encoding='utf-8')
+import io
+if isinstance(sys.stdout, io.TextIOWrapper):
+    sys.stdout.reconfigure(encoding='utf-8')
 from core.correlation_service import CorrelationService
 
 service = CorrelationService()
@@ -62,7 +64,7 @@ print('-' * 80)
 admin_ok = 0
 admin_fail = 0
 for subject in admin_subjects:
-    result = service._check_admin_subject(subject)
+    result = service._check_admin_subject(subject)  # type: ignore  # Acesso intencional para teste
     if result:
         status = f'✅ ADMIN: {result}'
         admin_ok += 1
@@ -76,7 +78,7 @@ print('-' * 80)
 normal_ok = 0
 normal_fail = 0
 for subject in normal_subjects:
-    result = service._check_admin_subject(subject)
+    result = service._check_admin_subject(subject)  # type: ignore  # Acesso intencional para teste
     if result:
         status = f'⚠️ FALSO POSITIVO: {result}'
         normal_fail += 1

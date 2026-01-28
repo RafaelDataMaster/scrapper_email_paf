@@ -15,7 +15,7 @@ e facilita manutenção.
 import re
 import unicodedata
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 # =============================================================================
 # REGEX COMPILADOS (evita recompilação a cada chamada)
@@ -77,7 +77,7 @@ def parse_br_money(value: str) -> float:
         return 0.0
 
 
-def extract_br_money_values(text: str) -> list[float]:
+def extract_br_money_values(text: str) -> List[float]:
     """
     Extrai todos os valores monetários de um texto.
 

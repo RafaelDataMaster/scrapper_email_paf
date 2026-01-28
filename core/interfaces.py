@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
-from core.exceptions import ExtractionError, IngestionError
 
 class TextExtractionStrategy(ABC):
     """

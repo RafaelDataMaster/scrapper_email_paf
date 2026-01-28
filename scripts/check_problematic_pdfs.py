@@ -163,20 +163,56 @@ def validar_vencimento(vencimento: str) -> Dict[str, Any]:
             "data_zerada": True,
         }
 
-    # Verificar padrão de data brasileira (dd/mm/aaaa)
-    date_pattern = re.compile(r"^\d{2}/\d{2}/\d{4}$")
-    formato_correto = bool(date_pattern.match(vencimento))
+    # Verificar padrões de data aceitos: dd/mm/aaaa ou aaaa-mm-dd
+    date_pattern_br = re.compile(r"^\d{2}/\d{2}/\d{4}$")
+    date_pattern_iso = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    formato_correto = bool(
+        date_pattern_br.match(vencimento) or date_pattern_iso.match(vencimento)
+    )
 
     if not formato_correto:
         # Verificar se parece ser uma data mas com formato diferente
         if any(char.isdigit() for char in vencimento):
-            problemas.append(f"Formato não padrão: '{vencimento}'")
+            problemas.append(
+                f"Formato não aceito: '{vencimento}' (use dd/mm/aaaa ou aaaa-mm-dd)"
+            )
         else:
             problemas.append(f"Formato inválido: '{vencimento}'")
 
-    # Verificar ano inválido (0000)
-    if "/0000" in vencimento or "-0000" in vencimento:
+    # Verificar ano inválido (0000) em ambos os formatos: dd/mm/aaaa e aaaa-mm-dd
+    ano_invalido = False
+
+    # Tentar extrair ano do formato dd/mm/aaaa
+    match_br = re.match(r"^\d{2}/\d{2}/(\d{4})$", vencimento)
+    if match_br:
+        ano = match_br.group(1)
+        if ano == "0000":
+            ano_invalido = True
+
+    # Tentar extrair ano do formato aaaa-mm-dd
+    match_iso = re.match(r"^(\d{4})-\d{2}-\d{2}$", vencimento)
+    if match_iso:
+        ano = match_iso.group(1)
+        if ano == "0000":
+            ano_invalido = True
+
+    if ano_invalido:
         problemas.append(f"Ano inválido (0000) na data: '{vencimento}'")
+
+    # Verificar anos fora do intervalo razoável (2020-2035)
+    # Apenas para datas com formato válido
+    if formato_correto:
+        ano_valido = None
+        if date_pattern_br.match(vencimento):
+            ano_valido = int(vencimento.split("/")[2])
+        elif date_pattern_iso.match(vencimento):
+            ano_valido = int(vencimento.split("-")[0])
+
+        if ano_valido is not None:
+            if ano_valido < 2020 or ano_valido > 2035:
+                problemas.append(
+                    f"Ano fora do intervalo esperado (2020-2035): {ano_valido}"
+                )
 
     return {
         "valido": len(problemas) == 0,
@@ -1542,7 +1578,7 @@ def main():
 
     # Verificar dependências
     try:
-        import pdfplumber  # noqa: F401
+        import pdfplumber  # noqa: F401  # type: ignore  # Verifica disponibilidade da lib
 
         print("OK pdfplumber disponível")
     except ImportError:

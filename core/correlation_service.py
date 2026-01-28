@@ -483,7 +483,7 @@ class CorrelationService:
         if duplicatas.get('numero_nota'):
             aviso_duplicata = f" [ENCAMINHAMENTO DUPLICADO - notas: {', '.join(duplicatas['numero_nota'])}]"
         elif duplicatas.get('fornecedor_valor'):
-            aviso_duplicata = f" [ENCAMINHAMENTO DUPLICADO - mesmos valores detectados]"
+            aviso_duplicata = " [ENCAMINHAMENTO DUPLICADO - mesmos valores detectados]"
 
         has_boleto = batch.has_boleto and valor_boleto > 0
         has_compra = valor_compra > 0

@@ -13,7 +13,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -422,7 +422,7 @@ class TestCheckpointResume:
             with patch.object(
                 orchestrator, "_process_emails_without_attachments", return_value=([], 0, 0)
             ):
-                result = orchestrator.run(
+                orchestrator.run(
                     subject_filter="ENC",  # Filtro diferente
                     resume=True,
                 )

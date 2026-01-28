@@ -15,14 +15,14 @@ para trabalhar com os extratores de PDF/XML.
 
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from config.empresas import EMPRESAS_CADASTRO
 
 from core.empresa_matcher import (
-    _empresa_codigo_from_razao,
-    _normalize_cnpj_to_digits,
+    empresa_codigo_from_razao,
     iter_cnpjs_in_text,
+    normalize_cnpj_to_digits,
 )
 
 
@@ -94,7 +94,7 @@ class EmpresaDetectorEmail:
         """Carrega cadastro normalizado."""
         normalized = {}
         for cnpj, payload in (EMPRESAS_CADASTRO or {}).items():
-            cnpj_digits = _normalize_cnpj_to_digits(str(cnpj))
+            cnpj_digits = normalize_cnpj_to_digits(str(cnpj))
             if cnpj_digits:
                 normalized[cnpj_digits] = payload
         return normalized
@@ -104,7 +104,7 @@ class EmpresaDetectorEmail:
         mapa = defaultdict(list)
         for cnpj, payload in self.cadastro.items():
             razao = payload.get("razao_social", "")
-            codigo = _empresa_codigo_from_razao(razao)
+            codigo = empresa_codigo_from_razao(razao)
             if codigo:
                 mapa[codigo.upper()].append(cnpj)
         return dict(mapa)
@@ -205,11 +205,11 @@ class EmpresaDetectorEmail:
         matches_encontrados = []
 
         # 1) Primeiro tenta por CNPJ (mais confiável)
-        for cnpj_digits, start, end, raw in iter_cnpjs_in_text(texto_limpo):
+        for cnpj_digits, _start, _end, raw in iter_cnpjs_in_text(texto_limpo):
             if cnpj_digits in self.cadastro:
                 payload = self.cadastro[cnpj_digits]
                 razao = payload.get("razao_social", "")
-                codigo = _empresa_codigo_from_razao(razao)
+                codigo = empresa_codigo_from_razao(razao)
                 matches_encontrados.append(f"CNPJ:{codigo}:{raw}")
                 # Retorna imediatamente se achou CNPJ nosso
                 return codigo, "cnpj", matches_encontrados
@@ -218,7 +218,7 @@ class EmpresaDetectorEmail:
         codigos_contexto_seguro = []
         codigos_contexto_normal = []
         
-        for codigo, cnpjs in self.empresas_por_codigo.items():
+        for codigo, _cnpjs in self.empresas_por_codigo.items():
             # Ignora códigos muito curtos ou stopwords
             if len(codigo) < 3 or codigo in self.STOPWORDS:
                 continue
@@ -252,9 +252,9 @@ class EmpresaDetectorEmail:
             return codigos_contexto_normal[0], "nome_exato", matches_encontrados
 
         # 3) Tenta por razão social parcial (mais arriscado)
-        for cnpj, payload in self.cadastro.items():
+        for _cnpj, payload in self.cadastro.items():
             razao = payload.get("razao_social", "")
-            codigo = _empresa_codigo_from_razao(razao)
+            codigo = empresa_codigo_from_razao(razao)
 
             # Extrai palavras significativas da razão social
             palavras = re.findall(r'\b[A-Z]{3,}\b', razao.upper())

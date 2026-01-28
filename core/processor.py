@@ -1,14 +1,12 @@
 import concurrent.futures  # Adicionado para timeout granular
 import os
-import re
-from abc import ABC, abstractmethod
+from abc import ABC
 from datetime import datetime
-from typing import Optional, Union
+from typing import Any, Dict, Optional
 
 # ORDEM IMPORTANTE: Importar apenas o pacote extractors
 # A ordem de registro é controlada pelo extractors/__init__.py
 # que garante que extractors específicos vêm ANTES dos genéricos
-import extractors
 from config.settings import TRAT_PAF_RESPONSAVEL
 from core.empresa_matcher import (
     find_empresa_no_texto,
@@ -114,7 +112,7 @@ class BaseInvoiceProcessor(ABC):
 
             # Dados comuns PAF (aplicados a todos os documentos)
             now_iso = datetime.now().strftime('%Y-%m-%d')
-            common_data = {
+            common_data: Dict[str, Any] = {
                 'data_processamento': now_iso,
                 'dt_classificacao': now_iso,
                 'trat_paf': TRAT_PAF_RESPONSAVEL,
@@ -181,7 +179,7 @@ class BaseInvoiceProcessor(ABC):
                     **common_data,
                     # Campos básicos do boleto
                     cnpj_beneficiario=extracted_data.get('cnpj_beneficiario'),
-                    valor_documento=extracted_data.get('valor_documento', 0.0),
+                    valor_documento=float(extracted_data.get('valor_documento') or 0.0),
                     vencimento=extracted_data.get('vencimento'),
                     data_emissao=extracted_data.get('data_emissao'),
                     numero_documento=extracted_data.get('numero_documento'),
@@ -207,7 +205,7 @@ class BaseInvoiceProcessor(ABC):
                     numero_nota=extracted_data.get('numero_nota'),
                     serie_nf=extracted_data.get('serie_nf'),
                     data_emissao=extracted_data.get('data_emissao'),
-                    valor_total=extracted_data.get('valor_total', 0.0),
+                    valor_total=float(extracted_data.get('valor_total') or 0.0),
                     vencimento=extracted_data.get('vencimento'),
                     forma_pagamento=extracted_data.get('forma_pagamento'),
                     numero_pedido=extracted_data.get('numero_pedido'),
@@ -224,7 +222,7 @@ class BaseInvoiceProcessor(ABC):
                     cnpj_fornecedor=extracted_data.get('cnpj_fornecedor'),
                     data_emissao=extracted_data.get('data_emissao'),
                     vencimento=extracted_data.get('vencimento'),
-                    valor_total=extracted_data.get('valor_total', 0.0),
+                    valor_total=float(extracted_data.get('valor_total') or 0.0),
                     numero_documento=extracted_data.get('numero_documento'),
                     subtipo=extracted_data.get('subtipo'),
                 )
@@ -238,7 +236,7 @@ class BaseInvoiceProcessor(ABC):
                     # Campos básicos da NFSe
                     cnpj_prestador=extracted_data.get('cnpj_prestador'),
                     numero_nota=extracted_data.get('numero_nota'),
-                    valor_total=extracted_data.get('valor_total', 0.0),
+                    valor_total=float(extracted_data.get('valor_total') or 0.0),
                     data_emissao=extracted_data.get('data_emissao'),
                     # Campos PAF (novos)
                     fornecedor_nome=extracted_data.get('fornecedor_nome'),
@@ -246,11 +244,11 @@ class BaseInvoiceProcessor(ABC):
                     numero_pedido=extracted_data.get('numero_pedido'),
                     forma_pagamento=extracted_data.get('forma_pagamento'),
                     # Impostos individuais
-                    valor_ir=extracted_data.get('valor_ir'),
-                    valor_inss=extracted_data.get('valor_inss'),
-                    valor_csll=extracted_data.get('valor_csll'),
-                    valor_iss=extracted_data.get('valor_iss'),
-                    valor_icms=extracted_data.get('valor_icms'),
+                    valor_ir=float(v) if (v := extracted_data.get('valor_ir')) else None,
+                    valor_inss=float(v) if (v := extracted_data.get('valor_inss')) else None,
+                    valor_csll=float(v) if (v := extracted_data.get('valor_csll')) else None,
+                    valor_iss=float(v) if (v := extracted_data.get('valor_iss')) else None,
+                    valor_icms=float(v) if (v := extracted_data.get('valor_icms')) else None,
                     base_calculo_icms=extracted_data.get('base_calculo_icms'),
                 )
 

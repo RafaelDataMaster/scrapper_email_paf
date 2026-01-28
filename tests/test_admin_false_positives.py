@@ -12,11 +12,11 @@ Foco:
 3. Testar casos de borda com conteúdo misto
 """
 
-import logging
+
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -373,7 +373,7 @@ def test_edge_cases():
     extractor = AdminDocumentExtractor()
 
     # Caso 1: Documento com 44 dígitos mas não é chave de acesso
-    falso_44_digitos = """
+    _falso_44_digitos = """
     RELATÓRIO DE ATIVIDADES
 
     Código de acompanhamento: 12345678901234567890123456789012345678901234

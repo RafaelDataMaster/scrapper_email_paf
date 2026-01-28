@@ -33,6 +33,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 # Adiciona o diretório raiz ao path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -40,7 +41,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import settings
 
 
-def load_metadata(batch_folder: Path) -> dict | None:
+def load_metadata(batch_folder: Path) -> Optional[dict]:
     """Carrega metadata.json de uma pasta de lote."""
     metadata_path = batch_folder / "metadata.json"
     if not metadata_path.exists():
@@ -54,7 +55,7 @@ def load_metadata(batch_folder: Path) -> dict | None:
         return None
 
 
-def get_attachment_files(batch_folder: Path) -> list[Path]:
+def get_attachment_files(batch_folder: Path) -> List[Path]:
     """Retorna lista de arquivos de anexo (excluindo metadata.json e pastas)."""
     files = []
     for item in batch_folder.iterdir():
@@ -107,7 +108,7 @@ def consolidate_batches(
         print(f"\n📂 Encontradas {len(batch_folders)} pastas de lote em {source_dir}")
 
     # 2. Agrupa por assunto do email
-    groups: dict[str, list[tuple[Path, dict]]] = defaultdict(list)
+    groups: Dict[str, List[Tuple[Path, dict]]] = defaultdict(list)
 
     for folder in batch_folders:
         metadata = load_metadata(folder)
@@ -174,7 +175,7 @@ def consolidate_batches(
 
         try:
             # Usa o primeiro folder como base para metadados
-            base_folder, base_metadata = folders[0]
+            _, base_metadata = folders[0]
 
             # Cria nova pasta consolidada
             new_batch_id = generate_batch_id()

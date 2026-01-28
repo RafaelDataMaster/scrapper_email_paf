@@ -144,12 +144,82 @@ class NfseGenericExtractor(BaseExtractor):
             r"\bR\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})\b",
         ]
 
+        # Primeiro, tenta encontrar valores com padrões específicos
         for pattern in patterns:
             match = re.search(pattern, text)
             if match:
-                valor = parse_br_money(match.group(1))
+                valor_str = match.group(1)
+                valor = parse_br_money(valor_str)
                 if valor > 0:
+                    # Verifica se não está em contexto de múltiplos zeros (placeholder)
+                    context_start = max(0, match.start() - 50)
+                    context_end = min(len(text), match.end() + 50)
+                    context = text[context_start:context_end]
+
+                    # Conta quantos "R$ 0,00" há no contexto próximo
+                    zeros_proximos = len(re.findall(r"R\$\s*0(?:,00)?", context))
+
+                    # Se há muitos zeros próximos e este também é zero, ignora
+                    if valor == 0 and zeros_proximos > 1:
+                        continue
+
                     return valor
+
+        # Fallback: coleta todos os valores R$ e prioriza não-zero
+        todos_valores = re.findall(r"R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})", text)
+
+        if todos_valores:
+            # Converte para valores float
+            valores_float = [parse_br_money(v) for v in todos_valores]
+
+            # Primeiro tenta encontrar valores não-zero
+            valores_nao_zero = [v for v in valores_float if v > 0]
+
+            if valores_nao_zero:
+                # Prioriza valores próximos a labels específicos
+                for i, valor_str in enumerate(todos_valores):
+                    valor_float = valores_float[i]
+                    if valor_float > 0:
+                        # Procura contexto ao redor do valor
+                        start_pos = 0
+                        for _ in range(i + 1):
+                            match = re.search(
+                                rf"R\$\s*{re.escape(valor_str)}", text[start_pos:]
+                            )
+                            if match:
+                                context_start = max(0, start_pos + match.start() - 100)
+                                context_end = min(
+                                    len(text), start_pos + match.end() + 100
+                                )
+                                context = text[context_start:context_end].upper()
+
+                                # Se está próximo de "VALOR TOTAL", "VALOR DA NOTA" ou similar, prioriza
+                                if any(
+                                    kw in context
+                                    for kw in [
+                                        "VALOR TOTAL",
+                                        "VALOR DA NOTA",
+                                        "TOTAL NOTA",
+                                        "VALOR LÍQUIDO",
+                                        "VALOR LIQUIDO",
+                                    ]
+                                ):
+                                    return valor_float
+
+                                start_pos = start_pos + match.end()
+
+                # Fallback: retorna o maior valor não-zero
+                return max(valores_nao_zero)
+
+            # Se todos os valores são zero, verifica se são placeholders
+            # Se há muitos "R$ 0,00" (>2), provavelmente são placeholders, retorna 0
+            if len(valores_float) > 2 and all(v == 0 for v in valores_float):
+                return 0.0
+
+            # Se chegou aqui e há valores (mesmo zero), retorna o maior
+            if valores_float:
+                return max(valores_float)
+
         return 0.0
 
     def _extract_data_emissao(self, text: str):
@@ -260,7 +330,7 @@ class NfseGenericExtractor(BaseExtractor):
 
         return False
 
-    def _extract_fornecedor_nome(self, text: str) -> str:
+    def _extract_fornecedor_nome(self, text: str) -> Optional[str]:
         text = self._normalize_text(text or "")
 
         # Padrão 1: Empresa com sufixo (LTDA, S/A, etc.) antes de CPF/CNPJ
@@ -363,7 +433,7 @@ class NfseGenericExtractor(BaseExtractor):
 
         return None
 
-    def _extract_vencimento(self, text: str) -> str:
+    def _extract_vencimento(self, text: str) -> Optional[str]:
         patterns = [
             r"(?i)Vencimento[:\s]+(\d{2}/\d{2}/\d{4})",
             r"(?i)Data\s+de\s+Vencimento[:\s]+(\d{2}/\d{2}/\d{4})",

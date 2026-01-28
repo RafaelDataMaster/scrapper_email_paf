@@ -30,8 +30,8 @@ import json
 import re
 import sys
 from collections import Counter
-from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from dataclasses import asdict, dataclass
+# datetime imported via email.utils
 from email import message_from_bytes
 from email.header import decode_header
 from email.message import Message
@@ -137,13 +137,13 @@ class StreamingStats:
     count_with_verification_code: int = 0
 
     # Para keywords e remetentes, usamos Counter (memória controlada)
-    keyword_counter: Counter = None
-    sender_counter: Counter = None
+    keyword_counter: Optional[Counter] = None
+    sender_counter: Optional[Counter] = None
 
     # Exemplos de subjects por tipo (limitados a 10 cada)
-    examples_link_com_codigo: List[str] = None
-    examples_link_download: List[str] = None
-    examples_apenas_codigo: List[str] = None
+    examples_link_com_codigo: Optional[List[str]] = None
+    examples_link_download: Optional[List[str]] = None
+    examples_apenas_codigo: Optional[List[str]] = None
 
     def __post_init__(self):
         if self.keyword_counter is None:
@@ -167,15 +167,15 @@ class StreamingStats:
             self.count_com_anexo += 1
         elif pattern.content_type == "LINK_COM_CODIGO":
             self.count_link_com_codigo += 1
-            if len(self.examples_link_com_codigo) < 10:
+            if self.examples_link_com_codigo is not None and len(self.examples_link_com_codigo) < 10:
                 self.examples_link_com_codigo.append(pattern.subject)
         elif pattern.content_type == "LINK_DOWNLOAD":
             self.count_link_download += 1
-            if len(self.examples_link_download) < 10:
+            if self.examples_link_download is not None and len(self.examples_link_download) < 10:
                 self.examples_link_download.append(pattern.subject)
         elif pattern.content_type == "APENAS_CODIGO":
             self.count_apenas_codigo += 1
-            if len(self.examples_apenas_codigo) < 10:
+            if self.examples_apenas_codigo is not None and len(self.examples_apenas_codigo) < 10:
                 self.examples_apenas_codigo.append(pattern.subject)
         else:
             self.count_irrelevante += 1
@@ -189,9 +189,11 @@ class StreamingStats:
             self.count_with_verification_code += 1
 
         # Atualiza contadores
-        for keyword in pattern.keywords_found:
-            self.keyword_counter[keyword] += 1
-        self.sender_counter[pattern.sender_address] += 1
+        if self.keyword_counter is not None:
+            for keyword in pattern.keywords_found:
+                self.keyword_counter[keyword] += 1
+        if self.sender_counter is not None:
+            self.sender_counter[pattern.sender_address] += 1
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário para salvar como JSON."""
@@ -209,8 +211,8 @@ class StreamingStats:
             "com_anexo": self.count_with_attachment,
             "com_links_nfe": self.count_with_nfe_links,
             "com_codigo_verificacao": self.count_with_verification_code,
-            "keywords_frequentes": dict(self.keyword_counter.most_common(20)),
-            "remetentes_frequentes": dict(self.sender_counter.most_common(15)),
+            "keywords_frequentes": dict(self.keyword_counter.most_common(20)) if self.keyword_counter else {},
+            "remetentes_frequentes": dict(self.sender_counter.most_common(15)) if self.sender_counter else {},
             "exemplos_subjects_por_tipo": {
                 "LINK_COM_CODIGO": self.examples_link_com_codigo,
                 "LINK_DOWNLOAD": self.examples_link_download,
@@ -325,20 +327,22 @@ class InboxDiagnosticAnalyzer:
                     encodings_to_try.extend(['utf-8', 'latin-1', 'iso-8859-1', 'cp1252'])
 
                     decoded = None
-                    for enc in encodings_to_try:
-                        try:
-                            decoded = payload.decode(enc)
-                            break
-                        except (LookupError, UnicodeDecodeError):
-                            continue
+                    if isinstance(payload, bytes):
+                        for enc in encodings_to_try:
+                            try:
+                                decoded = payload.decode(enc)
+                                break
+                            except (LookupError, UnicodeDecodeError):
+                                continue
 
-                    if decoded is None:
-                        decoded = payload.decode('latin-1', errors='replace')
+                        if decoded is None:
+                            decoded = payload.decode('latin-1', errors='replace')
 
-                    if content_type == "text/plain":
-                        body_text += decoded
-                    elif content_type == "text/html":
-                        body_html += decoded
+                    if decoded is not None:
+                        if content_type == "text/plain":
+                            body_text += decoded
+                        elif content_type == "text/html":
+                            body_html += decoded
                 except Exception:
                     pass
         else:
@@ -352,20 +356,22 @@ class InboxDiagnosticAnalyzer:
                     encodings_to_try.extend(['utf-8', 'latin-1', 'iso-8859-1', 'cp1252'])
 
                     decoded = None
-                    for enc in encodings_to_try:
-                        try:
-                            decoded = payload.decode(enc)
-                            break
-                        except (LookupError, UnicodeDecodeError):
-                            continue
+                    if isinstance(payload, bytes):
+                        for enc in encodings_to_try:
+                            try:
+                                decoded = payload.decode(enc)
+                                break
+                            except (LookupError, UnicodeDecodeError):
+                                continue
 
-                    if decoded is None:
-                        decoded = payload.decode('latin-1', errors='replace')
+                        if decoded is None:
+                            decoded = payload.decode('latin-1', errors='replace')
 
-                    if msg.get_content_type() == "text/plain":
-                        body_text = decoded
-                    else:
-                        body_html = decoded
+                    if decoded is not None:
+                        if msg.get_content_type() == "text/plain":
+                            body_text = decoded if decoded else ""
+                        else:
+                            body_html = decoded if decoded else ""
             except Exception:
                 pass
 
@@ -438,7 +444,7 @@ class InboxDiagnosticAnalyzer:
         text_lower = text.lower()
         found = []
 
-        for category, keywords in ALL_KEYWORDS.items():
+        for _, keywords in ALL_KEYWORDS.items():
             for keyword in keywords:
                 if keyword.lower() in text_lower:
                     if keyword not in found:
@@ -499,7 +505,7 @@ class InboxDiagnosticAnalyzer:
             date=date,
         )
 
-    def iter_emails(self, limit: int = 200, skip_ids: Set[str] = None) -> Iterator[Tuple[EmailPattern, int, int, Message]]:
+    def iter_emails(self, limit: int = 200, skip_ids: Optional[Set[str]] = None) -> Iterator[Tuple[EmailPattern, int, int, Message]]:
         """
         Itera sobre os e-mails como um generator (não carrega tudo em memória).
 
@@ -517,7 +523,9 @@ class InboxDiagnosticAnalyzer:
             skip_ids = set()
 
         # Busca TODOS os e-mails (sem filtro de subject)
-        status, messages = self.connection.search(None, 'ALL')
+        if self.connection is None:
+            return
+        _status, messages = self.connection.search(None, 'ALL')
 
         if not messages or messages[0] == b'':
             print("⚠️ Nenhum e-mail encontrado na caixa de entrada.")
@@ -557,11 +565,17 @@ class InboxDiagnosticAnalyzer:
                 continue
 
             try:
-                _, msg_data = self.connection.fetch(num, "(RFC822)")
+                if self.connection is None:
+                    continue
+                num_str = num.decode('utf-8') if isinstance(num, bytes) else str(num)
+                _, msg_data = self.connection.fetch(num_str, "(RFC822)")
                 if not msg_data or not msg_data[0]:
                     continue
 
-                msg = message_from_bytes(msg_data[0][1])
+                raw_bytes = msg_data[0][1]
+                if isinstance(raw_bytes, int):
+                    continue
+                msg = message_from_bytes(raw_bytes)
 
                 # Analisa o e-mail e retorna imediatamente (não acumula)
                 pattern = self._analyze_email(msg, email_id_str)
@@ -571,9 +585,9 @@ class InboxDiagnosticAnalyzer:
                 del msg
                 del msg_data
 
-            except Exception as e:
-                # Yield None para indicar erro (estatísticas contabilizam)
-                yield None, idx + 1 - skipped_resume, total_to_process - len(skip_ids), None
+            except Exception:
+                # Skip on error (estatísticas contabilizam)
+                continue
 
     def fetch_and_diagnose_streaming(
         self,
@@ -654,8 +668,10 @@ class InboxDiagnosticAnalyzer:
                     stats.count_with_verification_code += 1
 
                 for kw in existing.get('keywords_found', []):
-                    stats.keyword_counter[kw] += 1
-                stats.sender_counter[existing.get('sender_address', '')] += 1
+                    if stats.keyword_counter is not None:
+                        stats.keyword_counter[kw] += 1
+                if stats.sender_counter is not None:
+                    stats.sender_counter[existing.get('sender_address', '')] += 1
 
             if existing_patterns:
                 print(f"✅ {len(existing_patterns)} e-mails anteriores mantidos")
@@ -664,7 +680,7 @@ class InboxDiagnosticAnalyzer:
             # Processa novos e-mails
             new_count = 0
             for result in self.iter_emails(limit=limit, skip_ids=skip_ids):
-                pattern, current, total, msg = result
+                pattern, _, _, msg = result
 
                 if pattern is None or msg is None:
                     stats.errors += 1
@@ -694,9 +710,9 @@ class InboxDiagnosticAnalyzer:
                 )
                 email_bodies.append({
                     "uid": pattern.email_id,
-                    "subject": self._decode_text(msg.get("Subject")),
-                    "from": self._decode_text(msg.get("From")),
-                    "date": self._decode_text(msg.get("Date")),
+                    "subject": self._decode_text(msg.get("Subject") or ""),
+                    "from": self._decode_text(msg.get("From") or ""),
+                    "date": self._decode_text(msg.get("Date") or ""),
                     "body_text": body_text,
                     "body_html": body_html,
                     "quantidade_anexos": attachment_count,
@@ -719,7 +735,7 @@ class InboxDiagnosticAnalyzer:
         with open("data/output/inbox_body.json", "w", encoding="utf-8") as fbody:
             json.dump(email_bodies, fbody, ensure_ascii=False, indent=2)
 
-        print(f"\n✅ Análise concluída:")
+        print("\n✅ Análise concluída:")
         print(f"   - E-mails analisados (total): {stats.total_processed}")
         print(f"   - Novos nesta execução: {new_count}")
         if stats.errors > 0:
@@ -848,9 +864,9 @@ def main():
     if effective_limit > 0:
         print(f"   Limite: {effective_limit} e-mails")
     else:
-        print(f"   Limite: TODOS os e-mails (modo streaming ativado)")
+        print("   Limite: TODOS os e-mails (modo streaming ativado)")
     if args.resume:
-        print(f"   Modo: RESUME (continua de onde parou)")
+        print("   Modo: RESUME (continua de onde parou)")
     print()
 
     # Cria analisador e conecta

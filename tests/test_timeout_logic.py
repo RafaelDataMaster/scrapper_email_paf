@@ -67,7 +67,7 @@ class TestGranularTimeout(unittest.TestCase):
         dummy_path = Path("test_success.pdf")
 
         # 2. Execute
-        print(f"\nTesting success within limit...")
+        print("\nTesting success within limit...")
         result = batch_processor._process_single_file(dummy_path)
 
         # 3. Verify

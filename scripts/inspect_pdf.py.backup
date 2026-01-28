@@ -34,9 +34,9 @@ from _init_env import setup_project_path
 
 PROJECT_ROOT = setup_project_path()
 
-from config.settings import DIR_DEBUG_INPUT, DIR_TEMP  # noqa: E402
-from core.processor import BaseInvoiceProcessor  # noqa: E402
-from core.extractors import EXTRACTOR_REGISTRY  # noqa: E402
+from config.settings import DIR_DEBUG_INPUT, DIR_TEMP
+from core.processor import BaseInvoiceProcessor
+from core.extractors import EXTRACTOR_REGISTRY
 
 # Pastas onde buscar PDFs (ordem de prioridade) e batch padrão
 BATCH_BASE_DIR = DIR_TEMP
@@ -304,16 +304,16 @@ def inspect(
     """Processa e exibe campos extraídos do PDF."""
 
     print(f"\n{'=' * 80}")
-    print(f"[PDF] ARQUIVO: {pdf_path.name}")
-    print(f"[PATH] PATH:    {pdf_path}")
+    print(f"📄 ARQUIVO: {pdf_path.name}")
+    print(f"📁 PATH:    {pdf_path}")
 
     # Informações do batch
     batch_info = get_batch_info(pdf_path)
     if batch_info["is_from_batch"]:
-        print(f"[BATCH] BATCH:   {batch_info['batch_id']}")
+        print(f"📦 BATCH:   {batch_info['batch_id']}")
         if batch_info["batch_date"]:
-            print(f"[DATE] DATA:    {batch_info['batch_date']}")
-        print(f"[FOLDER] PASTA:   {batch_info['batch_path']}")
+            print(f"📅 DATA:    {batch_info['batch_date']}")
+        print(f"📂 PASTA:   {batch_info['batch_path']}")
 
     print(f"{'=' * 80}")
 
@@ -325,28 +325,26 @@ def inspect(
     texto_bruto = getattr(doc, "texto_bruto", "")
 
     # Testa todos os extratores
-    print("\n[INS] TESTE DE EXTRATORES (Ordem de prioridade):")
+    print("\n🔍 TESTE DE EXTRATORES (Ordem de prioridade):")
     print("-" * 60)
     test_results = test_all_extractors(texto_bruto)
 
     for result in test_results:
         status = (
-            "[OK] SELECIONADO"
+            "✅ SELECIONADO"
             if result["can_handle"]
             and result["name"] == getattr(p, "last_extractor", "")
-            else (
-                "[CHECK] Compatível" if result["can_handle"] else "[X] Não compatível"
-            )
+            else ("✓ Compatível" if result["can_handle"] else "✗ Não compatível")
         )
         error_info = f" - ERRO: {result['error']}" if "error" in result else ""
         print(f"{result['priority']:2d}. {result['name']:<35} {status}{error_info}")
 
     print("-" * 60)
-    print(f"[TARGET] EXTRATOR SELECIONADO: {getattr(p, 'last_extractor', 'N/A')}")
-    print(f"[PDF] TIPO DO DOCUMENTO:    {getattr(doc, 'doc_type', 'N/A')}")
+    print(f"🎯 EXTRATOR SELECIONADO: {getattr(p, 'last_extractor', 'N/A')}")
+    print(f"📄 TIPO DO DOCUMENTO:    {getattr(doc, 'doc_type', 'N/A')}")
 
     # Campos para relatorio_lotes.csv
-    print("\n[FIELDS] CAMPOS PARA RELATÓRIO_LOTES.CSV:")
+    print("\n📋 CAMPOS PARA RELATÓRIO_LOTES.CSV:")
     print("-" * 60)
     lotes_fields = get_relatorio_lotes_fields(doc)
     for key, value in lotes_fields.items():
@@ -360,7 +358,7 @@ def inspect(
             display = str(value)
         print(f"{key:<20} = {display}")
 
-    print("\n[STATS] CAMPOS EXTRÍDOS DO DOCUMENTO:")
+    print("\n📊 CAMPOS EXTRÍDOS DO DOCUMENTO:")
     print("-" * 40)
 
     # Campos a mostrar
@@ -390,13 +388,13 @@ def inspect(
     texto_bruto = getattr(doc, "texto_bruto", "")
 
     if show_raw:
-        print(f"\n[TEXT] TEXTO BRUTO COMPLETO:\n{texto_bruto}")
+        print(f"\n📝 TEXTO BRUTO COMPLETO:\n{texto_bruto}")
     else:
         preview = texto_bruto[:500] + "..." if len(texto_bruto) > 500 else texto_bruto
-        print(f"[TEXT] TEXTO BRUTO (primeiros 500 chars):\n{preview}")
+        print(f"📝 TEXTO BRUTO (primeiros 500 chars):\n{preview}")
 
     print(f"\n{'=' * 80}")
-    print("[OK] INSPEÇÃO CONCLUÍDA")
+    print("✅ INSPEÇÃO CONCLUÍDA")
     print(f"{'=' * 80}")
     print()
 
@@ -409,23 +407,23 @@ def inspect_batch(batch_path: Path) -> None:
         batch_path: Path da pasta do batch
     """
     if not batch_path.exists():
-        print(f"[ERROR] Pasta do batch não encontrada: {batch_path}")
+        print(f"❌ Pasta do batch não encontrada: {batch_path}")
         return
 
     if not batch_path.is_dir():
-        print(f"[ERROR] O caminho não é uma pasta: {batch_path}")
+        print(f"❌ O caminho não é uma pasta: {batch_path}")
         return
 
     # Lista todos os PDFs
     pdf_files = list(batch_path.glob("*.pdf"))
     if not pdf_files:
-        print(f"[INFO]  Nenhum PDF encontrado no batch: {batch_path}")
+        print(f"ℹ️  Nenhum PDF encontrado no batch: {batch_path}")
         return
 
     print(f"\n{'=' * 80}")
-    print("[INS] INSPEÇÃO DE BATCH: " + batch_path.name)
-    print(f"[FOLDER] PASTA: {batch_path}")
-    print(f"[PDF] TOTAL DE PDFs: {len(pdf_files)}")
+    print("🔍 INSPEÇÃO DE BATCH: " + batch_path.name)
+    print(f"📂 PASTA: {batch_path}")
+    print(f"📄 TOTAL DE PDFs: {len(pdf_files)}")
     print(f"{'=' * 80}")
 
     batch_summary = []
@@ -454,21 +452,21 @@ def inspect_batch(batch_path: Path) -> None:
         batch_summary.append(summary)
 
         # Exibe informações resumidas
-        print(f"[TARGET] Extrator: {summary['extrator']}")
-        print(f"[PDF] Tipo: {summary['tipo']}")
-        print(f"[SUPPLIER] Fornecedor: {summary['fornecedor'] or '(vazio)'}")
+        print(f"🎯 Extrator: {summary['extrator']}")
+        print(f"📄 Tipo: {summary['tipo']}")
+        print(f"🏢 Fornecedor: {summary['fornecedor'] or '(vazio)'}")
         print(
-            f"[MONEY] Valor: R$ {summary['valor']:,.2f}".replace(",", "X")
+            f"💰 Valor: R$ {summary['valor']:,.2f}".replace(",", "X")
             .replace(".", ",")
             .replace("X", ".")
         )
-        print(f"[DATE] Vencimento: {summary['vencimento'] or '(vazio)'}")
-        print(f"[NUMBER] Número: {summary['numero_nota'] or '(vazio)'}")
-        print(f"[COMPANY] Empresa: {summary['empresa'] or '(vazio)'}")
+        print(f"📅 Vencimento: {summary['vencimento'] or '(vazio)'}")
+        print(f"🔢 Número: {summary['numero_nota'] or '(vazio)'}")
+        print(f"🏭 Empresa: {summary['empresa'] or '(vazio)'}")
 
     # Resumo consolidado do batch
     print("\n" + "=" * 80)
-    print(f"[STATS] RESUMO DO BATCH: {batch_path.name}")
+    print(f"📊 RESUMO DO BATCH: {batch_path.name}")
     print("=" * 80)
 
     # Estatísticas
@@ -486,21 +484,21 @@ def inspect_batch(batch_path: Path) -> None:
         if empresa:
             empresas[empresa] = empresas.get(empresa, 0) + 1
 
-    print("\n[CHART] ESTATÍSTICAS:")
-    print("[PDF] Total de documentos: " + str(len(batch_summary)))
+    print("\n📈 ESTATÍSTICAS:")
+    print("📄 Total de documentos: " + str(len(batch_summary)))
 
-    print("\n[TARGET] DISTRIBUIÇÃO POR EXTRATOR:")
+    print("\n🎯 DISTRIBUIÇÃO POR EXTRATOR:")
     for extrator, count in sorted(extratores.items(), key=lambda x: x[1], reverse=True):
         percent = (count / len(batch_summary)) * 100
-        print(f"  {str(extrator or 'None'):<35} {count:3d} ({percent:.1f}%)")
+        print(f"  {extrator:<35} {count:3d} ({percent:.1f}%)")
 
-    print("\n[PDF] DISTRIBUIÇÃO POR TIPO:")
+    print("\n📄 DISTRIBUIÇÃO POR TIPO:")
     for tipo, count in sorted(tipos.items(), key=lambda x: x[1], reverse=True):
         percent = (count / len(batch_summary)) * 100
         print(f"  {tipo:<35} {count:3d} ({percent:.1f}%)")
 
     if empresas:
-        print("\n[COMPANY] DISTRIBUIÇÃO POR EMPRESA:")
+        print("\n🏭 DISTRIBUIÇÃO POR EMPRESA:")
         for empresa, count in sorted(
             empresas.items(), key=lambda x: x[1], reverse=True
         ):
@@ -508,7 +506,7 @@ def inspect_batch(batch_path: Path) -> None:
             print(f"  {empresa:<35} {count:3d} ({percent:.1f}%)")
 
     # Lista de documentos para relatorio_lotes.csv
-    print("\n[FIELDS] LISTA PARA RELATÓRIO_LOTES.CSV:")
+    print("\n📋 LISTA PARA RELATÓRIO_LOTES.CSV:")
     print("-" * 80)
     print(
         f"{'Arquivo':<30} {'Extrator':<25} {'Tipo':<10} {'Fornecedor':<30} {'Valor':>12} {'Vencimento':<12} {'Número':<15}"
@@ -529,7 +527,7 @@ def inspect_batch(batch_path: Path) -> None:
         tipo = summary["tipo"][:8] if summary["tipo"] else "N/A"
         fornecedor = (
             summary["fornecedor"][:27] + "..."
-            if summary["fornecedor"] and len(summary["fornecedor"]) > 30
+            if len(summary["fornecedor"]) > 30
             else summary["fornecedor"] or "(vazio)"
         )
         valor_str = (
@@ -547,7 +545,7 @@ def inspect_batch(batch_path: Path) -> None:
         )
 
     print("\n" + "=" * 80)
-    print("[OK] INSPEÇÃO DE BATCH CONCLUÍDA")
+    print("✅ INSPEÇÃO DE BATCH CONCLUÍDA")
     print(f"{'=' * 80}")
     print()
 
@@ -635,7 +633,7 @@ def main():
                             break
 
         if not batch_path:
-            print(f"[ERROR] Batch não encontrado: {batch_id}")
+            print(f"❌ Batch não encontrado: {batch_id}")
             print("\nBuscado em:")
             print(f"  - {BATCH_BASE_DIR}")
             print(f"\nBatches disponíveis em {BATCH_BASE_DIR}:")
@@ -665,7 +663,7 @@ def main():
 
     if not pdf_path:
         print(f"ERRO: Arquivo não encontrado: {filename}")
-        print("\nBuscado em:")
+        print(f"\nBuscado em:")
         for d in SEARCH_DIRS:
             print(f"  - {d}")
         print(

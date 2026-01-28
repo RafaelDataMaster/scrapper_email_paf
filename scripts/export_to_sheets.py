@@ -42,7 +42,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 
@@ -54,7 +54,7 @@ from dotenv import load_dotenv
 # Carrega variáveis de ambiente antes de importar settings
 load_dotenv()
 
-from core.models import (
+from core.models import (  # noqa: E402
     BoletoData,
     DanfeData,
     DocumentData,
@@ -122,8 +122,8 @@ class GoogleSheetsExporterDualTab:
 
     def __init__(
         self,
-        credentials_path: str = None,
-        spreadsheet_id: str = None,
+        credentials_path: Optional[str] = None,
+        spreadsheet_id: Optional[str] = None,
         dry_run: bool = False
     ):
         """
@@ -153,7 +153,7 @@ class GoogleSheetsExporterDualTab:
 
         try:
             import gspread
-            from gspread.exceptions import APIError
+
         except ImportError:
             raise ImportError(
                 "gspread não está instalado. "
@@ -168,7 +168,7 @@ class GoogleSheetsExporterDualTab:
         try:
             self._client = gspread.service_account(filename=self.credentials_path)
             self._spreadsheet = self._client.open_by_key(self.spreadsheet_id)
-            logger.info(f"✅ Autenticado com sucesso no Google Sheets")
+            logger.info("✅ Autenticado com sucesso no Google Sheets")
         except Exception as e:
             logger.error(f"❌ Erro na autenticação Google Sheets: {e}")
             raise
@@ -189,6 +189,9 @@ class GoogleSheetsExporterDualTab:
 
         self._authenticate()
 
+        if self._spreadsheet is None:
+            raise RuntimeError("Falha na autenticação com Google Sheets")
+
         try:
             worksheet = self._spreadsheet.worksheet(sheet_name)
             logger.info(f"📄 Aba '{sheet_name}' encontrada")
@@ -200,7 +203,7 @@ class GoogleSheetsExporterDualTab:
                 cols=len(headers)
             )
             # Adiciona headers
-            worksheet.append_row(headers, value_input_option='USER_ENTERED')
+            worksheet.append_row(headers, value_input_option='USER_ENTERED')  # type: ignore
             logger.info(f"📄 Aba '{sheet_name}' criada com headers")
 
         return worksheet
@@ -268,7 +271,7 @@ class GoogleSheetsExporterDualTab:
         self,
         documents: List[DocumentData],
         batch_size: int = 100,
-        source_email_subject_map: dict = None
+        source_email_subject_map: Optional[dict] = None
     ) -> Tuple[int, int]:
         """
         Exporta documentos para Google Sheets em duas abas.
@@ -302,7 +305,7 @@ class GoogleSheetsExporterDualTab:
 
         # Exporta para aba 'sem_anexos'
         if sem_anexos:
-            self._export_sem_anexos(sem_anexos, batch_size)
+            self._export_sem_anexos(sem_anexos, batch_size)  # type: ignore
 
         return len(anexos), len(sem_anexos)
 
@@ -430,14 +433,14 @@ def load_documents_from_csv(csv_path: Path) -> List[DocumentData]:
 
     for _, row in df.iterrows():
         try:
-            tipo = row.get('tipo_documento', '').upper()
+            tipo = (row.get('tipo_documento') or '').upper()
 
             # Converte row para dict, tratando NaN como None
             row_dict = {k: (None if pd.isna(v) else v) for k, v in row.items()}
 
             if tipo == 'NFSE':
                 doc = InvoiceData(
-                    arquivo_origem=row_dict.get('arquivo_origem', ''),
+                    arquivo_origem=row_dict.get('arquivo_origem') or '',
                     data_processamento=row_dict.get('data_processamento'),
                     empresa=row_dict.get('empresa'),
                     fornecedor_nome=row_dict.get('fornecedor_nome'),
@@ -453,7 +456,7 @@ def load_documents_from_csv(csv_path: Path) -> List[DocumentData]:
 
             elif tipo == 'DANFE':
                 doc = DanfeData(
-                    arquivo_origem=row_dict.get('arquivo_origem', ''),
+                    arquivo_origem=row_dict.get('arquivo_origem') or '',
                     data_processamento=row_dict.get('data_processamento'),
                     empresa=row_dict.get('empresa'),
                     fornecedor_nome=row_dict.get('fornecedor_nome'),
@@ -469,7 +472,7 @@ def load_documents_from_csv(csv_path: Path) -> List[DocumentData]:
 
             elif tipo == 'BOLETO':
                 doc = BoletoData(
-                    arquivo_origem=row_dict.get('arquivo_origem', ''),
+                    arquivo_origem=row_dict.get('arquivo_origem') or '',
                     data_processamento=row_dict.get('data_processamento'),
                     empresa=row_dict.get('empresa'),
                     fornecedor_nome=row_dict.get('fornecedor_nome'),
@@ -485,7 +488,7 @@ def load_documents_from_csv(csv_path: Path) -> List[DocumentData]:
 
             elif tipo == 'OUTRO':
                 doc = OtherDocumentData(
-                    arquivo_origem=row_dict.get('arquivo_origem', ''),
+                    arquivo_origem=row_dict.get('arquivo_origem') or '',
                     data_processamento=row_dict.get('data_processamento'),
                     empresa=row_dict.get('empresa'),
                     fornecedor_nome=row_dict.get('fornecedor_nome'),
@@ -501,7 +504,7 @@ def load_documents_from_csv(csv_path: Path) -> List[DocumentData]:
 
             elif tipo == 'AVISO':
                 doc = EmailAvisoData(
-                    arquivo_origem=row_dict.get('arquivo_origem', ''),
+                    arquivo_origem=row_dict.get('arquivo_origem') or '',
                     data_processamento=row_dict.get('data_processamento'),
                     email_date=row_dict.get('email_date'),  # Data do email (não do processamento)
                     empresa=row_dict.get('empresa'),
@@ -554,7 +557,7 @@ def load_lotes_from_csv(csv_path: Path) -> List[DocumentData]:
             valor_compra = _parse_float_br(row_dict.get('valor_compra'))
             valor_final = valor_boleto if valor_boleto and valor_boleto > 0 else valor_compra
 
-            batch_id = row_dict.get('batch_id', '')
+            batch_id = row_dict.get('batch_id') or ''
 
             # email_date: data de recebimento do email (coluna 'data' do CSV)
             email_date = row_dict.get('data')
@@ -567,7 +570,7 @@ def load_lotes_from_csv(csv_path: Path) -> List[DocumentData]:
                 if len(parts) >= 2 and len(parts[1]) == 8:
                     try:
                         data_proc = f"{parts[1][:4]}-{parts[1][4:6]}-{parts[1][6:8]}"
-                    except:
+                    except Exception:
                         pass
             if not data_proc:
                 data_proc = datetime.now().strftime('%Y-%m-%d')
@@ -583,7 +586,7 @@ def load_lotes_from_csv(csv_path: Path) -> List[DocumentData]:
 
             # Cria OtherDocumentData para representar o lote
             doc = OtherDocumentData(
-                arquivo_origem=batch_id,
+                arquivo_origem=batch_id or '',
                 data_processamento=data_proc,
                 email_date=email_date,  # Data do email (coluna 'data' do CSV)
                 empresa=row_dict.get('empresa'),
@@ -630,7 +633,7 @@ def load_avisos_from_csv(csv_path: Path) -> List[EmailAvisoData]:
             row_dict = {k: (None if pd.isna(v) else v) for k, v in row.items()}
 
             doc = EmailAvisoData(
-                arquivo_origem=row_dict.get('arquivo_origem', ''),
+                arquivo_origem=row_dict.get('arquivo_origem') or '',
                 data_processamento=row_dict.get('data_processamento'),
                 email_date=row_dict.get('email_date'),  # Data do email (não do processamento)
                 empresa=row_dict.get('empresa'),

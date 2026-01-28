@@ -103,7 +103,7 @@ def generate_markdown_report(
     lines = []
 
     # Header
-    lines.append(f"# Pyright/Basedpyright Report")
+    lines.append("# Pyright/Basedpyright Report")
     lines.append("")
     lines.append("## Summary")
     lines.append("")

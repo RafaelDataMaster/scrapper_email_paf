@@ -25,10 +25,10 @@ Princípios SOLID aplicados:
 - DIP: Usa abstrações (BatchProcessor, ExtractionDiagnostics)
 """
 import argparse
-import os
+
 import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Set, Tuple
 
 import pandas as pd
 from _init_env import setup_project_path
@@ -36,7 +36,7 @@ from _init_env import setup_project_path
 # Inicializa o ambiente do projeto
 setup_project_path()
 
-from config.settings import (
+from config.settings import (  # noqa: E402
     DEBUG_CSV_BOLETO_FALHA,
     DEBUG_CSV_BOLETO_SUCESSO,
     DEBUG_CSV_DANFE_FALHA,
@@ -49,12 +49,12 @@ from config.settings import (
     DIR_DEBUG_INPUT,
     DIR_DEBUG_OUTPUT,
 )
-from core.batch_processor import BatchProcessor
-from core.batch_result import BatchResult
-from core.correlation_service import CorrelationService
-from core.diagnostics import ExtractionDiagnostics
-from core.models import BoletoData, DanfeData, InvoiceData, OtherDocumentData
-from core.processor import BaseInvoiceProcessor
+from core.batch_processor import BatchProcessor  # noqa: E402
+
+from core.correlation_service import CorrelationService  # noqa: E402
+from core.diagnostics import ExtractionDiagnostics  # noqa: E402
+from core.models import BoletoData, DanfeData, InvoiceData, OtherDocumentData  # noqa: E402
+from core.processor import BaseInvoiceProcessor  # noqa: E402
 
 # Manifest para rastrear arquivos processados
 MANIFEST_PROCESSADOS = DIR_DEBUG_OUTPUT / "processed_files.txt"
@@ -300,7 +300,7 @@ def process_legacy_files(
     processor = BaseInvoiceProcessor()
     total = len(arquivos)
     processados = 0
-    interrompido = False
+    _interrompido = False
 
     try:
         for i, caminho in enumerate(arquivos, start=1):
@@ -320,8 +320,8 @@ def process_legacy_files(
                 validation_result.count_erro += 1
 
     except KeyboardInterrupt:
-        interrompido = True
-        print(f"\n🛑 Interrompido com Ctrl+C.")
+        _interrompido = True
+        print("\n🛑 Interrompido com Ctrl+C.")
 
     sys.stdout.write("\n")
     sys.stdout.flush()
@@ -350,7 +350,7 @@ def process_batch_mode(
         Número total de documentos processados
     """
     batch_processor = BatchProcessor()
-    correlation_service = CorrelationService() if apply_correlation else None
+    _correlation_service = CorrelationService() if apply_correlation else None
 
     total_batches = len(batch_folders)
     total_docs = 0
@@ -379,7 +379,7 @@ def process_batch_mode(
             validation_result.count_erro += batch_result.total_errors
 
     except KeyboardInterrupt:
-        print(f"\n🛑 Interrompido com Ctrl+C.")
+        print("\n🛑 Interrompido com Ctrl+C.")
 
     sys.stdout.write("\n")
     sys.stdout.flush()
@@ -461,7 +461,7 @@ def export_results(validation_result: ValidationResult) -> None:
     # NFSe
     if validation_result.nfse_sucesso:
         rows_paf = [item['object'].to_sheets_row() for item in validation_result.nfse_sucesso]
-        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
+        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)  # type: ignore
         df_paf.to_csv(DEBUG_CSV_NFSE_SUCESSO, index=False, encoding='utf-8-sig')
         print(f"✅ {DEBUG_CSV_NFSE_SUCESSO.name} ({len(validation_result.nfse_sucesso)} registros)")
 
@@ -482,7 +482,7 @@ def export_results(validation_result: ValidationResult) -> None:
     # Boletos
     if validation_result.boletos_sucesso:
         rows_paf = [item['object'].to_sheets_row() for item in validation_result.boletos_sucesso]
-        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
+        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)  # type: ignore
         df_paf.to_csv(DEBUG_CSV_BOLETO_SUCESSO, index=False, encoding='utf-8-sig')
         print(f"✅ {DEBUG_CSV_BOLETO_SUCESSO.name} ({len(validation_result.boletos_sucesso)} registros)")
 
@@ -502,7 +502,7 @@ def export_results(validation_result: ValidationResult) -> None:
     # DANFE
     if validation_result.danfe_sucesso:
         rows_paf = [item['object'].to_sheets_row() for item in validation_result.danfe_sucesso]
-        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
+        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)  # type: ignore
         df_paf.to_csv(DEBUG_CSV_DANFE_SUCESSO, index=False, encoding='utf-8-sig')
         print(f"✅ {DEBUG_CSV_DANFE_SUCESSO.name} ({len(validation_result.danfe_sucesso)} registros)")
 
@@ -522,7 +522,7 @@ def export_results(validation_result: ValidationResult) -> None:
     # Outros
     if validation_result.outros_sucesso:
         rows_paf = [item['object'].to_sheets_row() for item in validation_result.outros_sucesso]
-        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)
+        df_paf = pd.DataFrame(rows_paf, columns=COLUNAS_PAF)  # type: ignore
         df_paf.to_csv(DEBUG_CSV_OUTROS_SUCESSO, index=False, encoding='utf-8-sig')
         print(f"✅ {DEBUG_CSV_OUTROS_SUCESSO.name} ({len(validation_result.outros_sucesso)} registros)")
 

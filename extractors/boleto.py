@@ -1,4 +1,3 @@
-
 """
 Extrator de Boletos Bancários.
 
@@ -28,6 +27,7 @@ Example:
     ...     dados = extractor.extract(texto)
     ...     print(f"Valor: R$ {dados['valor_documento']:.2f}")
 """
+
 import re
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -78,12 +78,12 @@ class BoletoExtractor(BaseExtractor):
         # uma chave de acesso que pode parecer linha digitável.
         # Se o documento contém indicadores fortes de DANFSe, excluir imediatamente.
         danfse_exclusion_patterns = [
-            'DANFSE',
-            'DANFS-E',
-            'DOCUMENTOAUXILIARDANFSE',
-            'DOCUMENTOAUXILIARDANFS',
-            'CHAVEDEACESSODANFSE',
-            'CHAVEDEACESSODANFS',
+            "DANFSE",
+            "DANFS-E",
+            "DOCUMENTOAUXILIARDANFSE",
+            "DOCUMENTOAUXILIARDANFS",
+            "CHAVEDEACESSODANFSE",
+            "CHAVEDEACESSODANFS",
         ]
 
         for pattern in danfse_exclusion_patterns:
@@ -91,12 +91,12 @@ class BoletoExtractor(BaseExtractor):
                 return False
 
         # Verificação adicional: "DOCUMENTO AUXILIAR" + "NFS" no mesmo contexto
-        if 'DOCUMENTOAUXILIAR' in text_compact and 'NFS' in text_compact:
+        if "DOCUMENTOAUXILIAR" in text_compact and "NFS" in text_compact:
             return False
 
         # Verificação: "CHAVE DE ACESSO" + "NFS-E" ou "NOTA FISCAL DE SERVIÇO" indica DANFSe
-        if 'CHAVEDEACESSO' in text_compact:
-            if 'NFSE' in text_compact or 'NOTAFISCALDESERVICO' in text_compact:
+        if "CHAVEDEACESSO" in text_compact:
+            if "NFSE" in text_compact or "NOTAFISCALDESERVICO" in text_compact:
                 return False
 
         # Indicadores positivos de boleto
@@ -104,42 +104,50 @@ class BoletoExtractor(BaseExtractor):
         # em palavras-chave (ex: BENEFICIÁRIO → BENEFICI?RIO, NÚMERO → N?MERO). Por isso,
         # incluímos também alguns *stems* (BENEFICI, NOSSO) para a classificação.
         boleto_keywords = [
-            'LINHA DIGITÁVEL',
-            'LINHA DIGITAVEL',
-            'BENEFICI',
-            'BENEFICIÁRIO',
-            'BENEFICIARIO',
-            'VENCIMENTO',
-            'VALOR DO DOCUMENTO',
-            'NOSSO',
-            'NOSSO NÚMERO',
-            'NOSSO NUMERO',
-            'CÓDIGO DE BARRAS',
-            'CODIGO DE BARRAS',
-            'AGÊNCIA/CÓDIGO',
-            'AGENCIA/CODIGO',
-            'CEDENTE',
-            'RECIBO DO PAGADOR',
-            'RECIBO DO SACADO',
+            "LINHA DIGITÁVEL",
+            "LINHA DIGITAVEL",
+            "BENEFICI",
+            "BENEFICIÁRIO",
+            "BENEFICIARIO",
+            "VENCIMENTO",
+            "VALOR DO DOCUMENTO",
+            "NOSSO",
+            "NOSSO NÚMERO",
+            "NOSSO NUMERO",
+            "CÓDIGO DE BARRAS",
+            "CODIGO DE BARRAS",
+            "AGÊNCIA/CÓDIGO",
+            "AGENCIA/CODIGO",
+            "CEDENTE",
+            "RECIBO DO PAGADOR",
+            "RECIBO DO SACADO",
         ]
 
         # Indicadores negativos (se é NFSe, não é boleto puro)
         nfse_keywords = [
-            'NFS-E',
-            'NOTA FISCAL DE SERVIÇO ELETRÔNICA',
-            'NOTA FISCAL DE SERVICO ELETRONICA',
-            'PREFEITURA',
-            'DANFE',
-            'DOCUMENTO AUXILIAR DA NOTA FISCAL',
-            'DOCUMENTO AUXILIAR DA NFS',
-            'DANFSE',
+            "NFS-E",
+            "NOTA FISCAL DE SERVIÇO ELETRÔNICA",
+            "NOTA FISCAL DE SERVICO ELETRONICA",
+            "PREFEITURA",
+            "DANFE",
+            "DOCUMENTO AUXILIAR DA NOTA FISCAL",
+            "DOCUMENTO AUXILIAR DA NFS",
+            "DANFSE",
         ]
 
         def _kw_compact(kw: str) -> str:
             return re.sub(r"[^A-Z0-9]+", "", strip_accents((kw or "").upper()))
 
-        boleto_score = sum(1 for kw in boleto_keywords if _kw_compact(kw) and _kw_compact(kw) in text_compact)
-        nfse_score = sum(1 for kw in nfse_keywords if _kw_compact(kw) and _kw_compact(kw) in text_compact)
+        boleto_score = sum(
+            1
+            for kw in boleto_keywords
+            if _kw_compact(kw) and _kw_compact(kw) in text_compact
+        )
+        nfse_score = sum(
+            1
+            for kw in nfse_keywords
+            if _kw_compact(kw) and _kw_compact(kw) in text_compact
+        )
 
         # É boleto se:
         # - Tem alta pontuação de palavras-chave de boleto OU linha digitável
@@ -157,38 +165,38 @@ class BoletoExtractor(BaseExtractor):
         - Dados bancários normalizados (banco_nome, agencia, conta_corrente)
         """
         data = {}
-        data['tipo_documento'] = 'BOLETO'
+        data["tipo_documento"] = "BOLETO"
 
         # Campos básicos
-        data['cnpj_beneficiario'] = self._extract_cnpj_beneficiario(text)
-        data['valor_documento'] = self._extract_valor(text)
-        data['vencimento'] = self._extract_vencimento(text)
-        data['numero_documento'] = self._extract_numero_documento(text)
-        data['data_emissao'] = self._extract_data_documento(text)
-        data['linha_digitavel'] = self._extract_linha_digitavel(text)
-        data['nosso_numero'] = self._extract_nosso_numero(text)
-        data['referencia_nfse'] = self._extract_referencia_nfse(text)
+        data["cnpj_beneficiario"] = self._extract_cnpj_beneficiario(text)
+        data["valor_documento"] = self._extract_valor(text)
+        data["vencimento"] = self._extract_vencimento(text)
+        data["numero_documento"] = self._extract_numero_documento(text)
+        data["data_emissao"] = self._extract_data_documento(text)
+        data["linha_digitavel"] = self._extract_linha_digitavel(text)
+        data["nosso_numero"] = self._extract_nosso_numero(text)
+        data["referencia_nfse"] = self._extract_referencia_nfse(text)
 
         # Campos Core PAF (Prioridade Alta)
-        data['fornecedor_nome'] = self._extract_fornecedor_nome(text)
-        data['empresa'] = self._extract_pagador_nome(text)
-        data['cnpj_pagador'] = self._extract_cnpj_pagador(text)
-        data['banco_nome'] = self._extract_banco_nome(text, data.get('linha_digitavel'))
-        data['agencia'] = self._extract_agencia(text)
-        data['conta_corrente'] = self._extract_conta_corrente(text)
+        data["fornecedor_nome"] = self._extract_fornecedor_nome(text)
+        data["empresa"] = self._extract_pagador_nome(text)
+        data["cnpj_pagador"] = self._extract_cnpj_pagador(text)
+        data["banco_nome"] = self._extract_banco_nome(text, data.get("linha_digitavel"))
+        data["agencia"] = self._extract_agencia(text)
+        data["conta_corrente"] = self._extract_conta_corrente(text)
 
         return data
 
     def _extract_cnpj_pagador(self, text: str) -> Optional[str]:
         """Extrai CNPJ do pagador (empresa que paga o boleto).
-        
+
         Busca em seções comuns:
         1. Próximo a "Dados do Pagador" (1-8 linhas seguintes)
         2. Linha com "CPF/CNPJ" ou "CNPJ" junto do nome
-        
+
         Args:
             text: Texto extraído do boleto.
-            
+
         Returns:
             CNPJ formatado (XX.XXX.XXX/XXXX-XX) ou None.
         """
@@ -196,17 +204,17 @@ class BoletoExtractor(BaseExtractor):
             return None
 
         # 1) Próximo a "Dados do Pagador" (1-8 linhas seguintes)
-        lines = [ln.strip() for ln in (text or '').splitlines() if (ln or '').strip()]
+        lines = [ln.strip() for ln in (text or "").splitlines() if (ln or "").strip()]
         for i, ln in enumerate(lines):
-            if re.search(r'(?i)\bDados\s+do\s+Pagador\b', ln):
+            if re.search(r"(?i)\bDados\s+do\s+Pagador\b", ln):
                 for j in range(i + 1, min(i + 9, len(lines))):
-                    m = re.search(r'(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})', lines[j])
+                    m = re.search(r"(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", lines[j])
                     if m:
                         return m.group(1)
 
         # 2) Linha com "CPF/CNPJ" ou "CNPJ" junto do nome
         m = re.search(
-            r'(?i)\b(?:CPF/CNPJ|CNPJ)\s*:?\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            r"(?i)\b(?:CPF/CNPJ|CNPJ)\s*:?\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})",
             text,
         )
         if m:
@@ -216,13 +224,13 @@ class BoletoExtractor(BaseExtractor):
 
     def _normalize_entity_name(self, raw: str) -> str:
         """Normaliza nome de entidade (fornecedor/pagador).
-        
+
         Remove espaços extras, caracteres especiais e padroniza.
         Delega para função utilitária em extractors.utils.
-        
+
         Args:
             raw: Nome bruto extraído do documento.
-            
+
         Returns:
             Nome normalizado.
         """
@@ -230,13 +238,13 @@ class BoletoExtractor(BaseExtractor):
 
     def _looks_like_header_or_label(self, s: str) -> bool:
         """Verifica se string parece ser um cabeçalho/label e não um nome.
-        
+
         Usado para filtrar falsos positivos na extração de fornecedor_nome,
         evitando capturar rótulos como "VENCIMENTO" ou "NOSSO NÚMERO".
-        
+
         Args:
             s: String a verificar.
-            
+
         Returns:
             True se parece ser um cabeçalho/label.
         """
@@ -245,58 +253,62 @@ class BoletoExtractor(BaseExtractor):
         s_up = s.upper()
         # Cabeçalhos/labels que frequentemente aparecem após "Beneficiário" e não são nome
         bad_tokens = [
-            'VENCIMENTO',
-            'VALOR DO DOCUMENTO',
-            'COOPERATIVA',
-            'CÓD.',
-            'COD.',
-            'CÓDIGO',
-            'CARTEIRA',
-            'ESPÉCIE',
-            'ACEITE',
-            'PROCESSAMENTO',
-            'NOSSO NÚMERO',
-            'NOSSO NUMERO',
-            'AGÊNCIA',
-            'AGENCIA',
-            'CONTA',
+            "VENCIMENTO",
+            "VALOR DO DOCUMENTO",
+            "COOPERATIVA",
+            "CÓD.",
+            "COD.",
+            "CÓDIGO",
+            "CARTEIRA",
+            "ESPÉCIE",
+            "ACEITE",
+            "PROCESSAMENTO",
+            "NOSSO NÚMERO",
+            "NOSSO NUMERO",
+            "AGÊNCIA",
+            "AGENCIA",
+            "CONTA",
         ]
         return any(t in s_up for t in bad_tokens)
 
     def _looks_like_currency_or_amount_line(self, s: str) -> bool:
         """Verifica se a linha parece conter valores monetários.
-        
+
         Usado para filtrar linhas que não devem ser capturadas como
         nome de fornecedor (ex: linhas com R$ ou data+valor).
-        
+
         Args:
             s: Linha a verificar.
-            
+
         Returns:
             True se parece ser uma linha de valor monetário.
         """
         if not s:
             return False
         s_up = s.upper()
-        if 'R$' in s_up:
+        if "R$" in s_up:
             return True
         # Ex: "Real 1 14.338.304/0001-78 01/09/2025 352,08"
-        if re.search(r"\bREAL\b", s_up) and re.search(r"\b\d{1,3}(?:\.\d{3})*,\d{2}\b", s):
+        if re.search(r"\bREAL\b", s_up) and re.search(
+            r"\b\d{1,3}(?:\.\d{3})*,\d{2}\b", s
+        ):
             return True
         # Linhas tabulares com data+valor geralmente não são razão social
-        if re.search(r"\b\d{2}/\d{2}/\d{4}\b", s) and re.search(r"\b\d{1,3}(?:\.\d{3})*,\d{2}\b", s):
+        if re.search(r"\b\d{2}/\d{2}/\d{4}\b", s) and re.search(
+            r"\b\d{1,3}(?:\.\d{3})*,\d{2}\b", s
+        ):
             return True
         return False
 
     def _looks_like_linha_digitavel_line(self, s: str) -> bool:
         """Verifica se a linha parece ser uma linha digitável.
-        
+
         Usado para filtrar linhas que não devem ser capturadas como
         nome de fornecedor (linhas majoritáriamente numéricas).
-        
+
         Args:
             s: Linha a verificar.
-            
+
         Returns:
             True se parece ser linha digitável ou código de barras.
         """
@@ -313,14 +325,14 @@ class BoletoExtractor(BaseExtractor):
 
     def _extract_name_before_cnpj_in_line(self, line: str, cnpj: str) -> Optional[str]:
         """Extrai nome de entidade que aparece antes do CNPJ na mesma linha.
-        
+
         Padrão comum em boletos: "EMPRESA LTDA - CNPJ 12.345.678/0001-90"
         Remove labels/cabeçalhos que poluem o prefixo.
-        
+
         Args:
             line: Linha completa do texto.
             cnpj: CNPJ formatado a localizar na linha.
-            
+
         Returns:
             Nome normalizado ou None se não encontrado.
         """
@@ -353,7 +365,7 @@ class BoletoExtractor(BaseExtractor):
         return None
 
     def _format_name_with_cnpj(self, name: str, cnpj: str) -> str:
-        name_clean = re.sub(r'\s+', ' ', (name or '').strip()).strip(' -')
+        name_clean = re.sub(r"\s+", " ", (name or "").strip()).strip(" -")
         return f"{name_clean} - CNPJ {cnpj}".strip()
 
     def _extract_pagador_nome(self, text: str) -> Optional[str]:
@@ -361,27 +373,30 @@ class BoletoExtractor(BaseExtractor):
         if not text:
             return None
 
-        lines = [ln.strip() for ln in (text or '').splitlines()]
+        lines = [ln.strip() for ln in (text or "").splitlines()]
         lines = [ln for ln in lines if ln]
 
         # 1) Seção "Dados do Pagador" → normalmente o nome aparece 1-3 linhas depois
         for i, ln in enumerate(lines):
-            if re.search(r'(?i)\bDados\s+do\s+Pagador\b', ln):
+            if re.search(r"(?i)\bDados\s+do\s+Pagador\b", ln):
                 for j in range(i + 1, min(i + 6, len(lines))):
                     cand = lines[j]
-                    if re.search(r'(?i)\bNome\s+do\s+pagador\b', cand):
+                    if re.search(r"(?i)\bNome\s+do\s+pagador\b", cand):
                         continue
-                    if re.search(r'(?i)\bEndere[cç]o\b|\bBairro\b|\bMunic[ií]pio\b|\bMensagem\b', cand):
+                    if re.search(
+                        r"(?i)\bEndere[cç]o\b|\bBairro\b|\bMunic[ií]pio\b|\bMensagem\b",
+                        cand,
+                    ):
                         break
                     # Se vier junto com número do documento, remove o sufixo numérico.
-                    cand = re.sub(r'\s+\d{4}[\./-]\d+\b.*$', '', cand).strip()
+                    cand = re.sub(r"\s+\d{4}[\./-]\d+\b.*$", "", cand).strip()
                     cand = self._normalize_entity_name(cand)
                     if len(cand) >= 5 and not self._looks_like_header_or_label(cand):
                         return cand
 
         # 2) Linha explícita com label "Pagador" + CNPJ
         m = re.search(
-            r'(?im)^\s*Pagador\b[^\n]*\n\s*([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b',
+            r"(?im)^\s*Pagador\b[^\n]*\n\s*([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b",
             text,
         )
         if m:
@@ -398,7 +413,7 @@ class BoletoExtractor(BaseExtractor):
             ln_up = ln.upper()
 
             mline = re.search(
-                r'^(.*?)(?:\s*[-–]\s*(?:CPF/CNPJ\s*:?\s*)?)\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b',
+                r"^(.*?)(?:\s*[-–]\s*(?:CPF/CNPJ\s*:?\s*)?)\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b",
                 ln,
                 flags=re.IGNORECASE,
             )
@@ -417,9 +432,9 @@ class BoletoExtractor(BaseExtractor):
                 continue
 
             score = 0
-            if 'CSC' in ln_up:
+            if "CSC" in ln_up:
                 score += 5
-            if 'PAGADOR' in ln_up:
+            if "PAGADOR" in ln_up:
                 score += 1
 
             if score > best_score:
@@ -437,25 +452,27 @@ class BoletoExtractor(BaseExtractor):
             return None
 
         # 1) "Data do documento" - muitas vezes a data está na linha seguinte
-        lines = [ln.rstrip() for ln in (text or '').splitlines()]
+        lines = [ln.rstrip() for ln in (text or "").splitlines()]
         for i, ln in enumerate(lines):
-            if re.search(r'(?i)\bData\s+do\s+documento\b', ln):
+            if re.search(r"(?i)\bData\s+do\s+documento\b", ln):
                 # tenta mesma linha
-                m_same = re.search(r'(\d{2}/\d{2}/\d{4})', ln)
+                m_same = re.search(r"(\d{2}/\d{2}/\d{4})", ln)
                 if m_same:
                     parsed = parse_date_br(m_same.group(1))
                     if parsed:
                         return parsed
                 # tenta próximas linhas
                 for j in range(i + 1, min(i + 4, len(lines))):
-                    m = re.search(r'\b(\d{2}/\d{2}/\d{4})\b', lines[j])
+                    m = re.search(r"\b(\d{2}/\d{2}/\d{4})\b", lines[j])
                     if m:
                         parsed = parse_date_br(m.group(1))
                         if parsed:
                             return parsed
 
         # 2) "Data de Emissão" (pode estar longe do valor, usa DOTALL)
-        m = re.search(r'(?is)Data\s+de\s+Emiss[aã]o[\s\S]{0,120}?(\d{2}/\d{2}/\d{4})', text)
+        m = re.search(
+            r"(?is)Data\s+de\s+Emiss[aã]o[\s\S]{0,120}?(\d{2}/\d{2}/\d{4})", text
+        )
         if m:
             parsed = parse_date_br(m.group(1))
             if parsed:
@@ -464,15 +481,15 @@ class BoletoExtractor(BaseExtractor):
         # 3) Regra operacional (boletos): se não houver label explícito,
         # usa a MENOR data presente no documento (ex: data de geração do título).
         dates = []
-        for d in re.findall(r'\b(\d{2}/\d{2}/\d{4})\b', text):
+        for d in re.findall(r"\b(\d{2}/\d{2}/\d{4})\b", text):
             try:
-                dt = datetime.strptime(d, '%d/%m/%Y')
+                dt = datetime.strptime(d, "%d/%m/%Y")
                 if 2020 <= dt.year <= 2035:
                     dates.append(dt)
             except ValueError:
                 continue
         if dates:
-            return min(dates).strftime('%Y-%m-%d')
+            return min(dates).strftime("%Y-%m-%d")
 
         return None
 
@@ -483,9 +500,9 @@ class BoletoExtractor(BaseExtractor):
         """
         # Padrão: Procura CNPJ após "Beneficiário" ou "Cedente"
         patterns = [
-            r'(?i)Benefici[aá]rio.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
-            r'(?i)Cedente.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
-            r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}'  # Fallback: qualquer CNPJ
+            r"(?i)Benefici[aá]rio.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})",
+            r"(?i)Cedente.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})",
+            r"\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}",  # Fallback: qualquer CNPJ
         ]
 
         for pattern in patterns:
@@ -510,19 +527,19 @@ class BoletoExtractor(BaseExtractor):
         # Aceita formatos com ou sem R$
         patterns = [
             # Procura uma data (DD/MM/AAAA) seguida de um valor monetário no final da linha/bloco
-            r'\d{2}/\d{2}/\d{4}\s+.*?(\d{1,3}(?:\.\d{3})*,\d{2})',
+            r"\d{2}/\d{2}/\d{4}\s+.*?(\d{1,3}(?:\.\d{3})*,\d{2})",
             # Com R$ explícito
-            r'(?i)Valor\s+do\s+Documento\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
-            r'(?i)Valor\s+Nominal\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
-            r'(?i)Valor\s+Cobrado\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})',
-
+            r"(?i)Valor\s+do\s+Documento\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
+            r"(?i)Valor\s+Nominal\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
+            r"(?i)Valor\s+Cobrado\s*[:\s]*R\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
             # Sem R$ explícito (valor logo após o rótulo)
             # Útil para boletos com layout tabular
-            r'(?i)Valor\s+do\s+Documento[\s\n]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
-            r'(?i)Valor\s+Nominal[\s\n]+(\d{1,3}(?:\.\d{3})*,\d{2})\b',
-
+            r"(?i)Valor\s+do\s+Documento[\s\n]+(\d{1,3}(?:\.\d{3})*,\d{2})\b",
+            r"(?i)Valor\s+Nominal[\s\n]+(\d{1,3}(?:\.\d{3})*,\d{2})\b",
             # Genérico com R$
-            r'(?i)Valor\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})'
+            r"(?i)Valor\s*[:\s]*R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
+            # Padrão para layout tabular: "VENCIMENTO VALOR DO DOCUMENTO" em linhas separadas
+            r"(?i)VENCIMENTO\s+(?:\d{2}/\d{2}/\d{4}\s+)?(\d{1,3}(?:\.\d{3})*,\d{2})\b",
         ]
 
         # Fallback Nível 3: Extrai valor da linha digitável
@@ -530,8 +547,8 @@ class BoletoExtractor(BaseExtractor):
         # Exemplo: 75691.31407 01130.051202 02685.970010 3 11690000625000
         #          11690000625000 → 1169 (fator) + 0000625000 (valor em centavos = R$ 6.250,00)
         linha_digitavel_match = re.search(
-            r'\d{5}[\.\s]\d{5}\s+\d{5}[\.\s]\d{6}\s+\d{5}[\.\s]\d{6}\s+\d\s+(\d{4})(\d{10})',
-            text
+            r"\d{5}[\.\s]\d{5}\s+\d{5}[\.\s]\d{6}\s+\d{5}[\.\s]\d{6}\s+\d\s+(\d{4})(\d{10})",
+            text,
         )
         if linha_digitavel_match:
             # Segundo grupo: 10 dígitos do valor em centavos
@@ -548,25 +565,81 @@ class BoletoExtractor(BaseExtractor):
             match = re.search(pattern, text)
             if match:
                 valor_str = match.group(1)
-                valor = float(valor_str.replace('.', '').replace(',', '.'))
+                valor = float(valor_str.replace(".", "").replace(",", "."))
                 if valor > 0:
+                    # Verifica se não está em contexto de múltiplos zeros (placeholder)
+                    context_start = max(0, match.start() - 50)
+                    context_end = min(len(text), match.end() + 50)
+                    context = text[context_start:context_end]
+
+                    # Conta quantos "R$ 0,00" há no contexto próximo
+                    zeros_proximos = len(re.findall(r"R\$\s*0(?:,00)?", context))
+
+                    # Se há muitos zeros próximos e este também é zero, ignora
+                    if valor == 0 and zeros_proximos > 1:
+                        continue
+
                     return valor
 
         # Fallback Nível 2: Heurística do maior valor monetário encontrado
         # Útil quando o texto está "amassado" e os rótulos estão longe dos valores
-        todos_valores = re.findall(r'R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})', text)
+        todos_valores = re.findall(r"R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})", text)
 
         if todos_valores:
+            # Converte para valores float, filtrando zeros para evitar placeholders
             valores_float = [
-                float(v.replace('.', '').replace(',', '.'))
-                for v in todos_valores
+                float(v.replace(".", "").replace(",", ".")) for v in todos_valores
             ]
+
+            # Primeiro tenta encontrar valores não-zero
+            valores_nao_zero = [v for v in valores_float if v > 0]
+
+            if valores_nao_zero:
+                # Se há múltiplos valores não-zero, prioriza:
+                # 1. Valores em contexto de "Valor do Documento" ou similares
+                # 2. Maior valor (fallback)
+
+                # Tenta encontrar valores próximos a labels específicos
+                for i, valor_str in enumerate(todos_valores):
+                    valor_float = valores_float[i]
+                    if valor_float > 0:
+                        # Procura contexto ao redor do valor
+                        start_pos = 0
+                        for _ in range(i + 1):
+                            match = re.search(
+                                rf"R\$\s*{re.escape(valor_str)}", text[start_pos:]
+                            )
+                            if match:
+                                context_start = max(0, start_pos + match.start() - 100)
+                                context_end = min(
+                                    len(text), start_pos + match.end() + 100
+                                )
+                                context = text[context_start:context_end].upper()
+
+                                # Se está próximo de "VALOR DO DOCUMENTO" ou similar, prioriza
+                                if any(
+                                    kw in context
+                                    for kw in [
+                                        "VALOR DO DOCUMENTO",
+                                        "VALOR NOMINAL",
+                                        "VALOR COBRADO",
+                                    ]
+                                ):
+                                    return valor_float
+
+                                start_pos = start_pos + match.end()
+
+                # Fallback: retorna o maior valor não-zero
+                return max(valores_nao_zero)
+
+            # Se todos os valores são zero, verifica se são placeholders
+            # Se há muitos "R$ 0,00" (>2), provavelmente são placeholders, retorna 0
+            if len(valores_float) > 2 and all(v == 0 for v in valores_float):
+                return 0.0
+
+            # Se chegou aqui e há valores (mesmo zero), retorna o maior
             if valores_float:
-                maior_valor = max(valores_float)
-                if maior_valor > 0:
-                    return maior_valor
-
-
+                return max(valores_float)
 
         return 0.0
 
@@ -586,21 +659,21 @@ class BoletoExtractor(BaseExtractor):
         # "Emissão Vencimento ... <DD/MM/AAAA> <DD/MM/AAAA>".
         # Nesse caso, a 1ª data costuma ser a emissão e a 2ª o vencimento.
         m = re.search(
-            r'(?is)\bEmiss[aã]o\b\s+\bVencim\s*ento\b[\s\S]{0,220}?(\d{2}/\d{2}/\d{4})\s+(\d{2}/\d{2}/\d{4})',
+            r"(?is)\bEmiss[aã]o\b\s+\bVencim\s*ento\b[\s\S]{0,220}?(\d{2}/\d{2}/\d{4})\s+(\d{2}/\d{2}/\d{4})",
             text,
         )
         if m:
             try:
-                dt_emissao = datetime.strptime(m.group(1), '%d/%m/%Y')
-                dt_venc = datetime.strptime(m.group(2), '%d/%m/%Y')
+                dt_emissao = datetime.strptime(m.group(1), "%d/%m/%Y")
+                dt_venc = datetime.strptime(m.group(2), "%d/%m/%Y")
                 if 2020 <= dt_venc.year <= 2035 and dt_venc >= dt_emissao:
-                    return dt_venc.strftime('%Y-%m-%d')
+                    return dt_venc.strftime("%Y-%m-%d")
             except ValueError:
                 pass
 
         def parse_br_date(s: str) -> Optional[datetime]:
             try:
-                dt = datetime.strptime(s, '%d/%m/%Y')
+                dt = datetime.strptime(s, "%d/%m/%Y")
                 # Evita datas muito fora do esperado (ajusta conforme necessário)
                 if 2020 <= dt.year <= 2035:
                     return dt
@@ -613,10 +686,25 @@ class BoletoExtractor(BaseExtractor):
         # ligadas a "DATA DO PROCESSAMENTO" (falso positivo). Selecionamos por score.
         anchored_candidates: list[tuple[datetime, int]] = []
         anchored_patterns = [
-            (re.compile(r'(?i)\bDATA\s+DE\s+VENCIMENTO\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})'), 3),
-            (re.compile(r'(?i)\bData\s+de\s+Vencimento\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})'), 3),
-            (re.compile(r'(?i)\bData\s+Vencimento\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})'), 2),
-            (re.compile(r'(?i)\bVencimento\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})'), 1),
+            (
+                re.compile(
+                    r"(?i)\bDATA\s+DE\s+VENCIMENTO\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})"
+                ),
+                3,
+            ),
+            (
+                re.compile(
+                    r"(?i)\bData\s+de\s+Vencimento\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})"
+                ),
+                3,
+            ),
+            (
+                re.compile(
+                    r"(?i)\bData\s+Vencimento\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})"
+                ),
+                2,
+            ),
+            (re.compile(r"(?i)\bVencimento\b[^\n\d]{0,60}(\d{2}/\d{2}/\d{4})"), 1),
         ]
 
         for rx, base in anchored_patterns:
@@ -624,13 +712,15 @@ class BoletoExtractor(BaseExtractor):
                 dt = parse_br_date(m.group(1))
                 if not dt:
                     continue
-                window = text[max(0, m.start() - 140):min(len(text), m.end() + 80)].upper()
+                window = text[
+                    max(0, m.start() - 140) : min(len(text), m.end() + 80)
+                ].upper()
                 score = base
-                if 'DATA DO PROCESSAMENTO' in window or 'PROCESSAMENTO' in window:
+                if "DATA DO PROCESSAMENTO" in window or "PROCESSAMENTO" in window:
                     score -= 4
-                if 'NUMERO DO DOCUMENTO' in window or 'NÚMERO DO DOCUMENTO' in window:
+                if "NUMERO DO DOCUMENTO" in window or "NÚMERO DO DOCUMENTO" in window:
                     score += 1
-                if 'VALOR DO DOCUMENTO' in window:
+                if "VALOR DO DOCUMENTO" in window:
                     score += 1
                 anchored_candidates.append((dt, score))
 
@@ -639,8 +729,8 @@ class BoletoExtractor(BaseExtractor):
         lines = [ln for ln in lines if ln]
         candidates: list[tuple[datetime, int]] = []
 
-        venc_label = re.compile(r'(?i)\bVencimento\b')
-        date_re = re.compile(r'\b(\d{2}/\d{2}/\d{4})\b')
+        venc_label = re.compile(r"(?i)\bVencimento\b")
+        date_re = re.compile(r"\b(\d{2}/\d{2}/\d{4})\b")
 
         for i, ln in enumerate(lines):
             matches = list(venc_label.finditer(ln))
@@ -648,20 +738,24 @@ class BoletoExtractor(BaseExtractor):
                 continue
 
             ln_up = ln.upper()
-            ctx_up = " ".join(lines[max(0, i - 1):min(len(lines), i + 2)]).upper()
+            ctx_up = " ".join(lines[max(0, i - 1) : min(len(lines), i + 2)]).upper()
 
             def base_score() -> int:
                 score = 0
-                if ln_up.strip() == 'VENCIMENTO':
+                if ln_up.strip() == "VENCIMENTO":
                     score += 3
-                if 'NUMERO DO DOCUMENTO' in ln_up or 'NÚMERO DO DOCUMENTO' in ln_up:
+                if "NUMERO DO DOCUMENTO" in ln_up or "NÚMERO DO DOCUMENTO" in ln_up:
                     score += 2
-                if 'VALOR DO DOCUMENTO' in ln_up:
+                if "VALOR DO DOCUMENTO" in ln_up:
                     score += 2
                 # penaliza contextos que normalmente não representam vencimento real
-                if 'DATA DO PROCESSAMENTO' in ctx_up or 'PROCESSAMENTO' in ctx_up:
+                if "DATA DO PROCESSAMENTO" in ctx_up or "PROCESSAMENTO" in ctx_up:
                     score -= 3
-                if 'DATA DO DOCUMENTO' in ctx_up or 'DATA DE EMISS' in ctx_up or 'EMISS' in ctx_up:
+                if (
+                    "DATA DO DOCUMENTO" in ctx_up
+                    or "DATA DE EMISS" in ctx_up
+                    or "EMISS" in ctx_up
+                ):
                     score -= 1
                 return score
 
@@ -682,7 +776,7 @@ class BoletoExtractor(BaseExtractor):
 
             # Para cada ocorrência de 'Vencimento' na linha, pega a PRIMEIRA data logo depois
             for mlabel in matches:
-                tail = ln[mlabel.end():mlabel.end() + 140]
+                tail = ln[mlabel.end() : mlabel.end() + 140]
                 mdate = date_re.search(tail)
                 if mdate:
                     dt = parse_br_date(mdate.group(1))
@@ -705,36 +799,54 @@ class BoletoExtractor(BaseExtractor):
         if candidates:
             # Escolhe por score e, em empate, pela maior data.
             best_dt, _best_score = max(candidates, key=lambda x: (x[1], x[0]))
-            return best_dt.strftime('%Y-%m-%d')
+            return best_dt.strftime("%Y-%m-%d")
 
         if anchored_candidates:
             best_dt, _best_score = max(anchored_candidates, key=lambda x: (x[1], x[0]))
-            return best_dt.strftime('%Y-%m-%d')
+            return best_dt.strftime("%Y-%m-%d")
 
         # 2) Fallback: "maior data" do PDF, mas filtrando contextos que raramente são vencimento
         all_dates = []
-        for m in re.finditer(r'\b(\d{2}/\d{2}/\d{4})\b', text):
+        for m in re.finditer(r"\b(\d{2}/\d{2}/\d{4})\b", text):
             d = m.group(1)
             dt = parse_br_date(d)
             if not dt:
                 continue
-            ctx = text[max(0, m.start() - 60):min(len(text), m.end() + 60)].upper()
+            ctx = text[max(0, m.start() - 60) : min(len(text), m.end() + 60)].upper()
+
+            # Filtro adicional: se a data está isolada "VENCIMENTO:" sem data seguida
+            # (problema de layout tabular), tenta capturar data da próxima linha
+            if re.search(
+                r"VENCIMENTO\s*[:;]?\s*$", text[max(0, m.start() - 20) : m.start()]
+            ):
+                # Procura data nas próximas 2 linhas
+                lines_after = text[m.end() : min(len(text), m.end() + 200)].split("\n")
+                for j, line in enumerate(lines_after[:3]):
+                    date_match = re.search(r"\b(\d{2}/\d{2}/\d{4})\b", line)
+                    if date_match:
+                        dt2 = parse_br_date(date_match.group(1))
+                        if dt2:
+                            all_dates.append((dt2, ctx + " [CORRIGIDO_TABULAR]"))
+                            break
+
             all_dates.append((dt, ctx))
 
         if not all_dates:
             return None
 
         negative_ctx = (
-            'PROCESSAMENTO',
-            'DATA DO DOCUMENTO',
-            'DATA DO PROCESSAMENTO',
-            'DATA DE EMISS',
-            'EMISS',
+            "PROCESSAMENTO",
+            "DATA DO DOCUMENTO",
+            "DATA DO PROCESSAMENTO",
+            "DATA DE EMISS",
+            "EMISS",
         )
 
-        preferred = [dt for dt, ctx in all_dates if not any(tok in ctx for tok in negative_ctx)]
+        preferred = [
+            dt for dt, ctx in all_dates if not any(tok in ctx for tok in negative_ctx)
+        ]
         pick = max(preferred) if preferred else max(dt for dt, _ in all_dates)
-        return pick.strftime('%Y-%m-%d')
+        return pick.strftime("%Y-%m-%d")
 
     def _extract_numero_documento(self, text: str) -> Optional[str]:
         """
@@ -747,32 +859,26 @@ class BoletoExtractor(BaseExtractor):
         patterns = [
             # 1. PRIORIDADE ALTA - Layout tabular com data: "Nº Documento ... data ... X/Y"
             # Comum em boletos VSP/Itaú onde data vem antes do número
-            r'(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)',
-
+            r"(?i)N.?\s*Documento.*?\d{2}/\d{2}/\d{4}\s+(\d+/\d+)",
             # 2. Padrão REPROMAQ: "S" seguido de 5-6 dígitos com dígito verificador opcional (ex: S06633, S06633-1)
             # Busca no texto inteiro, geralmente aparece em títulos ou referências
-            r'\b(S\d{5,6}(?:-\d)?)\b',
-
+            r"\b(S\d{5,6}(?:-\d)?)\b",
             # 3. Padrão REPROMAQ em nome de arquivo: "BOL" + código (ex: BOLS066331)
             # Remove o prefixo BOL e extrai S + números
-            r'BOL(S\d{5,6}(?:-\d)?)',
-
+            r"BOL(S\d{5,6}(?:-\d)?)",
             # 4-8. Padrões específicos com diferentes variações de "número"
-            r'(?i)N[uú]mero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',  # Com ú ou u
-            r'(?i)Numero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',  # Sem acento
-            r'(?i)Num\.?\s*Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
-            r'(?i)N[ºº°]\s*Documento\s*[:\s]*([0-9]+(?:[/\.][0-9]+)?)',  # Aceita / ou .
-            r'(?i)N\.\s*documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)',
-
+            r"(?i)N[uú]mero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)",  # Com ú ou u
+            r"(?i)Numero\s+do\s+Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)",  # Sem acento
+            r"(?i)Num\.?\s*Documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)",
+            r"(?i)N[ºº°]\s*Documento\s*[:\s]*([0-9]+(?:[/\.][0-9]+)?)",  # Aceita / ou .
+            r"(?i)N\.\s*documento\s*[:\s]*([0-9]+(?:\.[0-9]+)?)",
             # 9. Busca "Número do Documento" seguido do valor na próxima linha
-            r'(?i)N.mero\s+do\s+Documento\s+.+?\n\s+.+?\s+([0-9]+\.[0-9]+)',  # Qualquer char em "Número"
-
+            r"(?i)N.mero\s+do\s+Documento\s+.+?\n\s+.+?\s+([0-9]+\.[0-9]+)",  # Qualquer char em "Número"
             # 10. Padrão contextual: palavra "documento" seguida de número (NÃO data)
             # Regex negativa para evitar capturar datas DD/MM/YYYY
-            r'(?i)documento\s+(?!\d{2}/\d{2}/\d{4})([0-9]+(?:\.[0-9]+)?)',
-
+            r"(?i)documento\s+(?!\d{2}/\d{2}/\d{4})([0-9]+(?:\.[0-9]+)?)",
             # 11. Genérico: busca por padrão ano.número (ex: 2025.122)
-            r'\b(20\d{2}\.\d+)\b'  # 2024.xxx, 2025.xxx, etc.
+            r"\b(20\d{2}\.\d+)\b",  # 2024.xxx, 2025.xxx, etc.
         ]
 
         for i, pattern in enumerate(patterns):
@@ -782,34 +888,34 @@ class BoletoExtractor(BaseExtractor):
             if match:
                 numero = match.group(1).strip()
                 # Valida: deve ter pelo menos 2 caracteres e não ser apenas "1"
-                if len(numero) >= 2 or (len(numero) == 1 and numero != '1'):
+                if len(numero) >= 2 or (len(numero) == 1 and numero != "1"):
                     return numero
 
         return None
 
     def _extract_linha_digitavel(self, text: str) -> Optional[str]:
-            """
-            Extrai a linha digitável do boleto (código de barras formatado).
-            Formato padrão: 5 blocos numéricos separados por espaços/pontos.
-            """
-            # Formato completo: XXXXX.XXXXX XXXXX.XXXXXX XXXXX.XXXXXX X XXXXXXXXXXXXXX
-            # A correção altera \s+ (espaço obrigatório) para \s* (espaço opcional)
-            patterns = [
-                r'(\d{5}[\.\s]\d{5}\s*\d{5}[\.\s]\d{6}\s*\d{5}[\.\s]\d{6}\s*\d\s*\d{14})',
-                r'(\d{5}\.\d{5}\s*\d{5}\.\d{6}\s*\d{5}\.\d{6})',
-                r'(\d{5}[\.\s]?\d{5}\s*\d{5}[\.\s]?\d{6}\s*\d{5}[\.\s]?\d{6}\s*\d\s*\d{14})',
-                r'(\d{47,48})'
-            ]
+        """
+        Extrai a linha digitável do boleto (código de barras formatado).
+        Formato padrão: 5 blocos numéricos separados por espaços/pontos.
+        """
+        # Formato completo: XXXXX.XXXXX XXXXX.XXXXXX XXXXX.XXXXXX X XXXXXXXXXXXXXX
+        # A correção altera \s+ (espaço obrigatório) para \s* (espaço opcional)
+        patterns = [
+            r"(\d{5}[\.\s]\d{5}\s*\d{5}[\.\s]\d{6}\s*\d{5}[\.\s]\d{6}\s*\d\s*\d{14})",
+            r"(\d{5}\.\d{5}\s*\d{5}\.\d{6}\s*\d{5}\.\d{6})",
+            r"(\d{5}[\.\s]?\d{5}\s*\d{5}[\.\s]?\d{6}\s*\d{5}[\.\s]?\d{6}\s*\d\s*\d{14})",
+            r"(\d{47,48})",
+        ]
 
-            # Remove quebras de linha para facilitar o match, se já não estiver feito
-            text_cleaned = text.replace('\n', ' ')
+        # Remove quebras de linha para facilitar o match, se já não estiver feito
+        text_cleaned = text.replace("\n", " ")
 
-            for pattern in patterns:
-                match = re.search(pattern, text_cleaned)
-                if match:
-                    return match.group(1).strip()
+        for pattern in patterns:
+            match = re.search(pattern, text_cleaned)
+            if match:
+                return match.group(1).strip()
 
-            return None
+        return None
 
     def _extract_nosso_numero(self, text: str) -> Optional[str]:
         """
@@ -820,14 +926,12 @@ class BoletoExtractor(BaseExtractor):
             # Formato bancário completo: XXX/XXXXXXX-X (ex: 109/00000507-1)
             # Padrão robusto: 2-3 dígitos / 7+ dígitos - 1 dígito
             # Evita capturar CNPJ que tem formato diferente
-            r'(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)',
-
+            r"(?i)Nosso\s+N.mero.*?(\d{2,3}/\d{7,}-\d+)",
             # Formato simples sem encoding específico
-            r'(?i)Nosso\s+Numero.*?(\d{2,3}/\d{7,}-\d+)',
-
+            r"(?i)Nosso\s+Numero.*?(\d{2,3}/\d{7,}-\d+)",
             # Fallback: qualquer sequência de dígitos com separadores
-            r'(?i)Nosso\s+N[úu]mero\s*[:\s]*([\d\-/]+)',
-            r'(?i)Nosso\s+Numero\s*[:\s]*([\d\-/]+)'
+            r"(?i)Nosso\s+N[úu]mero\s*[:\s]*([\d\-/]+)",
+            r"(?i)Nosso\s+Numero\s*[:\s]*([\d\-/]+)",
         ]
 
         for i, pattern in enumerate(patterns):
@@ -837,14 +941,14 @@ class BoletoExtractor(BaseExtractor):
             if match:
                 numero = match.group(1).strip()
                 # Validação: não deve ser parte de CNPJ (que tem pontos)
-                if '.' not in numero or numero.count('/') == 1:
+                if "." not in numero or numero.count("/") == 1:
                     return numero
 
         # Fallback genérico: busca padrão XXX/XXXXXXXX-X sem label
         # Usado quando "Nosso Número" está como imagem ou ausente
         # Formato: 3 dígitos / 8 dígitos - 1 dígito (ex: 109/42150105-8)
         # Evita Agência/Conta que tem 4 dígitos ou espaços (ex: "2938 / 0053345-8")
-        fallback_pattern = r'\b(\d{3}/\d{8}-\d)\b'
+        fallback_pattern = r"\b(\d{3}/\d{8}-\d)\b"
         match = re.search(fallback_pattern, text)
         if match:
             return match.group(1)
@@ -857,13 +961,13 @@ class BoletoExtractor(BaseExtractor):
         Alguns boletos incluem "Ref. NF 12345" ou similar.
         """
         patterns = [
-            r'(?i)Ref\.?\s*NF[:\s-]*(\d+)',
-            r'(?i)Refer[eê]ncia\s*NF[:\s-]*(\d+)',
-            r'(?i)Nota\s+Fiscal\s*n?[º°]?\s*[:\s]*(\d+)',
-            r'(?i)NF\s*[:\s-]*(\d+)',
-            r'(?i)N\.?\s*F\.?\s*[:\s-]*(\d+)',
-            r'(?i)NFSe\s*[:\s-]*(\d+)',
-            r'(?i)NFS-e\s*[:\s-]*(\d+)'
+            r"(?i)Ref\.?\s*NF[:\s-]*(\d+)",
+            r"(?i)Refer[eê]ncia\s*NF[:\s-]*(\d+)",
+            r"(?i)Nota\s+Fiscal\s*n?[º°]?\s*[:\s]*(\d+)",
+            r"(?i)NF\s*[:\s-]*(\d+)",
+            r"(?i)N\.?\s*F\.?\s*[:\s-]*(\d+)",
+            r"(?i)NFSe\s*[:\s-]*(\d+)",
+            r"(?i)NFS-e\s*[:\s-]*(\d+)",
         ]
 
         for pattern in patterns:
@@ -891,7 +995,7 @@ class BoletoExtractor(BaseExtractor):
         # 0) Caso "intermediador a serviço de <fornecedor> - CNPJ <cnpj>"
         # Ex: "Yapay a serviço de Locaweb S/A - CNPJ 02..."
         m = re.search(
-            r'(?im)^\s*(.+?\ba\s+servi[cç]o\s+de\s+.+?)\s*[-–]\s*CNPJ\s*[:\-]?\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b',
+            r"(?im)^\s*(.+?\ba\s+servi[cç]o\s+de\s+.+?)\s*[-–]\s*CNPJ\s*[:\-]?\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b",
             text,
         )
         if m:
@@ -901,7 +1005,7 @@ class BoletoExtractor(BaseExtractor):
         best_line: Optional[str] = None
         best_score = -999
         for m2 in re.finditer(
-            r'(?im)^\s*([^\n]{5,220}?)\s*[-–]\s*CNPJ\s*[:\-]?\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b',
+            r"(?im)^\s*([^\n]{5,220}?)\s*[-–]\s*CNPJ\s*[:\-]?\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b",
             text,
         ):
             raw_name = m2.group(1).strip()
@@ -915,13 +1019,13 @@ class BoletoExtractor(BaseExtractor):
                 continue
 
             # ignora possíveis linhas do pagador
-            if 'CSC' in raw_up:
+            if "CSC" in raw_up:
                 continue
             if self._looks_like_currency_or_amount_line(raw_name):
                 continue
 
             score = 0
-            if re.search(r'(?i)\bS/?A\b|\bLTDA\b', raw_name):
+            if re.search(r"(?i)\bS/?A\b|\bLTDA\b", raw_name):
                 score += 1
             if score > best_score:
                 best_score = score
@@ -934,29 +1038,31 @@ class BoletoExtractor(BaseExtractor):
         # (executa DEPOIS do caso especial "a serviço de" para não retornar lixo tipo "A - CNPJ").
         cnpj_benef = self._extract_cnpj_beneficiario(text)
         if cnpj_benef:
-            for ln in (text or '').splitlines():
+            for ln in (text or "").splitlines():
                 if cnpj_benef in ln:
                     cand = self._extract_name_before_cnpj_in_line(ln, cnpj_benef)
                     if cand:
                         return cand
 
-        lines = [ln.strip() for ln in (text or '').splitlines()]
+        lines = [ln.strip() for ln in (text or "").splitlines()]
         lines = [ln for ln in lines if ln]
 
         # 1) Bloco "Beneficiário ..." (muitas vezes é cabeçalho) → pega próxima linha com nome+cnpj
         for i, ln in enumerate(lines):
-            if re.search(r'(?i)\bBenefici[aá]rio\b', ln):
+            if re.search(r"(?i)\bBenefici[aá]rio\b", ln):
                 # Caso comum: tudo vem na mesma linha, com cabeçalhos no começo.
                 # Ex: "Beneficiário Vencimento Valor do Documento MAIS ... 18.363..."
-                m_cnpj = re.search(r'(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})', ln)
+                m_cnpj = re.search(r"(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", ln)
                 if m_cnpj:
-                    cand_inline = self._extract_name_before_cnpj_in_line(ln, m_cnpj.group(1))
+                    cand_inline = self._extract_name_before_cnpj_in_line(
+                        ln, m_cnpj.group(1)
+                    )
                     if cand_inline:
                         return cand_inline
 
                 # tenta nome + CNPJ na mesma linha
                 m_same = re.search(
-                    r'([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b',
+                    r"([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b",
                     ln,
                 )
                 if m_same:
@@ -968,27 +1074,36 @@ class BoletoExtractor(BaseExtractor):
                 for j in range(i + 1, min(i + 5, len(lines))):
                     next_ln = lines[j]
                     # interrompe se já entrou em seção de pagador/endereço
-                    if re.search(r'(?i)\bDados\s+do\s+Pagador\b|\bPagador\b', next_ln):
+                    if re.search(r"(?i)\bDados\s+do\s+Pagador\b|\bPagador\b", next_ln):
                         break
                     m = re.search(
-                        r'^\s*([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b',
+                        r"^\s*([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b",
                         next_ln,
                     )
                     if m:
                         cand = self._normalize_entity_name(m.group(1))
-                        if len(cand) >= 5 and not self._looks_like_header_or_label(cand):
+                        if len(cand) >= 5 and not self._looks_like_header_or_label(
+                            cand
+                        ):
                             return cand
 
                     # Alguns PDFs trazem só o nome (sem CNPJ) logo após o cabeçalho.
                     cand2 = self._normalize_entity_name(next_ln)
-                    if len(cand2) >= 8 and not self._looks_like_header_or_label(cand2) and not self._looks_like_currency_or_amount_line(next_ln):
+                    if (
+                        len(cand2) >= 8
+                        and not self._looks_like_header_or_label(cand2)
+                        and not self._looks_like_currency_or_amount_line(next_ln)
+                    ):
                         # evita capturar linhas óbvias de endereço/UF/CEP
-                        if not re.search(r'(?i)\bCEP\b|\bMG\b|\bSP\b|\bRJ\b|\bBAIRRO\b|\bAVENIDA\b|\bRUA\b', cand2):
+                        if not re.search(
+                            r"(?i)\bCEP\b|\bMG\b|\bSP\b|\bRJ\b|\bBAIRRO\b|\bAVENIDA\b|\bRUA\b",
+                            cand2,
+                        ):
                             return cand2
 
         # 2) "Beneficiário final <NOME> <CNPJ>" (bem comum em ficha de compensação)
         m = re.search(
-            r'(?i)Benefici[aá]rio\s+final\s+([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b',
+            r"(?i)Benefici[aá]rio\s+final\s+([A-ZÀ-ÿ][A-ZÀ-ÿ\s&\.\-]{5,120})\s+\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b",
             text,
         )
         if m:
@@ -997,11 +1112,15 @@ class BoletoExtractor(BaseExtractor):
                 return cand
 
         # Fallback: busca texto após CNPJ do beneficiário
-        cnpj_match = re.search(r'(?i)Benefici[aá]rio.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})', text)
+        cnpj_match = re.search(
+            r"(?i)Benefici[aá]rio.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", text
+        )
         if cnpj_match:
             start_pos = cnpj_match.end()
-            text_after = text[start_pos:start_pos+100]
-            nome_match = re.search(r'([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,80})', text_after)
+            text_after = text[start_pos : start_pos + 100]
+            nome_match = re.search(
+                r"([A-ZÀÁÂÃÇÉÊÍÓÔÕÚ][A-Za-zÀ-ÿ\s&\.\-]{5,80})", text_after
+            )
             if nome_match:
                 nome = self._normalize_entity_name(nome_match.group(1))
                 if len(nome) >= 5 and not self._looks_like_header_or_label(nome):
@@ -1009,7 +1128,9 @@ class BoletoExtractor(BaseExtractor):
 
         return None
 
-    def _extract_banco_nome(self, text: str, linha_digitavel: Optional[str]) -> Optional[str]:
+    def _extract_banco_nome(
+        self, text: str, linha_digitavel: Optional[str]
+    ) -> Optional[str]:
         """
         Identifica o nome do banco emissor do boleto.
 
@@ -1032,7 +1153,7 @@ class BoletoExtractor(BaseExtractor):
             return NOMES_BANCOS.get(codigo_banco, f"BANCO_{codigo_banco}")
 
         # Fallback: busca código do banco no texto
-        match = re.search(r'(?i)(?:Banco|C[oó]digo\s+Banco)[^\d]*(\d{3})', text)
+        match = re.search(r"(?i)(?:Banco|C[oó]digo\s+Banco)[^\d]*(\d{3})", text)
         if match:
             codigo = match.group(1)
             return NOMES_BANCOS.get(codigo, f"BANCO_{codigo}")
@@ -1055,18 +1176,20 @@ class BoletoExtractor(BaseExtractor):
         """
         patterns = [
             # Aceita formatos com pontos e espaços: "1.234 - 5"
-            r'(?i)Ag[eê]ncia[^\d]*([\d\.\s]{2,15})\s*[-–]?\s*(\d)?',
-            r'(?i)Ag[\.\s]*[:\s]*([\d\.\s]{2,15})\s*[-–]?\s*(\d)?',
+            r"(?i)Ag[eê]ncia[^\d]*([\d\.\s]{2,15})\s*[-–]?\s*(\d)?",
+            r"(?i)Ag[\.\s]*[:\s]*([\d\.\s]{2,15})\s*[-–]?\s*(\d)?",
         ]
 
         for pattern in patterns:
             match = re.search(pattern, text)
             if match:
                 numero_raw = match.group(1).strip()
-                digito = match.group(2) if match.lastindex and match.lastindex >= 2 else None
+                digito = (
+                    match.group(2) if match.lastindex and match.lastindex >= 2 else None
+                )
 
                 # Remove tudo que não for dígito do número-base
-                numero = re.sub(r'\D', '', numero_raw)
+                numero = re.sub(r"\D", "", numero_raw)
 
                 if not numero:
                     continue
@@ -1091,19 +1214,21 @@ class BoletoExtractor(BaseExtractor):
             str: Conta corrente no formato "123456-7" ou None
         """
         patterns = [
-            r'(?i)Conta\s+Corrente[^\d]*(\d{1,12})[\s\-]?(\d)?',
-            r'(?i)C/?C[^\d]*(\d{1,12})[\s\-]?(\d)?',
-            r'(?i)Conta[^\d]*(\d{1,12})[\s\-]?(\d)?',
+            r"(?i)Conta\s+Corrente[^\d]*(\d{1,12})[\s\-]?(\d)?",
+            r"(?i)C/?C[^\d]*(\d{1,12})[\s\-]?(\d)?",
+            r"(?i)Conta[^\d]*(\d{1,12})[\s\-]?(\d)?",
         ]
 
         for pattern in patterns:
             match = re.search(pattern, text)
             if match:
                 numero = match.group(1).strip()
-                digito = match.group(2) if match.lastindex and match.lastindex >= 2 else None
+                digito = (
+                    match.group(2) if match.lastindex and match.lastindex >= 2 else None
+                )
 
                 # Remove pontos e espaços
-                numero = numero.replace('.', '').replace(' ', '')
+                numero = numero.replace(".", "").replace(" ", "")
 
                 # Valida tamanho mínimo (evita capturar IDs pequenos)
                 if len(numero) < 4:

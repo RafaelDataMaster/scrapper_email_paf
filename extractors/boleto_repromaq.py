@@ -42,7 +42,7 @@ Example:
 """
 
 import re
-from datetime import datetime
+
 from typing import Any, Dict, List, Optional
 
 from core.extractors import BaseExtractor, register_extractor

@@ -8,13 +8,12 @@ Testa que os princípios SOLID foram implementados corretamente:
 """
 
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from pathlib import Path
 import tempfile
 
 from core.models import InvoiceData, BoletoData, DocumentData
 from strategies.native import NativePdfStrategy
-from strategies.ocr import TesseractOcrStrategy
 from strategies.table import TablePdfStrategy
 from strategies.fallback import SmartExtractionStrategy
 from core.exceptions import ExtractionError

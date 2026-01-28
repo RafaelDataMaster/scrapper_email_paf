@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 
 # Match CNPJ even when PDF extraction inserts spaces between separators.
@@ -61,7 +61,7 @@ class EmpresaMatch:
     score: int
 
 
-def _normalize_cnpj_to_digits(value: str) -> Optional[str]:
+def normalize_cnpj_to_digits(value: str) -> Optional[str]:
     """Normaliza um CNPJ para apenas dígitos (14 caracteres).
     
     Args:
@@ -71,7 +71,7 @@ def _normalize_cnpj_to_digits(value: str) -> Optional[str]:
         String com 14 dígitos ou None se inválido.
         
     Example:
-        >>> _normalize_cnpj_to_digits("12.345.678/0001-90")
+        >>> normalize_cnpj_to_digits("12.345.678/0001-90")
         '12345678000190'
     """
     if not value:
@@ -95,13 +95,13 @@ def format_cnpj(digits: str) -> str:
         >>> format_cnpj("12345678000190")
         '12.345.678/0001-90'
     """
-    d = _normalize_cnpj_to_digits(digits)
+    d = normalize_cnpj_to_digits(digits)
     if not d:
         return ""
     return f"{d[0:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:14]}"
 
 
-def _empresa_codigo_from_razao(razao_social: str) -> str:
+def empresa_codigo_from_razao(razao_social: str) -> str:
     """Extrai o código/sigla da empresa a partir da razão social.
     
     O código é o primeiro token alfanumérico da razão social,
@@ -114,7 +114,7 @@ def _empresa_codigo_from_razao(razao_social: str) -> str:
         Código da empresa em maiúsculas ou string vazia.
         
     Example:
-        >>> _empresa_codigo_from_razao("CSC GESTAO INTEGRADA S/A")
+        >>> empresa_codigo_from_razao("CSC GESTAO INTEGRADA S/A")
         'CSC'
     """
     if not razao_social:
@@ -143,7 +143,7 @@ def _load_empresas_cadastro() -> Dict[str, Dict[str, str]]:
         # Normaliza chaves para dígitos
         normalized: Dict[str, Dict[str, str]] = {}
         for cnpj, payload in (EMPRESAS_CADASTRO or {}).items():
-            cnpj_digits = _normalize_cnpj_to_digits(str(cnpj))
+            cnpj_digits = normalize_cnpj_to_digits(str(cnpj))
             if not cnpj_digits:
                 continue
             normalized[cnpj_digits] = payload
@@ -179,7 +179,7 @@ def iter_cnpjs_in_text(text: str) -> Iterable[Tuple[str, int, int, str]]:
 
     for m in _CNPJ_ANY_RE.finditer(text):
         raw = m.group(0)
-        digits = _normalize_cnpj_to_digits(raw)
+        digits = normalize_cnpj_to_digits(raw)
         if not digits:
             continue
         yield (digits, m.start(), m.end(), raw)
@@ -256,7 +256,7 @@ def find_empresa_no_texto(text: str) -> Optional[EmpresaMatch]:
 
         payload = cadastro.get(cnpj_digits) or {}
         razao = (payload.get("razao_social") or "").strip()
-        codigo = _empresa_codigo_from_razao(razao)
+        codigo = empresa_codigo_from_razao(razao)
 
         # Score contextual (pagador/tomador/destinatário geralmente são "nós")
         window = upper[max(0, start - 250) : min(len(upper), end + 250)]
@@ -288,7 +288,7 @@ def find_empresa_no_texto(text: str) -> Optional[EmpresaMatch]:
         razao = (payload.get("razao_social") or "").strip()
         if not razao:
             continue
-        codigo = _empresa_codigo_from_razao(razao)
+        codigo = empresa_codigo_from_razao(razao)
         if codigo and re.search(rf"\b{re.escape(codigo)}\b", upper):
             return EmpresaMatch(
                 cnpj_digits=cnpj_digits,
@@ -309,7 +309,7 @@ def find_empresa_no_texto(text: str) -> Optional[EmpresaMatch]:
             razao = (payload.get("razao_social") or "").strip()
             if not razao:
                 continue
-            codigo = _empresa_codigo_from_razao(razao)
+            codigo = empresa_codigo_from_razao(razao)
             codigo_up = (codigo or "").upper().strip()
             if not codigo_up:
                 continue
@@ -369,7 +369,7 @@ def is_cnpj_nosso(cnpj_value: Optional[str]) -> bool:
     if not cnpj_value:
         return False
     cadastro = _load_empresas_cadastro()
-    digits = _normalize_cnpj_to_digits(cnpj_value)
+    digits = normalize_cnpj_to_digits(cnpj_value)
     return bool(digits and digits in cadastro)
 
 
@@ -419,7 +419,7 @@ def is_nome_nosso(nome: Optional[str]) -> bool:
     }
     for payload in cadastro.values():
         razao = (payload.get("razao_social") or "").strip()
-        codigo = _empresa_codigo_from_razao(razao)
+        codigo = empresa_codigo_from_razao(razao)
         if not codigo:
             continue
 
@@ -477,7 +477,7 @@ def infer_fornecedor_from_text(text: str, empresa_cnpj_digits: Optional[str]) ->
         return None
 
     cadastro = _load_empresas_cadastro()
-    empresa_cnpj_digits_norm = _normalize_cnpj_to_digits(empresa_cnpj_digits or "")
+    empresa_cnpj_digits_norm = normalize_cnpj_to_digits(empresa_cnpj_digits or "")
 
     label_re = re.compile(
         r"\b(Raz[ãa]o\s+Social|Benefici[áa]rio|Cedente|Prestador(?:\s+de\s+Servi[çc]os)?)\b",
@@ -526,7 +526,7 @@ def infer_fornecedor_from_text(text: str, empresa_cnpj_digits: Optional[str]) ->
             continue
 
         for m in _CNPJ_ANY_RE.finditer(ln):
-            digits = _normalize_cnpj_to_digits(m.group(0))
+            digits = normalize_cnpj_to_digits(m.group(0))
             if not digits:
                 continue
             if digits in cadastro:

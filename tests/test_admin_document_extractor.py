@@ -16,7 +16,7 @@ Princípios SOLID testados:
 
 """
 
-import re
+
 import sys
 from pathlib import Path
 
@@ -294,7 +294,7 @@ def test_extractor_order():
     """Testa que o AdminDocumentExtractor está na posição correta no registro."""
     # Encontrar posições dos extratores relevantes
     admin_idx = None
-    nfse_idx = None
+    _nfse_idx = None
     outros_idx = None
 
     for i, extractor_class in enumerate(EXTRACTOR_REGISTRY):
@@ -302,7 +302,7 @@ def test_extractor_order():
         if class_name == "AdminDocumentExtractor":
             admin_idx = i
         elif class_name == "NfseGenericExtractor":
-            nfse_idx = i
+            _nfse_idx = i
         elif class_name == "OutrosExtractor":
             outros_idx = i
 
@@ -366,7 +366,7 @@ def test_priority_over_other_extractors():
     admin_text = "LEMBRETE GENTIL: Vencimento de Fatura"
 
     admin_can_handle = extractor_admin.can_handle(admin_text)
-    outros_can_handle = extractor_outros.can_handle(admin_text)
+    _outros_can_handle = extractor_outros.can_handle(admin_text)
     nfse_can_handle = extractor_nfse.can_handle(admin_text)
 
     assert admin_can_handle, (

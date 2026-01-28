@@ -25,12 +25,11 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 from core.extractors import BaseExtractor, register_extractor
-from core.models import InvoiceData
+
 from extractors.utils import (
     parse_br_money,
     parse_date_br,
     extract_cnpj_flexible,
-    format_cnpj,
     normalize_text_for_extraction,
     normalize_entity_name,
 )
@@ -131,7 +130,6 @@ class NfcomTelcablesExtractor(BaseExtractor):
             Dicionário com campos extraídos no formato do InvoiceData
         """
         text = normalize_text_for_extraction(text or "")
-        text_upper = text.upper()
 
         data: Dict[str, Any] = {"tipo_documento": "NFSE"}
 

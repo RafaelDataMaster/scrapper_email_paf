@@ -1,5 +1,6 @@
 import logging
 import os
+import platform  # Detecta automaticamente se está no Docker (Linux) ou Windows
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -28,39 +29,42 @@ DEBUG_RELATORIO_QUALIDADE = DIR_DEBUG_OUTPUT / "relatorio_qualidade.txt"
 
 # --- Caminhos de Binários Externos ---
 # Centralizamos aqui para não espalhar caminhos pelo código
-# Detecta automaticamente se está no Docker (Linux) ou Windows
-import platform
 
-is_linux = platform.system() == 'Linux'
+
+is_linux = platform.system() == "Linux"
 
 # Defaults diferentes para Linux (Docker) e Windows (desenvolvimento)
 if is_linux:
-    TESSERACT_CMD = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
-    POPPLER_PATH = os.getenv('POPPLER_PATH', '/usr/bin')
+    TESSERACT_CMD = os.getenv("TESSERACT_CMD", "/usr/bin/tesseract")
+    POPPLER_PATH = os.getenv("POPPLER_PATH", "/usr/bin")
 else:
-    TESSERACT_CMD = os.getenv('TESSERACT_CMD', r'C:\Program Files\Tesseract-OCR\tesseract.exe')
-    POPPLER_PATH = os.getenv('POPPLER_PATH', r'C:\Poppler\Release-25.12.0-0\poppler-25.12.0\Library\bin')
+    TESSERACT_CMD = os.getenv(
+        "TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    )
+    POPPLER_PATH = os.getenv(
+        "POPPLER_PATH", r"C:\Poppler\Release-25.12.0-0\poppler-25.12.0\Library\bin"
+    )
 
 # --- Parâmetros do OCR ---
 # --psm 6: Assume um bloco único de texto uniforme (vital para notas fiscais)
 # load_system_dawg=0 e load_freq_dawg=0: Desativa dicionários de linguagem
 # Otimização para leitura de códigos/números (não prosa), economiza CPU
-OCR_CONFIG = r'--psm 6 -c load_system_dawg=0 -c load_freq_dawg=0'
-OCR_LANG = 'por'
+OCR_CONFIG = r"--psm 6 -c load_system_dawg=0 -c load_freq_dawg=0"
+OCR_LANG = "por"
 
 # --- Modo híbrido (PDF com texto + partes em imagem) ---
 # Alguns PDFs possuem camada de texto parcial e campos importantes como imagem.
 # Quando habilitado, o leitor pode complementar o texto nativo com OCR.
-HYBRID_OCR_COMPLEMENT = os.getenv('HYBRID_OCR_COMPLEMENT', '1') == '1'
+HYBRID_OCR_COMPLEMENT = os.getenv("HYBRID_OCR_COMPLEMENT", "1") == "1"
 
 # --- Parâmetros de Diretórios (Legado/Compatibilidade) ---
-ARQUIVO_SAIDA = 'carga_notas_fiscais.csv'
+ARQUIVO_SAIDA = "carga_notas_fiscais.csv"
 
 # --- Configurações de E-mail (Lendo do ambiente com valores default seguros) ---
-EMAIL_HOST = os.getenv('EMAIL_HOST', '')
-EMAIL_USER = os.getenv('EMAIL_USER', '')
-EMAIL_PASS = os.getenv('EMAIL_PASS', '')
-EMAIL_FOLDER = os.getenv('EMAIL_FOLDER', 'INBOX')
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_USER = os.getenv("EMAIL_USER", "")
+EMAIL_PASS = os.getenv("EMAIL_PASS", "")
+EMAIL_FOLDER = os.getenv("EMAIL_FOLDER", "INBOX")
 
 # Validação básica para não rodar sem config
 if not all([EMAIL_HOST, EMAIL_USER, EMAIL_PASS]):
@@ -68,18 +72,20 @@ if not all([EMAIL_HOST, EMAIL_USER, EMAIL_PASS]):
 
 # --- Configurações PAF (Planilha de Autorização de Faturamento) ---
 # Responsável pela classificação que aparecerá na coluna 15 (TRAT PAF) da planilha
-TRAT_PAF_RESPONSAVEL = os.getenv('TRAT_PAF_RESPONSAVEL', 'SISTEMA_AUTO')
+TRAT_PAF_RESPONSAVEL = os.getenv("TRAT_PAF_RESPONSAVEL", "SISTEMA_AUTO")
 
 # --- Configurações do Google Sheets ---
 # ID da planilha do Google Sheets (extraído da URL)
 # Exemplo: https://docs.google.com/spreadsheets/d/1ABC.../edit -> ID = 1ABC...
-GOOGLE_SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '')
+GOOGLE_SPREADSHEET_ID = os.getenv("GOOGLE_SPREADSHEET_ID", "")
 
 # Caminho para o arquivo de credenciais da Service Account
-GOOGLE_CREDENTIALS_PATH = os.getenv('GOOGLE_CREDENTIALS_PATH', 'credentials.json')
+GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials.json")
 
 if not GOOGLE_SPREADSHEET_ID:
-    print("⚠️ AVISO: GOOGLE_SPREADSHEET_ID não configurado no .env (necessário para exportação)")
+    print(
+        "⚠️ AVISO: GOOGLE_SPREADSHEET_ID não configurado no .env (necessário para exportação)"
+    )
 
 # --- Configuração de Exportação NF ---
 # Controla se a coluna NF (5) e Nº FAT (13) são preenchidas na exportação PAF.
@@ -91,11 +97,11 @@ if not GOOGLE_SPREADSHEET_ID:
 
 # Se True, a coluna NF (e Nº FAT relacionado) é exportada em branco no to_sheets_row().
 # Default: False - exporta numero_nota extraído do PDF (DANFE/NFSe) ou referencia_nfse (Boleto)
-PAF_EXPORT_NF_EMPTY = os.getenv('PAF_EXPORT_NF_EMPTY', '0') == '1'
+PAF_EXPORT_NF_EMPTY = os.getenv("PAF_EXPORT_NF_EMPTY", "0") == "1"
 
 # Se True, a validação/diagnóstico exige número de NF na NFSe (numero_nota).
 # Para o MVP, default é False.
-PAF_EXIGIR_NUMERO_NF = os.getenv('PAF_EXIGIR_NUMERO_NF', '0') == '1'
+PAF_EXIGIR_NUMERO_NF = os.getenv("PAF_EXIGIR_NUMERO_NF", "0") == "1"
 
 # --- Configuração de Logging com Rotação ---
 # Conformidade: Rastreabilidade exigida pela Política Interna
@@ -106,8 +112,7 @@ LOG_FILE = LOG_DIR / "scrapper.log"
 
 # Formato detalhado para auditoria
 log_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
 )
 
 # Handler com rotação: 10MB por arquivo, mantém 5 backups
@@ -115,7 +120,7 @@ rotating_handler = RotatingFileHandler(
     LOG_FILE,
     maxBytes=10 * 1024 * 1024,  # 10MB
     backupCount=5,
-    encoding='utf-8'
+    encoding="utf-8",
 )
 rotating_handler.setFormatter(log_formatter)
 
@@ -138,12 +143,12 @@ root_logger.addHandler(rotating_handler)
 root_logger.addHandler(console_handler)
 
 # Logger específico do scrapper (para uso direto quando importado)
-logger = logging.getLogger('scrapper')
+logger = logging.getLogger("scrapper")
 
 # --- Configurações de Timeout ---
 # Timeout total para processamento de um lote (pasta)
-BATCH_TIMEOUT_SECONDS = int(os.getenv('BATCH_TIMEOUT_SECONDS', '300')) # 5 min
+BATCH_TIMEOUT_SECONDS = int(os.getenv("BATCH_TIMEOUT_SECONDS", "300"))  # 5 min
 
 # Timeout individual por arquivo (importante para OCRs lentos)
 # Se um arquivo travar, ele é pulado e o lote continua
-FILE_TIMEOUT_SECONDS = int(os.getenv('FILE_TIMEOUT_SECONDS', '90')) # 1.5 min
+FILE_TIMEOUT_SECONDS = int(os.getenv("FILE_TIMEOUT_SECONDS", "90"))  # 1.5 min

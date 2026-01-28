@@ -13,8 +13,6 @@ Princípios de teste:
 - Usa mocks para simular PDFs e processamento
 - Testa casos de sucesso e de falha
 """
-import json
-import os
 import shutil
 import tempfile
 import unittest
@@ -594,7 +592,7 @@ class TestCorrelationServicePropagation(unittest.TestCase):
         batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1000.0))
 
         service = CorrelationService()
-        result = service.correlate(batch)
+        service.correlate(batch)
 
         # Verifica propagação para todos os documentos
         for doc in batch.documents:
@@ -609,7 +607,7 @@ class TestCorrelationServicePropagation(unittest.TestCase):
         batch.add_document(BoletoData(arquivo_origem="b.pdf", valor_documento=1500.0))
 
         service = CorrelationService()
-        result = service.correlate(batch)
+        service.correlate(batch)
 
         # Verifica propagação para todos os documentos
         for doc in batch.documents:
@@ -623,7 +621,7 @@ class TestCorrelationServicePropagation(unittest.TestCase):
         batch.add_document(DanfeData(arquivo_origem="d.pdf", valor_total=500.0))
 
         service = CorrelationService()
-        result = service.correlate(batch)
+        service.correlate(batch)
 
         danfe = batch.danfes[0]
         self.assertEqual(danfe.status_conciliacao, "CONFERIR")
@@ -870,7 +868,7 @@ class TestCorrelationService(unittest.TestCase):
         )
 
         service = CorrelationService()
-        result = service.correlate(batch, metadata)
+        service.correlate(batch, metadata)
 
         # DANFE deve ter herdado vencimento do assunto (formato ISO)
         danfe = batch.danfes[0]

@@ -81,7 +81,7 @@ def check_settings():
         tesseract_exists = Path(settings.TESSERACT_CMD).exists()
         poppler_exists = Path(settings.POPPLER_PATH).exists()
         
-        print(f"\nValidação de Paths:")
+        print("\nValidação de Paths:")
         print(f"  Tesseract existe: {'✅' if tesseract_exists else '❌'}")
         print(f"  Poppler existe: {'✅' if poppler_exists else '❌'}")
         
@@ -113,7 +113,7 @@ def check_pdf2image():
     print_header("Verificando Integração pdf2image → Poppler")
     
     try:
-        from pdf2image import convert_from_path
+        from pdf2image import convert_from_path  # type: ignore  # noqa: F401  # Verifica disponibilidade
         from config import settings
         
         # Testa se consegue encontrar o pdfinfo (parte do Poppler)
@@ -129,10 +129,10 @@ def check_pdf2image():
                                   text=True)
         
         if result.returncode == 0:
-            print(f"✅ pdf2image consegue acessar Poppler")
+            print("✅ pdf2image consegue acessar Poppler")
             return True
         else:
-            print(f"❌ Poppler não está acessível")
+            print("❌ Poppler não está acessível")
             return False
             
     except Exception as e:
@@ -163,7 +163,7 @@ def check_directories():
                 test_file.touch()
                 test_file.unlink()
                 writable = True
-        except:
+        except Exception:
             writable = False
             
         status = '✅' if (exists and writable) else '⚠️' if exists else '❌'

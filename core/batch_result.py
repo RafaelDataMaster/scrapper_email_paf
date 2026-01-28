@@ -533,7 +533,7 @@ class BatchResult:
                 return DanfeData(
                     arquivo_origem=doc_dict.get("arquivo_origem", ""),
                     fornecedor_nome=doc_dict.get("fornecedor_nome"),
-                    cnpj_prestador=doc_dict.get("cnpj_prestador") or doc_dict.get("fornecedor_cnpj"),
+                    cnpj_emitente=doc_dict.get("cnpj_prestador") or doc_dict.get("fornecedor_cnpj"),
                     valor_total=doc_dict.get("valor_total") or 0.0,
                     numero_nota=doc_dict.get("numero_nota"),
                     chave_acesso=doc_dict.get("chave_acesso"),
@@ -544,7 +544,7 @@ class BatchResult:
                 return InvoiceData(
                     arquivo_origem=doc_dict.get("arquivo_origem", ""),
                     fornecedor_nome=doc_dict.get("fornecedor_nome"),
-                    cnpj_emitente=doc_dict.get("cnpj_emitente") or doc_dict.get("fornecedor_cnpj"),
+                    cnpj_prestador=doc_dict.get("cnpj_emitente") or doc_dict.get("fornecedor_cnpj"),
                     valor_total=doc_dict.get("valor_total") or 0.0,
                     numero_nota=doc_dict.get("numero_nota"),
                     data_emissao=doc_dict.get("data_emissao"),

@@ -2,7 +2,8 @@ import email
 import imaplib
 import logging
 from email.header import decode_header
-from typing import Any, Dict, List
+from email.message import Message
+from typing import Any, Dict, List, Optional
 
 from core.interfaces import EmailIngestorStrategy
 
@@ -45,7 +46,7 @@ class ImapIngestor(EmailIngestorStrategy):
         self.connection.login(self.user, self.password)
         self.connection.select(self.folder) # Seleciona caixa de entrada
 
-    def _decode_text(self, text: str) -> str:
+    def _decode_text(self, text: Optional[str]) -> str:
         """
         Decodifica cabeçalhos de e-mail (Assunto, Nome de arquivo) de forma segura.
         Trata diferentes encodings e evita falhas de 'utf-8 codec error'.
@@ -72,7 +73,7 @@ class ImapIngestor(EmailIngestorStrategy):
 
         return final_text
 
-    def _is_valid_attachment(self, filename: str) -> bool:
+    def _is_valid_attachment(self, filename: Optional[str]) -> bool:
         """
         Verifica se o arquivo é um anexo válido (PDF ou XML).
 
@@ -88,7 +89,7 @@ class ImapIngestor(EmailIngestorStrategy):
         ext = filename.lower()
         return any(ext.endswith(valid_ext) for valid_ext in self.VALID_EXTENSIONS)
 
-    def _extract_email_body(self, msg: email.message.Message) -> str:
+    def _extract_email_body(self, msg: Message) -> str:
         """
         Extrai o corpo do e-mail em texto plano E HTML combinados.
 
@@ -115,7 +116,7 @@ class ImapIngestor(EmailIngestorStrategy):
 
                 try:
                     payload = part.get_payload(decode=True)
-                    if not payload:
+                    if not payload or not isinstance(payload, bytes):
                         continue
 
                     charset = part.get_content_charset() or 'utf-8'
@@ -131,7 +132,7 @@ class ImapIngestor(EmailIngestorStrategy):
             content_type = msg.get_content_type()
             try:
                 payload = msg.get_payload(decode=True)
-                if payload:
+                if payload and isinstance(payload, bytes):
                     charset = msg.get_content_charset() or 'utf-8'
                     decoded = payload.decode(charset, errors='replace')
 
@@ -150,7 +151,7 @@ class ImapIngestor(EmailIngestorStrategy):
 
         return combined
 
-    def _extract_sender_info(self, msg: email.message.Message) -> Dict[str, str]:
+    def _extract_sender_info(self, msg: Message) -> Dict[str, str]:
         """
         Extrai informações do remetente do e-mail.
 
@@ -176,7 +177,7 @@ class ImapIngestor(EmailIngestorStrategy):
 
         return {"name": sender_name, "address": sender_address}
 
-    def _extract_date_with_fallback(self, msg: email.message.Message) -> str:
+    def _extract_date_with_fallback(self, msg: Message) -> str:
         """
         Extrai a data do e-mail com fallback para outros cabeçalhos.
 
@@ -254,24 +255,31 @@ class ImapIngestor(EmailIngestorStrategy):
         """
         if not self.connection:
             self.connect()
+        
+        if not self.connection:
+            raise RuntimeError("Falha ao conectar ao servidor IMAP")
 
         # Busca no servidor - se filtro vazio ou "*", busca TODOS
         if not subject_filter or subject_filter == "*":
-            status, messages = self.connection.search(None, 'ALL')
+            _status, messages = self.connection.search(None, 'ALL')
         else:
-            status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
+            _status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
 
         results = []
         if not messages or messages[0] == b'':
             return results
 
-        for num in messages[0].split():
+        for num_raw in messages[0].split():
+            num = num_raw.decode('utf-8') if isinstance(num_raw, bytes) else str(num_raw)
             try:
                 _, msg_data = self.connection.fetch(num, "(RFC822)")
                 if not msg_data or not msg_data[0]:
                     continue
 
-                msg = email.message_from_bytes(msg_data[0][1])
+                raw_bytes = msg_data[0][1]
+                if isinstance(raw_bytes, int):
+                    continue
+                msg = email.message_from_bytes(raw_bytes)
 
                 # Gera um email_id único baseado no Message-ID ou número sequencial
                 message_id = msg.get("Message-ID", "")
@@ -280,7 +288,7 @@ class ImapIngestor(EmailIngestorStrategy):
                     email_id = message_id.strip("<>").replace("@", "_").replace(".", "_")
                 else:
                     # Fallback: usa o número do email no servidor
-                    email_id = f"email_{num.decode('utf-8')}"
+                    email_id = f"email_{num}"
 
                 # Extrai metadados do e-mail
                 subject = self._decode_text(msg["Subject"])
@@ -395,12 +403,15 @@ class ImapIngestor(EmailIngestorStrategy):
         """
         if not self.connection:
             self.connect()
+        
+        if not self.connection:
+            raise RuntimeError("Falha ao conectar ao servidor IMAP")
 
         # Busca no servidor - se filtro vazio ou "*", busca TODOS
         if not subject_filter or subject_filter == "*":
-            status, messages = self.connection.search(None, 'ALL')
+            _status, messages = self.connection.search(None, 'ALL')
         else:
-            status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
+            _status, messages = self.connection.search(None, f'(SUBJECT "{subject_filter}")')
 
         results = []
         count = 0
@@ -408,7 +419,8 @@ class ImapIngestor(EmailIngestorStrategy):
         if not messages or messages[0] == b'':
             return results
 
-        for num in messages[0].split():
+        for num_raw in messages[0].split():
+            num = num_raw.decode('utf-8') if isinstance(num_raw, bytes) else str(num_raw)
             if limit > 0 and count >= limit:
                 break
 
@@ -417,7 +429,10 @@ class ImapIngestor(EmailIngestorStrategy):
                 if not msg_data or not msg_data[0]:
                     continue
 
-                msg = email.message_from_bytes(msg_data[0][1])
+                raw_bytes = msg_data[0][1]
+                if isinstance(raw_bytes, int):
+                    continue
+                msg = email.message_from_bytes(raw_bytes)
 
                 # Verifica se tem anexo válido - se tiver, pula
                 has_valid_attachment = False
@@ -441,7 +456,7 @@ class ImapIngestor(EmailIngestorStrategy):
                 if message_id:
                     email_id = message_id.strip("<>").replace("@", "_").replace(".", "_")
                 else:
-                    email_id = f"email_{num.decode('utf-8')}"
+                    email_id = f"email_{num}"
 
                 # Extrai metadados
                 subject = self._decode_text(msg["Subject"])

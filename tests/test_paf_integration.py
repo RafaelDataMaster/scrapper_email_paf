@@ -2,7 +2,7 @@
 Testes de integração para sistema PAF
 Valida conformidade com Policy 5.9 e POP 4.10
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 

@@ -37,14 +37,13 @@ Estrutura XML NFS-e (ABRASF):
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime
+
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from core.models import (
     BoletoData,
     DanfeData,
-    DocumentData,
     EmailAvisoData,
     InvoiceData,
     OtherDocumentData,
@@ -259,9 +258,6 @@ class XmlExtractor:
                     success=False,
                     error="Elemento infNFe não encontrado no XML"
                 )
-
-            # Namespace vazio após remoção
-            ns = {}
 
             # Extrai dados
             raw_data = {}

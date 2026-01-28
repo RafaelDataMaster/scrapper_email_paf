@@ -24,11 +24,11 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # Adiciona o diretório raiz ao path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -218,13 +218,13 @@ class LogAnalyzer:
     def _analyze_batches(self):
         """Analisa estatísticas de lotes."""
         current_batch: Optional[str] = None
-        batch_start: Optional[datetime] = None
+        _batch_start: Optional[datetime] = None
         
         for entry in self.entries:
             # Identifica batch no log
             batch_match = LogParser.BATCH_PATTERN.search(entry.message)
             if batch_match:
-                idx, total, batch_id = batch_match.groups()
+                _, _, batch_id = batch_match.groups()
                 current_batch = batch_id
                 
                 if batch_id not in self.analysis.batch_stats:
@@ -621,7 +621,7 @@ class ReportGenerator:
             )
         
         # Verifica extratores com baixa taxa de sucesso
-        for extractor, count in self.analysis.extractor_usage.most_common():
+        for extractor, _count in self.analysis.extractor_usage.most_common():
             success = self.analysis.extractor_success.get(extractor, 0)
             failure = self.analysis.extractor_failure.get(extractor, 0)
             total = success + failure

@@ -24,7 +24,7 @@ Example:
     >>> print(f"Nota {dados['numero_nota']}: R$ {dados['valor_total']:.2f}")
 """
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from core.extractors import BaseExtractor, register_extractor
 
@@ -90,7 +90,7 @@ class NfseCustomVilaVelhaExtractor(BaseExtractor):
 
         return data
 
-    def _extract_numero_nota(self, text: str) -> str:
+    def _extract_numero_nota(self, text: str) -> Optional[str]:
         """
         Extrai número da nota em Vila Velha.
 
@@ -137,7 +137,7 @@ class NfseCustomVilaVelhaExtractor(BaseExtractor):
 
         return 0.0
 
-    def _extract_vencimento(self, text: str) -> str:
+    def _extract_vencimento(self, text: str) -> Optional[str]:
         """
         Extrai data de vencimento.
 
@@ -155,7 +155,7 @@ class NfseCustomVilaVelhaExtractor(BaseExtractor):
         # Fallback: usa data de emissão
         return self._extract_data_emissao(text)
 
-    def _extract_data_emissao(self, text: str) -> str:
+    def _extract_data_emissao(self, text: str) -> Optional[str]:
         """Extrai data de emissão."""
         # Padrão Vila Velha: "Emitida em ... 03/11/2025"
         patterns = [

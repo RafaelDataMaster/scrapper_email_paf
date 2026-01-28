@@ -12,7 +12,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import unittest
 
-from core.models import BoletoData, InvoiceData
 from extractors.boleto import BoletoExtractor
 from extractors.danfe import DanfeExtractor
 from extractors.nfse_generic import NfseGenericExtractor

@@ -24,25 +24,25 @@ Princípios SOLID aplicados:
 - DIP: Usa abstrações (BatchProcessor, CorrelationService)
 """
 import argparse
-import sys
+
 from pathlib import Path
-from typing import List
+
 
 from _init_env import setup_project_path
 
 # Inicializa o ambiente do projeto
 setup_project_path()
 
-from config.settings import DIR_DEBUG_INPUT, DIR_TEMP
-from core.batch_processor import (
+from config.settings import DIR_DEBUG_INPUT, DIR_TEMP  # noqa: E402
+from core.batch_processor import (  # noqa: E402
     BatchProcessor,
     process_email_batch,
     process_legacy_folder,
 )
-from core.batch_result import BatchResult
-from core.correlation_service import CorrelationService
-from core.metadata import EmailMetadata
-from services.ingestion_service import create_batch_folder
+from core.batch_result import BatchResult  # noqa: E402
+
+from core.metadata import EmailMetadata  # noqa: E402
+from services.ingestion_service import create_batch_folder  # noqa: E402
 
 
 def print_batch_summary(batch: BatchResult) -> None:

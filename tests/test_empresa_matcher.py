@@ -1,4 +1,3 @@
-import pytest
 
 from core.empresa_matcher import find_empresa_no_texto, infer_fornecedor_from_text
 

@@ -42,6 +42,18 @@ Sistema para extração e processamento de documentos fiscais (DANFE, NFSe e Bol
 
 ## Done
 
+### 28/01/2026
+
+- [x] **Implementação de extratores específicos para casos problemáticos**: Criação de três extratores especializados para resolver problemas de classificação e extração de valores:
+    - **AcimocExtractor**: Para boletos da Associação Comercial Industrial e de Serviços de Montes Claros, que estavam sendo capturados incorretamente pelo AdminDocumentExtractor com valor R$ 0,00
+    - **MugoExtractor**: Para faturas da MUGO TELECOMUNICAÇÕES LTDA, resolvendo casos de PDFs não reconhecidos e extração de valores
+    - **ProPainelExtractor**: Para documentos da PRÓ - PAINEL LTDA (boletos PIX e faturas de locação), que não eram reconhecidos pelos extratores existentes
+- [x] **Correções estruturais de campos CNPJ**: Ajuste dos campos CNPJ conforme tipo de documento:
+    - MugoExtractor: Alterado `cnpj_beneficiario` para `cnpj_prestador` (NFSe)
+    - ProPainelExtractor: Lógica condicional (`cnpj_beneficiario` para BOLETO, `cnpj_prestador` para NFSE)
+- [x] **AdminDocumentExtractor menos agressivo**: Adição de padrões negativos para evitar captura de boletos e documentos de fornecedores específicos, com sistema de scoring para rejeitar documentos que parecem ser boletos
+- [x] **Correções técnicas**: Resolução de erros `Cannot access attribute "strftime" for class "str"` nos métodos de extração de datas, ajuste de padrões regex para melhorar extração de números de documento
+
 ### 27/02/2026
 
 - [x] Fazer um script pra automatizar a analise de logs, feito scripts\analyze_logs.py

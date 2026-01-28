@@ -16,7 +16,6 @@ Versão: 1.0.0
 import pytest
 
 from core.filters import (
-    ContentType,
     EmailFilter,
     FilterDecision,
     FilterResult,

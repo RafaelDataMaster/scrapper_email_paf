@@ -84,7 +84,7 @@ EMPRESAS_CADASTRO = {
     "09118929000194": {"razao_social": "RW-COBRANCA PRESTADORA DE SERVICOS (MATRIZ)", "cidade": "Divinópolis", "uf": "MG"},
     "09118929000275": {"razao_social": "RW-COBRANCA PRESTADORA DE SERVICOS (FILIAL)", "cidade": "Divinópolis", "uf": "MG"},
     "13581280000110": {"razao_social": "DECK BEER PARTICIPACOES SOCIETARIAS LTDA", "cidade": "Divinópolis", "uf": "MG"},
-    "09118929000194": {"razao_social": "MGM PARTICIPACOES EIRELI", "cidade": "Divinópolis", "uf": "MG"}, # Verificado duplicidade de CNPJ no CSV original ou erro de digitação, mantido conforme CSV se diferente
+    # Nota: CNPJ 09118929000194 aparece duplicado no CSV original (MGM e RW-COBRANCA)
     "18163092000196": {"razao_social": "MGM PARTICIPACOES EIRELI", "cidade": "Belo Horizonte", "uf": "MG"},
     "25167520000114": {"razao_social": "PRO-DADOS PROCESSAMENTO EIRELI", "cidade": "Divinópolis", "uf": "MG"},
     "04373256000103": {"razao_social": "SUNRISE PARTICIPACOES LTDA (MATRIZ)", "cidade": "Divinópolis", "uf": "MG"},

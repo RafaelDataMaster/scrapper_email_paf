@@ -40,7 +40,7 @@ Example:
 
 import logging
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from core.extractors import BaseExtractor, register_extractor
 from extractors.utils import (
@@ -105,7 +105,11 @@ class AdminDocumentExtractor(BaseExtractor):
             # 4. Padrões de fornecedores problemáticos identificados
             r"TELCABLES\s+BRASIL.*NOTA\s+FISCAL",
             r"TCF\s+TELECOM.*NOTA\s+FISCAL",
-            r"BOX\s+BRAZIL.*FATURAMENTO.*\d{4}",
+            r"BOX\s+BRAZIL",
+            r"BOX\s+BRAZIL.*FATURAMENTO",
+            r"FATURAMENTO.*BOX\s+BRAZIL",
+            r"BOX\s+BRAZIL.*FATURA:",
+            r"BOX\s+BRAZIL.*-\s*[A-Z]{3}\s*-\s*[A-Z]+",
             # 5. Estruturas de dados fiscais
             r"ITENS\s+DA\s+FATURA\b",
             r"UN\s+QUANT\s+PRE[ÇC]O\s+UNIT",
@@ -120,6 +124,22 @@ class AdminDocumentExtractor(BaseExtractor):
             # 7. Dados específicos de NFSE de municípios
             r"IM:\d+",  # Inscrição Municipal
             r"IE:\d+",  # Inscrição Estadual
+            # 8. Padrões de boletos bancários (excluir para evitar falsos positivos)
+            r"RECIBO\s+DO\s+SACADO",
+            r"VALOR\s+DO\s+DOCUMENTO",
+            r"BOLETO",
+            r"LINHA\s+DIGIT[ÁA]VEL",
+            r"BENEFICI[ÁA]RIO",
+            r"SACADO",
+            r"CEDENTE",
+            r"NOSSO\s+N[ÚU]MERO",
+            r"AG[ÊE]NCIA",
+            r"CONTA\s+CORRENTE",
+            # 9. Padrões específicos de fornecedores problemáticos (boletos)
+            r"ACIMOC",
+            r"ASSOCIA[ÇC][AÃ]O\s+COMERCIAL\s+INDUSTRIAL",
+            r"MUGO\s+TELECOM",
+            r"PR[ÓO]\s*[-]?\s*PAINEL",
         ]
 
         # Primeiro verifica se é claramente um documento fiscal
@@ -141,7 +161,37 @@ class AdminDocumentExtractor(BaseExtractor):
             r"\b\d{44}\b", t
         ):
             logging.getLogger(__name__).debug(
-                f"AdminDocumentExtractor: can_handle rejeitado - chave de acesso detectada"
+                "AdminDocumentExtractor: can_handle rejeitado - chave de acesso detectada"
+            )
+            return False
+
+        # Verificação forte para boletos bancários (evitar falsos positivos como ACIMOC)
+        boleto_indicators = [
+            r"RECIBO\s+DO\s+SACADO",
+            r"VALOR\s+DO\s+DOCUMENTO",
+            r"BOLETO",
+            r"LINHA\s+DIGIT[ÁA]VEL",
+            r"BENEFICI[ÁA]RIO",
+            r"SACADO",
+            r"CEDENTE",
+            r"NOSSO\s+N[ÚU]MERO",
+            r"AG[ÊE]NCIA",
+            r"CONTA\s+CORRENTE",
+            r"PAGADOR",
+            r"VENCIMENTO",
+            r"VALOR\s+A\s+PAGAR",
+        ]
+
+        boleto_score = 0
+        for pattern in boleto_indicators:
+            if re.search(pattern, t, re.IGNORECASE):
+                boleto_score += 1
+
+        # Se tiver múltiplos indicadores de boleto (>=3), rejeita como documento administrativo
+        if boleto_score >= 3:
+            logging.getLogger(__name__).debug(
+                f"AdminDocumentExtractor: can_handle rejeitado - documento parece ser boleto "
+                f"(score: {boleto_score})"
             )
             return False
 
@@ -247,13 +297,13 @@ class AdminDocumentExtractor(BaseExtractor):
 
                 if has_fiscal_indicator:
                     logging.getLogger(__name__).debug(
-                        f"AdminDocumentExtractor: padrão administrativo detectado, "
-                        f"mas documento tem indicadores fiscais - rejeitando"
+                        "AdminDocumentExtractor: padrão administrativo detectado, "
+                        "mas documento tem indicadores fiscais - rejeitando"
                     )
                     return False
 
                 logging.getLogger(__name__).debug(
-                    f"AdminDocumentExtractor: can_handle detectou padrão administrativo"
+                    "AdminDocumentExtractor: can_handle detectou padrão administrativo"
                 )
                 return True
 
@@ -290,8 +340,8 @@ class AdminDocumentExtractor(BaseExtractor):
             has_money_pattern or has_vencimento or has_fiscal_indicator
         ):
             logging.getLogger(__name__).debug(
-                f"AdminDocumentExtractor: can_handle detectou contexto administrativo "
-                f"(sem valores de cobrança ou indicadores fiscais)"
+                "AdminDocumentExtractor: can_handle detectou contexto administrativo "
+                "(sem valores de cobrança ou indicadores fiscais)"
             )
             return True
 
@@ -310,7 +360,7 @@ class AdminDocumentExtractor(BaseExtractor):
         logger = logging.getLogger(__name__)
         data: Dict[str, Any] = {"tipo_documento": "OUTRO"}
         logger.debug(
-            f"AdminDocumentExtractor: iniciando extração de documento administrativo"
+            "AdminDocumentExtractor: iniciando extração de documento administrativo"
         )
 
         t = text.upper()
@@ -402,7 +452,7 @@ class AdminDocumentExtractor(BaseExtractor):
             data["subtipo"] = "ADMINISTRATIVO"
             data["admin_type"] = "Documento administrativo"
             logger.debug(
-                f"AdminDocumentExtractor: usando subtipo genérico 'ADMINISTRATIVO'"
+                "AdminDocumentExtractor: usando subtipo genérico 'ADMINISTRATIVO'"
             )
 
         # Fornecedor (tentativas)

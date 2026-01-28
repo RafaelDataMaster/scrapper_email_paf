@@ -10,7 +10,7 @@ Características típicas:
 
 import logging
 import re
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
 from core.extractors import BaseExtractor, register_extractor
 from extractors.utils import parse_br_money, parse_date_br
@@ -84,15 +84,6 @@ class EnergyBillExtractor(BaseExtractor):
 
     def _extract_supplier_name(self, text: str) -> Optional[str]:
         """Extrai o nome da distribuidora de energia."""
-        # Padrão 1: Linha que começa com nome da distribuidora e termina antes do CNPJ/endereço
-        # Ex: "EDP SP DISTRIB DE ENERGIA SA"
-        patterns = [
-            # Captura nome até encontrar CNPJ ou endereço
-            r"^([A-Z][A-Z\s\.\-]{5,60}?DISTRIB\s*DE\s*ENERGIA[A-Z\s\.\-]{0,30}?)(?=\s+CNPJ|\s+RUA|\s+AV\.|\s+CEP|\d)",
-            r"^([A-Z][A-Z\s\.\-]{5,60}?DISTRIBUIDORA\s+DE\s+ENERGIA[A-Z\s\.\-]{0,30}?)(?=\s+CNPJ|\s+RUA|\s+AV\.|\s+CEP|\d)",
-            r"^([A-Z][A-Z\s\.\-]{5,60}?ENERGIA\s+EL[ÉE]TRICA[A-Z\s\.\-]{0,30}?)(?=\s+CNPJ|\s+RUA|\s+AV\.|\s+CEP|\d)",
-        ]
-
         # Primeiro, tenta encontrar uma linha que contenha "DISTRIB DE ENERGIA"
         lines = text.split("\n")
         for line in lines:

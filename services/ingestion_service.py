@@ -24,16 +24,16 @@ import os
 import re
 import uuid
 from datetime import datetime
-from email.header import decode_header
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from core.empresa_matcher_email import find_empresa_in_email
 from core.filters import (
     EmailFilter,
-    FilterResult,
+
     get_default_filter,
-    should_process_email,
+
 )
 from core.interfaces import EmailIngestorStrategy
 from core.metadata import EmailMetadata
@@ -412,7 +412,7 @@ class IngestionService:
             )
 
         # Busca e-mails sem anexo
-        raw_emails = self.ingestor.fetch_emails_without_attachments(
+        raw_emails = self.ingestor.fetch_emails_without_attachments(  # type: ignore
             subject_filter=subject_filter,
             limit=limit
         )
@@ -464,7 +464,7 @@ class IngestionService:
 
             # Detecta empresa usando o texto COMPLETO do e-mail
             texto_completo = f"{email_data.get('subject', '')} {email_data.get('body_text', '')}"
-            codigo_empresa, metodo, matches = find_empresa_in_email(texto_completo)
+            codigo_empresa, _metodo, _matches = find_empresa_in_email(texto_completo)
             if codigo_empresa:
                 aviso.empresa = codigo_empresa
 

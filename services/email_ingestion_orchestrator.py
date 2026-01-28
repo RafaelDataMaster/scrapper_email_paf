@@ -22,7 +22,7 @@ import atexit
 import json
 import logging
 import signal
-import sys
+
 import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
@@ -34,7 +34,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from core.batch_processor import BatchProcessor
 from core.batch_result import BatchResult
-from core.filters import EmailFilter, FilterResult, get_default_filter
+from core.filters import EmailFilter, get_default_filter
 from core.interfaces import EmailIngestorStrategy
 from core.metrics import IngestionMetrics
 from core.models import EmailAvisoData
@@ -590,7 +590,7 @@ class EmailIngestionOrchestrator:
                         )
                         self.clear_checkpoint()
                     else:
-                        logger.info(f"▶️ Resumindo ingestão de checkpoint...")
+                        logger.info("▶️ Resumindo ingestão de checkpoint...")
             else:
                 self.clear_checkpoint()
 
@@ -613,7 +613,7 @@ class EmailIngestionOrchestrator:
                 )
 
             # Conecta ao servidor
-            logger.info(f"📧 Conectando ao servidor de e-mail...")
+            logger.info("📧 Conectando ao servidor de e-mail...")
             self.ingestor.connect()
 
             # Define ordem de processamento
@@ -622,7 +622,7 @@ class EmailIngestionOrchestrator:
                 # FASE 1: E-mails SEM anexos (links e códigos) - PRIMEIRO
                 # ================================================================
                 if process_without_attachments and not self._interrupted:
-                    logger.info(f"\n🔗 Fase 1: Processando e-mails SEM anexos...")
+                    logger.info("\n🔗 Fase 1: Processando e-mails SEM anexos...")
 
                     avisos, without_att_count, filtered_count = self._process_emails_without_attachments(
                         subject_filter=subject_filter,
@@ -638,7 +638,7 @@ class EmailIngestionOrchestrator:
                 # FASE 2: E-mails COM anexos - DEPOIS
                 # ================================================================
                 if process_with_attachments and not self._interrupted:
-                    logger.info(f"\n📎 Fase 2: Processando e-mails COM anexos...")
+                    logger.info("\n📎 Fase 2: Processando e-mails COM anexos...")
 
                     batch_results, with_att_count = self._process_emails_with_attachments(
                         subject_filter=subject_filter,
@@ -653,7 +653,7 @@ class EmailIngestionOrchestrator:
                 # FASE 1: E-mails COM anexos - PRIMEIRO (padrão)
                 # ================================================================
                 if process_with_attachments and not self._interrupted:
-                    logger.info(f"\n📎 Fase 1: Processando e-mails COM anexos...")
+                    logger.info("\n📎 Fase 1: Processando e-mails COM anexos...")
 
                     batch_results, with_att_count = self._process_emails_with_attachments(
                         subject_filter=subject_filter,
@@ -668,7 +668,7 @@ class EmailIngestionOrchestrator:
                 # FASE 2: E-mails SEM anexos (links e códigos) - DEPOIS
                 # ================================================================
                 if process_without_attachments and not self._interrupted:
-                    logger.info(f"\n🔗 Fase 2: Processando e-mails SEM anexos...")
+                    logger.info("\n🔗 Fase 2: Processando e-mails SEM anexos...")
 
                     avisos, without_att_count, filtered_count = self._process_emails_without_attachments(
                         subject_filter=subject_filter,
@@ -817,7 +817,7 @@ class EmailIngestionOrchestrator:
                             f"Valor: R$ {batch_result.get_valor_compra():,.2f}"
                         )
                     else:
-                        logger.warning(f"      ⚠️ Nenhum documento extraído")
+                        logger.warning("      ⚠️ Nenhum documento extraído")
                         self._metrics.record_batch_processed(0, batch_duration, "empty")
 
                     self._save_checkpoint()

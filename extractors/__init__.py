@@ -9,6 +9,15 @@ from .nfse_custom_vila_velha import NfseCustomVilaVelhaExtractor
 from .energy_bill import EnergyBillExtractor
 from .nfcom_telcables_extractor import NfcomTelcablesExtractor
 
+# Extrator especializado para boletos ACIMOC
+from .acimoc_extractor import AcimocExtractor
+
+# Extrator especializado para faturas MUGO TELECOM
+from .mugo_extractor import MugoExtractor
+
+# Extrator especializado para PRÓ - PAINEL LTDA
+from .pro_painel_extractor import ProPainelExtractor
+
 # Extrator especializado para documentos administrativos (deve vir antes dos genéricos)
 from .admin_document import AdminDocumentExtractor
 
@@ -30,6 +39,8 @@ from .xml_extractor import XmlExtractionResult, XmlExtractor, extract_xml
 
 __all__ = [
     "BoletoRepromaqExtractor",
+    "AcimocExtractor",
+    "MugoExtractor",
     "BoletoExtractor",
     "DanfeExtractor",
     "EmcFaturaExtractor",
@@ -50,4 +61,5 @@ __all__ = [
     "extract_from_email_body",
     # Extrator especializado para documentos administrativos
     "AdminDocumentExtractor",
+    "ProPainelExtractor",
 ]

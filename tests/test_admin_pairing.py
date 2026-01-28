@@ -51,7 +51,7 @@ def test_admin_detection_in_pairing():
     ]
 
     admin_ok = 0
-    admin_fail = 0
+    _admin_fail = 0
 
     for subject, expected_desc in test_cases:
         # Cria batch com documento fictício
@@ -105,7 +105,7 @@ def test_admin_detection_in_pairing():
     )
 
     normal_ok = 0
-    normal_fail = 0
+    _normal_fail = 0
 
     for subject in normal_cases:
         # Cria batch com documento normal

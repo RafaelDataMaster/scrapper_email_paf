@@ -1,6 +1,6 @@
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 # 1. O Registro (Lista de plugins disponíveis)
 EXTRACTOR_REGISTRY = []

@@ -418,7 +418,7 @@ class DocumentPairingService:
             return True
 
         if 'atestamos' in texto[:200] or 'declaramos' in texto[:200]:
-            logger.debug(f"Documento é auxiliar: texto contém atestamos/declaramos")
+            logger.debug("Documento é auxiliar: texto contém atestamos/declaramos")
             return True
 
         # 2. Documentos com valor total positivo não são considerados auxiliares
@@ -435,10 +435,10 @@ class DocumentPairingService:
 
         # 4. Verifica se é um demonstrativo (arquivo que contém "demonstrativo" no nome)
         if 'demonstrativo' in arquivo:
-            logger.debug(f"Documento é auxiliar: arquivo contém 'demonstrativo'")
+            logger.debug("Documento é auxiliar: arquivo contém 'demonstrativo'")
             return True
 
-        logger.debug(f"Documento NÃO é auxiliar: nenhum critério atendido")
+        logger.debug("Documento NÃO é auxiliar: nenhum critério atendido")
         return False
 
     def _agrupar_por_valor_e_numero(

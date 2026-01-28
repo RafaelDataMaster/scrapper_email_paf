@@ -8,7 +8,6 @@ Este módulo testa:
 4. Extração de links de NF-e
 5. Pareamento forçado por lote
 """
-from datetime import datetime
 
 import pytest
 

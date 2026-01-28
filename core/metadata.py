@@ -402,7 +402,7 @@ class EmailMetadata:
             (self.email_body_text or '', 'body')
         ]
 
-        for text, source in sources:
+        for text, _source in sources:
             if not text.strip():
                 continue
 

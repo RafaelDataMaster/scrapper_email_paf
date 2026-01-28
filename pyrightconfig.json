@@ -11,6 +11,7 @@
         "tests"
     ],
     "exclude": [
+        "tests",
         "**/.venv",
         "**/__pycache__",
         "**/.pytest_cache",

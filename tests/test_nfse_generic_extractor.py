@@ -13,7 +13,6 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import logging
 from extractors.nfse_generic import NfseGenericExtractor
 from extractors.outros import OutrosExtractor

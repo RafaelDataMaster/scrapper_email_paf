@@ -6,7 +6,6 @@ from email.message import EmailMessage
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from config import settings
 from ingestors.imap import ImapIngestor
 from services.ingestion_service import IngestionService
 

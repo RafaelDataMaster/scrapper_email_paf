@@ -56,10 +56,10 @@ from typing import List, Optional, Tuple
 from config import settings
 from core.batch_processor import BatchProcessor, process_email_batch
 from core.batch_result import BatchResult
-from core.correlation_service import CorrelationService
-from core.exporters import CsvExporter, FileSystemManager
+
+from core.exporters import FileSystemManager
 from core.interfaces import EmailIngestorStrategy
-from core.metadata import EmailMetadata
+
 from core.models import EmailAvisoData
 from ingestors.imap import ImapIngestor
 from services.email_ingestion_orchestrator import (
@@ -519,7 +519,7 @@ def ingest_and_process(
                     f"Valor: R$ {batch_result.get_valor_compra():,.2f}"
                 )
             else:
-                logger.warning(f"   ⚠️ Nenhum documento extraído")
+                logger.warning("   ⚠️ Nenhum documento extraído")
 
         except Exception as e:
             logger.error(f"   ❌ Erro: {e}")
@@ -986,7 +986,7 @@ Exemplos:
 
         # Exibe avisos de links/códigos se houver
         if avisos:
-            logger.info(f"\n📋 AVISOS (e-mails sem anexo com links/códigos):")
+            logger.info("\n📋 AVISOS (e-mails sem anexo com links/códigos):")
             logger.info(f"   Total de avisos: {len(avisos)}")
             for aviso in avisos[:5]:  # Mostra apenas os 5 primeiros
                 logger.info(

@@ -15,7 +15,7 @@ import unittest
 from pathlib import Path
 
 from core.models import DanfeData, InvoiceData
-from extractors.xml_extractor import XmlExtractionResult, XmlExtractor, extract_xml
+from extractors.xml_extractor import XmlExtractor, extract_xml
 
 
 class TestXmlExtractorDetection(unittest.TestCase):

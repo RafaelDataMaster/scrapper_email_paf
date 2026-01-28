@@ -117,7 +117,7 @@ def print_summary(avisos: List[EmailAvisoData]) -> None:
     com_codigo = sum(1 for a in avisos if a.codigo_verificacao)
     com_numero_nf = sum(1 for a in avisos if a.numero_nota)
 
-    print(f"\n📈 Estatísticas:")
+    print("\n📈 Estatísticas:")
     print(f"   Com link de NF-e: {com_link}")
     print(f"   Com código de verificação: {com_codigo}")
     print(f"   Com número de NF extraído: {com_numero_nf}")
@@ -224,7 +224,7 @@ def main():
         if args.output:
             output_path = Path(args.output)
             export_avisos_to_csv(avisos, output_path)
-            logger.info(f"\n💾 Arquivo salvo:")
+            logger.info("\n💾 Arquivo salvo:")
             logger.info(f"   - {output_path}")
         elif args.keep_history:
             # Salva versão com timestamp + latest
@@ -232,13 +232,13 @@ def main():
             output_path = Path(f"data/output/avisos_emails_sem_anexo_{timestamp}.csv")
             export_avisos_to_csv(avisos, output_path)
             export_avisos_to_csv(avisos, latest_path)
-            logger.info(f"\n💾 Arquivos salvos:")
+            logger.info("\n💾 Arquivos salvos:")
             logger.info(f"   - {output_path}")
             logger.info(f"   - {latest_path}")
         else:
             # Só salva latest (padrão)
             export_avisos_to_csv(avisos, latest_path)
-            logger.info(f"\n💾 Arquivo salvo:")
+            logger.info("\n💾 Arquivo salvo:")
             logger.info(f"   - {latest_path}")
 
     except Exception as e:

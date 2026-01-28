@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, List, Optional
+from dataclasses import dataclass
+from datetime import date, datetime
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from core.metadata import EmailMetadata
@@ -43,7 +43,10 @@ def _calcular_situacao_vencimento(vencimento_str: Optional[str], valor: Optional
             try:
                 from config.feriados_sp import SPBusinessCalendar
                 calendario = SPBusinessCalendar()
-                dias_uteis = calendario.get_working_days_delta(hoje, venc_date)
+                dias_uteis = calendario.get_working_days_delta(
+                    datetime.combine(hoje, datetime.min.time()),
+                    datetime.combine(venc_date, datetime.min.time())
+                )
             except ImportError:
                 # Fallback: conta dias corridos se calendário não disponível
                 dias_uteis = (venc_date - hoje).days
